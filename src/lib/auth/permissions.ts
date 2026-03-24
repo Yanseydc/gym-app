@@ -19,7 +19,7 @@ export const rolePermissions: Record<Role, AppModule[]> = {
 
 export const moduleRoutes: Record<AppModule, string[]> = {
   dashboard: ["/dashboard"],
-  clients: ["/dashboard/members"],
+  clients: ["/dashboard/clients", "/dashboard/members"],
   memberships: ["/dashboard/memberships"],
   payments: ["/dashboard/payments"],
   classes: ["/dashboard/classes"],

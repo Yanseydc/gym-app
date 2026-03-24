@@ -8,7 +8,7 @@ export type NavigationItem = {
 
 export const appNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", module: "dashboard" },
-  { href: "/dashboard/members", label: "Socios", module: "clients" },
+  { href: "/dashboard/clients", label: "Clients", module: "clients" },
   { href: "/dashboard/memberships", label: "Membresías", module: "memberships" },
   { href: "/dashboard/classes", label: "Clases", module: "classes" },
   { href: "/dashboard/payments", label: "Pagos", module: "payments" },
