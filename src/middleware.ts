@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { dashboardRoles } from "@/lib/auth/roles";
-import { authRoutes } from "@/config/routes";
+import { authRoutes, protectedRoutes } from "@/config/routes";
 import { clientEnv } from "@/lib/env";
 import {
   getAuthenticatedUser,
@@ -29,9 +29,9 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  if (!isAuthRoute && !isDashboardRoute) {
+  if (!isAuthRoute && !isProtectedRoute) {
     return response;
   }
 
@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
 
   const user = await getAuthenticatedUser(supabase);
 
-  if (isDashboardRoute && !user) {
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!user || !isDashboardRoute) {
+  if (!user || !isProtectedRoute) {
     return response;
   }
 

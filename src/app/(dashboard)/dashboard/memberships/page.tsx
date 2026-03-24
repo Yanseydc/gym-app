@@ -1,16 +1,17 @@
-import { DashboardShell } from "@/components/layout/dashboard-shell";
-
 export default function MembershipsPage() {
   return (
-    <DashboardShell
-      title="Membresias"
-      description="Placeholder inicial para planes, suscripciones y renovaciones."
-    >
+    <>
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: "0 0 8px" }}>Membresías</h1>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+          Placeholder inicial para planes, suscripciones y renovaciones.
+        </p>
+      </header>
       <PlaceholderCard
         title="Próximo alcance"
         body="Catálogo de planes, activación de membresías, congelamientos y vencimientos."
       />
-    </DashboardShell>
+    </>
   );
 }
 

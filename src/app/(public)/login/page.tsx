@@ -1,6 +1,15 @@
-import { LoginForm } from "@/modules/auth/components/login-form";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+import { LoginForm } from "@/modules/auth/components/login-form";
+import { getCurrentUser } from "@/modules/auth/services/auth-service";
+
+export default async function LoginPage() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <main style={{ padding: "72px 0" }}>
       <div

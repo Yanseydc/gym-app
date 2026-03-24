@@ -1,18 +1,16 @@
 import Link from "next/link";
 
 import { appNavigation } from "@/config/navigation";
+import { AuthUserCard } from "@/modules/auth/components/auth-user-card";
+import { SignOutButton } from "@/modules/auth/components/sign-out-button";
+import type { AuthUser } from "@/modules/auth/types";
 
 type DashboardShellProps = Readonly<{
   children: React.ReactNode;
-  title: string;
-  description?: string;
+  user: AuthUser;
 }>;
 
-export function DashboardShell({
-  children,
-  title,
-  description,
-}: DashboardShellProps) {
+export function DashboardShell({ children, user }: DashboardShellProps) {
   return (
     <main style={{ padding: "40px 0 64px" }}>
       <div
@@ -39,6 +37,8 @@ export function DashboardShell({
             <span style={{ color: "var(--muted)" }}>Operación central</span>
           </div>
 
+          <AuthUserCard user={user} />
+
           <nav style={{ display: "grid", gap: 12 }}>
             {appNavigation.map((item) => (
               <Link
@@ -55,6 +55,10 @@ export function DashboardShell({
               </Link>
             ))}
           </nav>
+
+          <div style={{ marginTop: 20 }}>
+            <SignOutButton />
+          </div>
         </aside>
 
         <section
@@ -65,14 +69,6 @@ export function DashboardShell({
             border: "1px solid var(--border)",
           }}
         >
-          <header style={{ marginBottom: 24 }}>
-            <h1 style={{ margin: "0 0 8px" }}>{title}</h1>
-            {description ? (
-              <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                {description}
-              </p>
-            ) : null}
-          </header>
           {children}
         </section>
       </div>

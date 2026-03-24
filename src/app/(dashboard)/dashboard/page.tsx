@@ -1,20 +1,20 @@
-import { redirect } from "next/navigation";
-
-import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login");
+    return null;
   }
 
   return (
-    <DashboardShell
-      title="Dashboard"
-      description="Vista inicial para staff y administración del gimnasio."
-    >
+    <>
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: "0 0 8px" }}>Dashboard</h1>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+          Vista inicial para staff y administración del gimnasio.
+        </p>
+      </header>
       <div
         style={{
           display: "grid",
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
         <MetricCard label="Sucursal" value="Por definir" />
         <MetricCard label="Estado" value="Scaffold inicial" />
       </div>
-    </DashboardShell>
+    </>
   );
 }
 

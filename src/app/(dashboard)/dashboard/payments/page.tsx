@@ -1,16 +1,17 @@
-import { DashboardShell } from "@/components/layout/dashboard-shell";
-
 export default function PaymentsPage() {
   return (
-    <DashboardShell
-      title="Pagos"
-      description="Placeholder inicial para cobros, historial y conciliación."
-    >
+    <>
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: "0 0 8px" }}>Pagos</h1>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+          Placeholder inicial para cobros, historial y conciliación.
+        </p>
+      </header>
       <PlaceholderCard
         title="Próximo alcance"
         body="Registro manual de pagos, estado de cobro y vista por socio o membresía."
       />
-    </DashboardShell>
+    </>
   );
 }
 
