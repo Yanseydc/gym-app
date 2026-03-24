@@ -45,6 +45,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      client_memberships: {
+        Row: {
+          client_id: string;
+          created_at: string;
+          end_date: string;
+          id: string;
+          membership_plan_id: string;
+          notes: string | null;
+          start_date: string;
+          status: "active" | "expired" | "cancelled";
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          created_at?: string;
+          end_date: string;
+          id?: string;
+          membership_plan_id: string;
+          notes?: string | null;
+          start_date: string;
+          status?: "active" | "expired" | "cancelled";
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string;
+          created_at?: string;
+          end_date?: string;
+          id?: string;
+          membership_plan_id?: string;
+          notes?: string | null;
+          start_date?: string;
+          status?: "active" | "expired" | "cancelled";
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      membership_plans: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          duration_in_days: number;
+          id: string;
+          is_active: boolean;
+          name: string;
+          price: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          duration_in_days: number;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          price: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          duration_in_days?: number;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          price?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
