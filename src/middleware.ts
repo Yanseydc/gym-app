@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { dashboardRoles } from "@/lib/auth/roles";
-import { authRoutes, protectedRoutes } from "@/config/routes";
+import {
+  canAccessPath,
+  getAuthorizedHomePath,
+} from "@/lib/auth/permissions";
+import { authRoutes, defaultAuthenticatedRoute, protectedRoutes } from "@/config/routes";
 import { clientEnv } from "@/lib/env";
 import {
   getAuthenticatedUser,
@@ -63,7 +66,7 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = defaultAuthenticatedRoute;
     return NextResponse.redirect(url);
   }
 
@@ -72,10 +75,11 @@ export async function middleware(request: NextRequest) {
   }
 
   const profile = await getProfileByUserId(supabase, user.id);
+  const role = profile?.role ?? "member";
 
-  if (profile?.role && !dashboardRoles.includes(profile.role)) {
+  if (!canAccessPath(role, pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = getAuthorizedHomePath(role);
     return NextResponse.redirect(url);
   }
 

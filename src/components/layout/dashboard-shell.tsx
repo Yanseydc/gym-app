@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { appNavigation } from "@/config/navigation";
+import { hasModuleAccess } from "@/lib/auth/permissions";
 import { AuthUserCard } from "@/modules/auth/components/auth-user-card";
 import { SignOutButton } from "@/modules/auth/components/sign-out-button";
 import type { AuthUser } from "@/modules/auth/types";
@@ -11,6 +12,10 @@ type DashboardShellProps = Readonly<{
 }>;
 
 export function DashboardShell({ children, user }: DashboardShellProps) {
+  const visibleNavigation = appNavigation.filter((item) =>
+    hasModuleAccess(user.role, item.module),
+  );
+
   return (
     <main style={{ padding: "40px 0 64px" }}>
       <div
@@ -40,7 +45,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           <AuthUserCard user={user} />
 
           <nav style={{ display: "grid", gap: 12 }}>
-            {appNavigation.map((item) => (
+            {visibleNavigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

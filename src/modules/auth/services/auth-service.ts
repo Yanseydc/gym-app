@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import type { Role } from "@/lib/auth/roles";
 import type { Database } from "@/types/database";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { AuthProfile, AuthUser, SignInInput } from "@/modules/auth/types";
@@ -55,15 +56,16 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   }
 
   const profile = await getProfileByUserId(supabase, user.id);
+  const role: Role = profile?.role ?? "member";
 
   return {
     id: user.id,
     email: user.email,
-    role: profile?.role ?? "member",
+    role,
     profile: {
       firstName: profile?.firstName ?? null,
       lastName: profile?.lastName ?? null,
-      role: profile?.role ?? "member",
+      role,
     },
     user,
   };
