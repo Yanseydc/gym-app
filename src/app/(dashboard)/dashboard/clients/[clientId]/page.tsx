@@ -12,6 +12,10 @@ import {
   getActiveMembershipPlansForPage,
   getClientMembershipHistoryForPage,
 } from "@/modules/memberships/services/membership-service";
+import { PaymentForm } from "@/modules/payments/components/payment-form";
+import { PaymentList } from "@/modules/payments/components/payment-list";
+import { createPayment } from "@/modules/payments/services/create-payment";
+import { getClientPaymentsForPage } from "@/modules/payments/services/payment-service";
 
 type ClientDetailPageProps = {
   params: Promise<{
@@ -26,10 +30,12 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: client, error },
     { data: membershipHistory, error: membershipHistoryError },
     { data: activePlans, error: activePlansError },
+    { data: payments, error: paymentsError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
     getActiveMembershipPlansForPage(),
+    getClientPaymentsForPage(clientId),
   ]);
 
   if (error) {
@@ -127,6 +133,96 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             />
           )}
         </section>
+      ) : null}
+
+      {user && hasModuleAccess(user.role, "payments") ? (
+        <>
+          <section style={{ display: "grid", gap: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2 style={{ margin: "0 0 8px" }}>Payment history</h2>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Manual payments registered for this client.
+                </p>
+              </div>
+
+              <Link
+                href={`/dashboard/payments/new?clientId=${client.id}`}
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 14,
+                  background: "var(--surface-alt)",
+                  fontWeight: 700,
+                }}
+              >
+                Open payment page
+              </Link>
+            </div>
+
+            {paymentsError ? (
+              <p
+                style={{
+                  margin: 0,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "#fff2f2",
+                  color: "#8a1c1c",
+                }}
+              >
+                {paymentsError}
+              </p>
+            ) : (
+              <PaymentList payments={payments} showClient={false} />
+            )}
+          </section>
+
+          <section
+            style={{
+              display: "grid",
+              gap: 16,
+              padding: 24,
+              borderRadius: 24,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+            }}
+          >
+            <div>
+              <h2 style={{ margin: "0 0 8px" }}>Register payment</h2>
+              <p style={{ margin: 0, color: "var(--muted)" }}>
+                Record a manual payment and optionally link it to a client membership.
+              </p>
+            </div>
+
+            <PaymentForm
+              action={createPayment.bind(null, client.id)}
+              clients={[
+                {
+                  id: client.id,
+                  label: `${client.firstName} ${client.lastName}`,
+                },
+              ]}
+              memberships={membershipHistory.map((membership) => ({
+                id: membership.id,
+                clientId: membership.clientId,
+                label: `${membership.planName} · ${membership.startDate} to ${membership.endDate}`,
+              }))}
+              submitLabel="Register payment"
+              defaultValues={{
+                clientId: client.id,
+                paymentMethod: "cash",
+              }}
+              lockClient
+            />
+          </section>
+        </>
       ) : null}
     </div>
   );

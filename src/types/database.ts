@@ -114,6 +114,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          amount: number;
+          client_id: string;
+          client_membership_id: string | null;
+          concept: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          payment_date: string;
+          payment_method: "cash" | "transfer" | "card";
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          client_id: string;
+          client_membership_id?: string | null;
+          concept: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          payment_date: string;
+          payment_method: "cash" | "transfer" | "card";
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          client_id?: string;
+          client_membership_id?: string | null;
+          concept?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          payment_date?: string;
+          payment_method?: "cash" | "transfer" | "card";
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;

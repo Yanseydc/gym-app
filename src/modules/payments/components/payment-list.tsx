@@ -1,0 +1,88 @@
+import Link from "next/link";
+
+import type { Payment } from "@/modules/payments/types";
+
+type PaymentListProps = {
+  payments: Payment[];
+  showClient?: boolean;
+};
+
+export function PaymentList({ payments, showClient = true }: PaymentListProps) {
+  if (payments.length === 0) {
+    return (
+      <article
+        style={{
+          padding: 20,
+          borderRadius: "var(--radius)",
+          border: "1px dashed var(--border)",
+          background: "var(--surface)",
+          color: "var(--muted)",
+        }}
+      >
+        No payments found.
+      </article>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      {payments.map((payment) => (
+        <article
+          key={payment.id}
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: 18,
+            borderRadius: "var(--radius)",
+            border: "1px solid var(--border)",
+            background: "var(--surface)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <strong>${payment.amount.toFixed(2)}</strong>
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "var(--surface-alt)",
+                fontSize: 13,
+                fontWeight: 700,
+                textTransform: "capitalize",
+              }}
+            >
+              {payment.paymentMethod}
+            </span>
+          </div>
+
+          <div style={{ color: "var(--muted)", display: "grid", gap: 6 }}>
+            {showClient ? (
+              <span>
+                Client:{" "}
+                <Link href={`/dashboard/clients/${payment.clientId}`} style={{ fontWeight: 700 }}>
+                  {payment.clientName}
+                </Link>
+              </span>
+            ) : null}
+            <span>Concept: {payment.concept}</span>
+            <span>Date: {payment.paymentDate}</span>
+            <span>Membership: {payment.membershipLabel ?? "Not linked"}</span>
+          </div>
+
+          {payment.notes ? (
+            <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
+              {payment.notes}
+            </p>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  );
+}
