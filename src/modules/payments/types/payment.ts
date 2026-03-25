@@ -36,6 +36,9 @@ export type PaymentMembershipOption = {
   id: string;
   clientId: string;
   label: string;
+  planPrice: number;
+  totalPaid: number;
+  remainingBalance: number;
 };
 
 export type PaymentMutationState = {

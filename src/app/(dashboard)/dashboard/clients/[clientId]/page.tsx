@@ -220,6 +220,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 id: membership.id,
                 clientId: membership.clientId,
                 label: `${membership.planName} · ${membership.startDate} to ${membership.endDate} · $${membership.remainingBalance.toFixed(2)} remaining`,
+                planPrice: membership.planPrice,
+                totalPaid: membership.totalPaid,
+                remainingBalance: membership.remainingBalance,
               }))}
               submitLabel="Register payment"
               defaultValues={{

@@ -57,7 +57,16 @@ async function getMembershipLabelMap(
   membershipIds: string[],
 ) {
   if (membershipIds.length === 0) {
-    return new Map<string, { clientId: string; label: string }>();
+    return new Map<
+      string,
+      {
+        clientId: string;
+        label: string;
+        planPrice: number;
+        totalPaid: number;
+        remainingBalance: number;
+      }
+    >();
   }
 
   const { data, error } = await supabase
@@ -71,20 +80,46 @@ async function getMembershipLabelMap(
 
   const memberships = data ?? [];
   const planIds = [...new Set(memberships.map((membership) => String(membership.membership_plan_id)))];
+  let paymentTotals = new Map<string, number>();
 
-  let planNameMap = new Map<string, string>();
+  if (memberships.length > 0) {
+    const { data: payments, error: paymentsError } = await supabase
+      .from("payments")
+      .select("client_membership_id, amount")
+      .in("client_membership_id", memberships.map((membership) => String(membership.id)));
+
+    if (paymentsError) {
+      throw new Error(paymentsError.message);
+    }
+
+    paymentTotals = (payments ?? []).reduce((map, payment) => {
+      const membershipId = String(payment.client_membership_id);
+      map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+      return map;
+    }, new Map<string, number>());
+  }
+
+  let planNameMap = new Map<string, { name: string; price: number }>();
 
   if (planIds.length > 0) {
     const { data: plans, error: plansError } = await supabase
       .from("membership_plans")
-      .select("id, name")
+      .select("id, name, price")
       .in("id", planIds);
 
     if (plansError) {
       throw new Error(plansError.message);
     }
 
-    planNameMap = new Map((plans ?? []).map((plan) => [String(plan.id), String(plan.name)]));
+    planNameMap = new Map(
+      (plans ?? []).map((plan) => [
+        String(plan.id),
+        {
+          name: String(plan.name),
+          price: Number(plan.price),
+        },
+      ]),
+    );
   }
 
   return new Map(
@@ -92,9 +127,16 @@ async function getMembershipLabelMap(
       String(membership.id),
       {
         clientId: String(membership.client_id),
-        label: `${planNameMap.get(String(membership.membership_plan_id)) ?? "Plan"} · ${
+        label: `${planNameMap.get(String(membership.membership_plan_id))?.name ?? "Plan"} · ${
           String(membership.start_date)
         } to ${String(membership.end_date)} · ${String(membership.status)}`,
+        planPrice: planNameMap.get(String(membership.membership_plan_id))?.price ?? 0,
+        totalPaid: paymentTotals.get(String(membership.id)) ?? 0,
+        remainingBalance: Math.max(
+          0,
+          (planNameMap.get(String(membership.membership_plan_id))?.price ?? 0) -
+            (paymentTotals.get(String(membership.id)) ?? 0),
+        ),
       },
     ]),
   );
@@ -248,6 +290,9 @@ export async function listPaymentMembershipOptions(
         id,
         clientId: value.clientId,
         label: `${clientMap.get(value.clientId) ?? "Unknown client"} · ${value.label}`,
+        planPrice: value.planPrice,
+        totalPaid: value.totalPaid,
+        remainingBalance: value.remainingBalance,
       })),
       error: null,
     };
@@ -324,6 +369,22 @@ export async function createPaymentRecord(
       (total, payment) => total + Number(payment.amount),
       0,
     );
+
+    const remainingBalance = Math.max(0, membershipPlanPrice - existingTotalPaid);
+
+    if (remainingBalance <= 0) {
+      return {
+        data: null,
+        error: "This membership is already fully paid. No more linked payments can be registered.",
+      };
+    }
+
+    if (values.amount > remainingBalance) {
+      return {
+        data: null,
+        error: `Payment amount exceeds the remaining balance for this membership. Remaining balance: $${remainingBalance.toFixed(2)}.`,
+      };
+    }
   }
 
   const paymentInsert = await supabase

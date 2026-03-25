@@ -35,9 +35,14 @@ export function PaymentForm({
 }: PaymentFormProps) {
   const { state, formAction, pending } = usePaymentForm(action);
   const [selectedClientId, setSelectedClientId] = useState(defaultValues?.clientId ?? "");
+  const [selectedMembershipId, setSelectedMembershipId] = useState(
+    defaultValues?.clientMembershipId ?? "",
+  );
   const visibleMemberships = selectedClientId
     ? memberships.filter((membership) => membership.clientId === selectedClientId)
     : [];
+  const selectedMembership =
+    visibleMemberships.find((membership) => membership.id === selectedMembershipId) ?? null;
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
@@ -50,6 +55,7 @@ export function PaymentForm({
               value={selectedClientId}
               onChange={(event) => {
                 setSelectedClientId(event.target.value);
+                setSelectedMembershipId("");
               }}
               style={inputStyles}
             >
@@ -71,13 +77,10 @@ export function PaymentForm({
           <select
             name="clientMembershipId"
             key={selectedClientId || "no-client"}
-            defaultValue={
-              visibleMemberships.some(
-                (membership) => membership.id === defaultValues?.clientMembershipId,
-              )
-                ? defaultValues?.clientMembershipId
-                : ""
-            }
+            value={selectedMembershipId}
+            onChange={(event) => {
+              setSelectedMembershipId(event.target.value);
+            }}
             style={inputStyles}
           >
             <option value="">No membership linked</option>
@@ -89,6 +92,23 @@ export function PaymentForm({
           </select>
           {state.fieldErrors?.clientMembershipId ? (
             <FieldError message={state.fieldErrors.clientMembershipId} />
+          ) : null}
+          {selectedMembership ? (
+            <div
+              style={{
+                display: "grid",
+                gap: 4,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "var(--surface-alt)",
+                color: "var(--muted)",
+                fontSize: 14,
+              }}
+            >
+              <span>Plan price: ${selectedMembership.planPrice.toFixed(2)}</span>
+              <span>Total paid: ${selectedMembership.totalPaid.toFixed(2)}</span>
+              <span>Remaining balance: ${selectedMembership.remainingBalance.toFixed(2)}</span>
+            </div>
           ) : null}
         </label>
 
