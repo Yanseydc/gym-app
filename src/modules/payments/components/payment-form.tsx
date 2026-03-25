@@ -73,7 +73,7 @@ export function PaymentForm({
         ) : null}
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Membership (optional)</span>
+          <span style={labelStyles}>Membership</span>
           <select
             name="clientMembershipId"
             key={selectedClientId || "no-client"}
@@ -83,7 +83,7 @@ export function PaymentForm({
             }}
             style={inputStyles}
           >
-            <option value="">No membership linked</option>
+            <option value="">Select a membership</option>
             {visibleMemberships.map((membership) => (
               <option key={membership.id} value={membership.id}>
                 {membership.label}

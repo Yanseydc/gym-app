@@ -314,6 +314,13 @@ export async function createPaymentRecord(
   let membershipPlanPrice = 0;
   let existingTotalPaid = 0;
 
+  if (!membershipId) {
+    return {
+      data: null,
+      error: "A membership must be selected before registering this payment.",
+    };
+  }
+
   if (membershipId) {
     const { data: membership, error: membershipError } = await supabase
       .from("client_memberships")
@@ -407,10 +414,7 @@ export async function createPaymentRecord(
     return paymentInsert;
   }
 
-  if (
-    membershipId &&
-    membershipStatus !== "cancelled"
-  ) {
+  if (membershipStatus !== "cancelled") {
     const nextStatus = existingTotalPaid + values.amount >= membershipPlanPrice
       ? "active"
       : "partial";

@@ -28,7 +28,7 @@ function toPaymentFormValues(
 ): PaymentFormValues {
   return {
     clientId: values.clientId,
-    clientMembershipId: values.clientMembershipId ?? "",
+    clientMembershipId: values.clientMembershipId,
     amount: values.amount,
     paymentMethod: values.paymentMethod,
     paymentDate: values.paymentDate,

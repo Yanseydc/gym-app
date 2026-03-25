@@ -4,7 +4,7 @@ export const paymentMethodSchema = z.enum(["cash", "transfer", "card"]);
 
 export const paymentFormSchema = z.object({
   clientId: z.string().uuid("Select a valid client."),
-  clientMembershipId: z.string().uuid().optional().or(z.literal("")),
+  clientMembershipId: z.string().uuid("Select a valid membership."),
   amount: z.coerce.number().positive("Amount must be greater than 0.").max(999999),
   paymentMethod: paymentMethodSchema,
   paymentDate: z.string().min(1, "Payment date is required."),
