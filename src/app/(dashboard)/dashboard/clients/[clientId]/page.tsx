@@ -5,6 +5,11 @@ import { hasModuleAccess } from "@/lib/auth/permissions";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
+import { CheckInForm } from "@/modules/checkins/components/checkin-form";
+import { CheckInHistoryList } from "@/modules/checkins/components/checkin-history-list";
+import { CheckInStatusBadge } from "@/modules/checkins/components/checkin-status-badge";
+import { createCheckIn } from "@/modules/checkins/services/create-checkin";
+import { getClientCheckInsForPage } from "@/modules/checkins/services/checkin-service";
 import { ClientMembershipHistory } from "@/modules/memberships/components/client-membership-history";
 import { MembershipAssignmentForm } from "@/modules/memberships/components/membership-assignment-form";
 import { assignMembershipToClient } from "@/modules/memberships/services/assign-membership";
@@ -31,11 +36,13 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: membershipHistory, error: membershipHistoryError },
     { data: activePlans, error: activePlansError },
     { data: payments, error: paymentsError },
+    { data: checkIns, error: checkInsError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
     getActiveMembershipPlansForPage(),
     getClientPaymentsForPage(clientId),
+    getClientCheckInsForPage(clientId),
   ]);
 
   if (error) {
@@ -221,6 +228,81 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               }}
               lockClient
             />
+          </section>
+        </>
+      ) : null}
+
+      {user && hasModuleAccess(user.role, "checkins") ? (
+        <>
+          <section style={{ display: "grid", gap: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2 style={{ margin: "0 0 8px" }}>Check-in history</h2>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Reception log for this client.
+                </p>
+              </div>
+              {membershipHistory[0] ? (
+                <CheckInStatusBadge status={membershipHistory[0].status} />
+              ) : null}
+            </div>
+
+            {checkInsError ? (
+              <p
+                style={{
+                  margin: 0,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "#fff2f2",
+                  color: "#8a1c1c",
+                }}
+              >
+                {checkInsError}
+              </p>
+            ) : (
+              <CheckInHistoryList checkIns={checkIns} showClient={false} />
+            )}
+          </section>
+
+          <section
+            style={{
+              display: "grid",
+              gap: 16,
+              padding: 24,
+              borderRadius: 24,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+            }}
+          >
+            <div>
+              <h2 style={{ margin: "0 0 8px" }}>Manual check-in</h2>
+              <p style={{ margin: 0, color: "var(--muted)" }}>
+                A client can only enter if they currently have an active membership.
+              </p>
+            </div>
+
+            {membershipHistory.some((membership) => membership.status === "active") ? (
+              <CheckInForm action={createCheckIn.bind(null, client.id)} />
+            ) : (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 14,
+                  background: "#fff2f2",
+                  color: "#8a1c1c",
+                }}
+              >
+                This client does not currently have an active membership, so check-in is blocked.
+              </div>
+            )}
           </section>
         </>
       ) : null}

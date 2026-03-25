@@ -5,14 +5,15 @@ export const appModules = [
   "clients",
   "memberships",
   "payments",
+  "checkins",
   "classes",
 ] as const;
 
 export type AppModule = (typeof appModules)[number];
 
 export const rolePermissions: Record<Role, AppModule[]> = {
-  admin: ["dashboard", "clients", "memberships", "payments", "classes"],
-  staff: ["dashboard", "clients", "memberships", "payments"],
+  admin: ["dashboard", "clients", "memberships", "payments", "checkins", "classes"],
+  staff: ["dashboard", "clients", "memberships", "payments", "checkins"],
   coach: [],
   member: [],
 };
@@ -22,6 +23,7 @@ export const moduleRoutes: Record<AppModule, string[]> = {
   clients: ["/dashboard/clients", "/dashboard/members"],
   memberships: ["/dashboard/memberships"],
   payments: ["/dashboard/payments"],
+  checkins: ["/dashboard/checkins"],
   classes: ["/dashboard/classes"],
 };
 

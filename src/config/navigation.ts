@@ -11,5 +11,6 @@ export const appNavigation: NavigationItem[] = [
   { href: "/dashboard/clients", label: "Clients", module: "clients" },
   { href: "/dashboard/memberships", label: "Memberships", module: "memberships" },
   { href: "/dashboard/classes", label: "Classes", module: "classes" },
+  { href: "/dashboard/checkins", label: "Check-ins", module: "checkins" },
   { href: "/dashboard/payments", label: "Payments", module: "payments" },
 ];

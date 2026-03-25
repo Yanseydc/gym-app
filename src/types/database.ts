@@ -81,6 +81,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      check_ins: {
+        Row: {
+          checked_in_at: string;
+          client_id: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+        };
+        Insert: {
+          checked_in_at?: string;
+          client_id: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+        };
+        Update: {
+          checked_in_at?: string;
+          client_id?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
       membership_plans: {
         Row: {
           created_at: string;
