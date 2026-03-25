@@ -62,7 +62,7 @@ async function getMembershipLabelMap(
 
   const { data, error } = await supabase
     .from("client_memberships")
-    .select("id, client_id, start_date, end_date, membership_plan_id")
+    .select("id, client_id, start_date, end_date, membership_plan_id, status")
     .in("id", membershipIds);
 
   if (error) {
@@ -94,7 +94,7 @@ async function getMembershipLabelMap(
         clientId: String(membership.client_id),
         label: `${planNameMap.get(String(membership.membership_plan_id)) ?? "Plan"} · ${
           String(membership.start_date)
-        } to ${String(membership.end_date)}`,
+        } to ${String(membership.end_date)} · ${String(membership.status)}`,
       },
     ]),
   );
@@ -222,11 +222,21 @@ export async function listPaymentMembershipOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: PaymentMembershipOption[]; error: string | null }> {
   try {
+    const { data: membershipRows, error: membershipsError } = await supabase
+      .from("client_memberships")
+      .select("id")
+      .neq("status", "cancelled");
+
+    if (membershipsError) {
+      return {
+        data: [],
+        error: membershipsError.message,
+      };
+    }
+
     const membershipMap = await getMembershipLabelMap(
       supabase,
-      (
-        (await supabase.from("client_memberships").select("id")).data ?? []
-      ).map((membership) => String(membership.id)),
+      (membershipRows ?? []).map((membership) => String(membership.id)),
     );
     const clientMap = await getClientMap(
       supabase,

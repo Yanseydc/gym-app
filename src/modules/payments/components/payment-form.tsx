@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { CSSProperties } from "react";
 
 import { usePaymentForm } from "@/modules/payments/hooks/use-payment-form";
@@ -33,10 +34,10 @@ export function PaymentForm({
   lockClient = false,
 }: PaymentFormProps) {
   const { state, formAction, pending } = usePaymentForm(action);
-  const selectedClientId = defaultValues?.clientId ?? "";
+  const [selectedClientId, setSelectedClientId] = useState(defaultValues?.clientId ?? "");
   const visibleMemberships = selectedClientId
     ? memberships.filter((membership) => membership.clientId === selectedClientId)
-    : memberships;
+    : [];
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
@@ -46,10 +47,13 @@ export function PaymentForm({
             <span style={labelStyles}>Client</span>
             <select
               name="clientId"
-              defaultValue={selectedClientId}
+              value={selectedClientId}
+              onChange={(event) => {
+                setSelectedClientId(event.target.value);
+              }}
               style={inputStyles}
             >
-              <option value="" disabled>
+              <option value="">
                 Select a client
               </option>
               {clients.map((client) => (
@@ -66,7 +70,14 @@ export function PaymentForm({
           <span style={labelStyles}>Membership (optional)</span>
           <select
             name="clientMembershipId"
-            defaultValue={defaultValues?.clientMembershipId ?? ""}
+            key={selectedClientId || "no-client"}
+            defaultValue={
+              visibleMemberships.some(
+                (membership) => membership.id === defaultValues?.clientMembershipId,
+              )
+                ? defaultValues?.clientMembershipId
+                : ""
+            }
             style={inputStyles}
           >
             <option value="">No membership linked</option>
