@@ -48,78 +48,84 @@ async function getActiveClientsCount(supabase: AppSupabaseClient) {
 }
 
 async function getMembershipMetrics(supabase: AppSupabaseClient) {
-  const { data, error } = await supabase
-    .from("client_memberships")
-    .select("end_date, status");
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
   const today = toIsoDate(new Date());
   const soonDate = toIsoDate(addDays(new Date(), 7));
 
-  return (data ?? []).reduce(
-    (accumulator, membership) => {
-      const status = String(membership.status);
-      const endDate = String(membership.end_date);
+  const [
+    activeMembershipsResult,
+    expiredMembershipsResult,
+    expiringSoonResult,
+  ] = await Promise.all([
+    supabase
+      .from("client_memberships")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "cancelled")
+      .gte("end_date", today),
+    supabase
+      .from("client_memberships")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "cancelled")
+      .lt("end_date", today),
+    supabase
+      .from("client_memberships")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "cancelled")
+      .gte("end_date", today)
+      .lte("end_date", soonDate),
+  ]);
 
-      if (status === "cancelled") {
-        return accumulator;
-      }
+  if (activeMembershipsResult.error) {
+    throw new Error(activeMembershipsResult.error.message);
+  }
 
-      if (endDate < today) {
-        accumulator.expiredMemberships += 1;
-        return accumulator;
-      }
+  if (expiredMembershipsResult.error) {
+    throw new Error(expiredMembershipsResult.error.message);
+  }
 
-      accumulator.activeMemberships += 1;
+  if (expiringSoonResult.error) {
+    throw new Error(expiringSoonResult.error.message);
+  }
 
-      if (endDate <= soonDate) {
-        accumulator.membershipsExpiringSoon += 1;
-      }
-
-      return accumulator;
-    },
-    {
-      activeMemberships: 0,
-      expiredMemberships: 0,
-      membershipsExpiringSoon: 0,
-    },
-  );
+  return {
+    activeMemberships: activeMembershipsResult.count ?? 0,
+    expiredMemberships: expiredMembershipsResult.count ?? 0,
+    membershipsExpiringSoon: expiringSoonResult.count ?? 0,
+  };
 }
 
 async function getIncomeMetrics(supabase: AppSupabaseClient) {
   const monthStart = toIsoDate(getMonthStart(new Date()));
   const today = toIsoDate(new Date());
+  const [{ data: todayPayments, error: todayError }, { data: monthPayments, error: monthError }] =
+    await Promise.all([
+      supabase
+        .from("payments")
+        .select("amount")
+        .eq("payment_date", today),
+      supabase
+        .from("payments")
+        .select("amount")
+        .gte("payment_date", monthStart),
+    ]);
 
-  const { data, error } = await supabase
-    .from("payments")
-    .select("amount, payment_date")
-    .gte("payment_date", monthStart);
-
-  if (error) {
-    throw new Error(error.message);
+  if (todayError) {
+    throw new Error(todayError.message);
   }
 
-  return (data ?? []).reduce(
-    (accumulator, payment) => {
-      const amount = Number(payment.amount);
-      const paymentDate = String(payment.payment_date);
+  if (monthError) {
+    throw new Error(monthError.message);
+  }
 
-      accumulator.incomeThisMonth += amount;
-
-      if (paymentDate === today) {
-        accumulator.incomeToday += amount;
-      }
-
-      return accumulator;
-    },
-    {
-      incomeToday: 0,
-      incomeThisMonth: 0,
-    },
-  );
+  return {
+    incomeToday: (todayPayments ?? []).reduce(
+      (total, payment) => total + Number(payment.amount),
+      0,
+    ),
+    incomeThisMonth: (monthPayments ?? []).reduce(
+      (total, payment) => total + Number(payment.amount),
+      0,
+    ),
+  };
 }
 
 async function getRecentPayments(supabase: AppSupabaseClient): Promise<RecentDashboardPayment[]> {
