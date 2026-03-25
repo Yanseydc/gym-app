@@ -348,13 +348,16 @@ export async function createPaymentRecord(
 
   if (
     membershipId &&
-    membershipStatus !== "cancelled" &&
-    existingTotalPaid + values.amount >= membershipPlanPrice
+    membershipStatus !== "cancelled"
   ) {
+    const nextStatus = existingTotalPaid + values.amount >= membershipPlanPrice
+      ? "active"
+      : "partial";
+
     const membershipUpdate = await supabase
       .from("client_memberships")
       .update({
-        status: "active",
+        status: nextStatus,
         updated_at: new Date().toISOString(),
       })
       .eq("id", membershipId)

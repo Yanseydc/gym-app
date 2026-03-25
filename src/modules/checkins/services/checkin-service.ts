@@ -87,6 +87,8 @@ export async function searchClientsForCheckIn(
                 ? `${membership.planName} cancelled`
                 : membership.status === "pending_payment"
                   ? `${membership.planName} awaiting payment · $${membership.remainingBalance.toFixed(2)} remaining`
+                  : membership.status === "partial"
+                    ? `${membership.planName} partially paid · $${membership.remainingBalance.toFixed(2)} remaining`
                   : "No membership history";
 
         return {

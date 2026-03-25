@@ -7,6 +7,7 @@ export type ClientMembershipAccessStatus =
   | "expired"
   | "cancelled"
   | "pending_payment"
+  | "partial"
   | "none";
 
 export type CheckInClientResult = {

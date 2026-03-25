@@ -21,6 +21,8 @@ type MembershipAccessSummary = {
   remainingBalance: number;
 };
 
+const openMembershipStatuses: MembershipStatus[] = ["pending_payment", "partial", "active"];
+
 function toIsoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -36,8 +38,8 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
     return "cancelled";
   }
 
-  if (baseStatus === "pending_payment") {
-    return "pending_payment";
+  if (baseStatus === "pending_payment" || baseStatus === "partial") {
+    return baseStatus;
   }
 
   const today = toIsoDate(new Date());
@@ -54,8 +56,12 @@ function getEffectiveMembershipStatus(params: {
     return "cancelled";
   }
 
-  if (params.totalPaid < params.planPrice) {
+  if (params.totalPaid <= 0) {
     return "pending_payment";
+  }
+
+  if (params.totalPaid < params.planPrice) {
+    return "partial";
   }
 
   const today = toIsoDate(new Date());
@@ -329,6 +335,28 @@ export async function assignMembershipToClientRecord(
   clientId: string,
   values: ClientMembershipFormValues,
 ) {
+  const { data: membershipHistory, error: membershipHistoryError } =
+    await listClientMembershipHistory(supabase, clientId);
+
+  if (membershipHistoryError) {
+    return {
+      data: null,
+      error: membershipHistoryError,
+    };
+  }
+
+  const openMembership = membershipHistory.find((membership) =>
+    openMembershipStatuses.includes(membership.status),
+  );
+
+  if (openMembership) {
+    return {
+      data: null,
+      error:
+        "This client already has an open membership. Cancel, expire, or complete payment before assigning a new one.",
+    };
+  }
+
   const { data: planData, error: planError } = await supabase
     .from("membership_plans")
     .select("*")

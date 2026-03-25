@@ -54,7 +54,7 @@ export type Database = {
           membership_plan_id: string;
           notes: string | null;
           start_date: string;
-          status: "active" | "expired" | "cancelled" | "pending_payment";
+          status: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at: string;
         };
         Insert: {
@@ -65,7 +65,7 @@ export type Database = {
           membership_plan_id: string;
           notes?: string | null;
           start_date: string;
-          status?: "active" | "expired" | "cancelled" | "pending_payment";
+          status?: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at?: string;
         };
         Update: {
@@ -76,7 +76,7 @@ export type Database = {
           membership_plan_id?: string;
           notes?: string | null;
           start_date?: string;
-          status?: "active" | "expired" | "cancelled" | "pending_payment";
+          status?: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at?: string;
         };
         Relationships: [];
