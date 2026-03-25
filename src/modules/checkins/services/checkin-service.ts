@@ -216,6 +216,8 @@ export async function createCheckInRecord(
   clientId: string,
   values: CheckInFormValues,
 ) {
+  const now = new Date();
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const membershipLookup = await getClientMembershipLookup(supabase, [clientId]);
   const membership = membershipLookup.get(clientId);
 
@@ -226,16 +228,51 @@ export async function createCheckInRecord(
     };
   }
 
-  return supabase
+  const { data: recentCheckIn, error: recentCheckInError } = await supabase
+    .from("check_ins")
+    .select("id, checked_in_at")
+    .eq("client_id", clientId)
+    .gte("checked_in_at", fiveMinutesAgo)
+    .order("checked_in_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (recentCheckInError) {
+    return {
+      data: null,
+      error: recentCheckInError.message,
+    };
+  }
+
+  if (recentCheckIn) {
+    return {
+      data: null,
+      error: "This client already checked in within the last 5 minutes.",
+    };
+  }
+
+  const insertResult = await supabase
     .from("check_ins")
     .insert({
       client_id: clientId,
-      checked_in_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
+      checked_in_at: now.toISOString(),
+      created_at: now.toISOString(),
       notes: values.notes.trim() || null,
     })
     .select("id")
     .single();
+
+  if (
+    insertResult.error &&
+    /check_ins_no_duplicates_within_5_minutes/.test(insertResult.error.message)
+  ) {
+    return {
+      data: null,
+      error: "This client already checked in within the last 5 minutes.",
+    };
+  }
+
+  return insertResult;
 }
 
 export async function listClientCheckIns(
