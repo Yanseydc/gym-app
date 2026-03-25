@@ -265,11 +265,14 @@ export async function createPaymentRecord(
 ) {
   const membershipId = values.clientMembershipId || null;
   let membershipStatus: string | null = null;
+  let membershipPlanId: string | null = null;
+  let membershipPlanPrice = 0;
+  let existingTotalPaid = 0;
 
   if (membershipId) {
     const { data: membership, error: membershipError } = await supabase
       .from("client_memberships")
-      .select("id, client_id, status")
+      .select("id, client_id, status, membership_plan_id")
       .eq("id", membershipId)
       .maybeSingle();
 
@@ -288,6 +291,39 @@ export async function createPaymentRecord(
     }
 
     membershipStatus = String(membership.status);
+    membershipPlanId = String(membership.membership_plan_id);
+
+    const { data: plan, error: planError } = await supabase
+      .from("membership_plans")
+      .select("id, price")
+      .eq("id", membershipPlanId)
+      .maybeSingle();
+
+    if (planError) {
+      return {
+        data: null,
+        error: planError.message,
+      };
+    }
+
+    membershipPlanPrice = plan ? Number(plan.price) : 0;
+
+    const { data: previousPayments, error: previousPaymentsError } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("client_membership_id", membershipId);
+
+    if (previousPaymentsError) {
+      return {
+        data: null,
+        error: previousPaymentsError.message,
+      };
+    }
+
+    existingTotalPaid = (previousPayments ?? []).reduce(
+      (total, payment) => total + Number(payment.amount),
+      0,
+    );
   }
 
   const paymentInsert = await supabase
@@ -310,7 +346,11 @@ export async function createPaymentRecord(
     return paymentInsert;
   }
 
-  if (membershipId && membershipStatus === "pending_payment") {
+  if (
+    membershipId &&
+    membershipStatus !== "cancelled" &&
+    existingTotalPaid + values.amount >= membershipPlanPrice
+  ) {
     const membershipUpdate = await supabase
       .from("client_memberships")
       .update({

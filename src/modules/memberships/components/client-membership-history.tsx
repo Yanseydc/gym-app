@@ -66,6 +66,21 @@ export function ClientMembershipHistory({
             <MembershipStatusBadge status={membership.status} />
           </div>
 
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            }}
+          >
+            <DetailItem label="Plan price" value={`$${membership.planPrice.toFixed(2)}`} />
+            <DetailItem label="Total paid" value={`$${membership.totalPaid.toFixed(2)}`} />
+            <DetailItem
+              label="Remaining balance"
+              value={`$${membership.remainingBalance.toFixed(2)}`}
+            />
+          </div>
+
           {membership.notes ? (
             <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
               {membership.notes}
@@ -92,6 +107,21 @@ export function ClientMembershipHistory({
           ) : null}
         </article>
       ))}
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 14,
+        background: "rgba(239, 229, 212, 0.45)",
+      }}
+    >
+      <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }

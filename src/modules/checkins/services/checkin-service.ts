@@ -3,6 +3,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { Database } from "@/types/database";
+import { getClientMembershipAccessLookup } from "@/modules/memberships/services/membership-service";
 import type {
   CheckInClientResult,
   CheckInFormValues,
@@ -13,127 +14,11 @@ import type {
 
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
 
-function toIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function getMembershipAccessStatus(
-  memberships: Array<{
-    id: string;
-    membershipPlanName: string;
-    endDate: string;
-    status: string;
-  }>,
-): {
-  status: ClientMembershipAccessStatus;
-  label: string;
-  activeMembershipId: string | null;
-} {
-  if (memberships.length === 0) {
-    return {
-      status: "none",
-      label: "No membership history",
-      activeMembershipId: null,
-    };
-  }
-
-  const today = toIsoDate(new Date());
-  const sorted = [...memberships].sort((left, right) => right.endDate.localeCompare(left.endDate));
-  const activeMembership = sorted.find(
-    (membership) => membership.status === "active" && membership.endDate >= today,
-  );
-
-  if (activeMembership) {
-    return {
-      status: "active",
-      label: `${activeMembership.membershipPlanName} active until ${activeMembership.endDate}`,
-      activeMembershipId: activeMembership.id,
-    };
-  }
-
-  const latest = sorted[0];
-
-  if (latest.status === "cancelled") {
-    return {
-      status: "cancelled",
-      label: `${latest.membershipPlanName} cancelled`,
-      activeMembershipId: null,
-    };
-  }
-
-  if (latest.status === "pending_payment") {
-    return {
-      status: "pending_payment",
-      label: `${latest.membershipPlanName} awaiting payment`,
-      activeMembershipId: null,
-    };
-  }
-
-  return {
-    status: "expired",
-    label: `${latest.membershipPlanName} expired on ${latest.endDate}`,
-    activeMembershipId: null,
-  };
-}
-
 async function getClientMembershipLookup(
   supabase: AppSupabaseClient,
   clientIds: string[],
 ) {
-  if (clientIds.length === 0) {
-    return new Map<string, ReturnType<typeof getMembershipAccessStatus>>();
-  }
-
-  const { data: memberships, error: membershipsError } = await supabase
-    .from("client_memberships")
-    .select("id, client_id, membership_plan_id, end_date, status")
-    .in("client_id", clientIds);
-
-  if (membershipsError) {
-    throw new Error(membershipsError.message);
-  }
-
-  const records = memberships ?? [];
-  const planIds = [...new Set(records.map((membership) => String(membership.membership_plan_id)))];
-
-  let planMap = new Map<string, string>();
-
-  if (planIds.length > 0) {
-    const { data: plans, error: plansError } = await supabase
-      .from("membership_plans")
-      .select("id, name")
-      .in("id", planIds);
-
-    if (plansError) {
-      throw new Error(plansError.message);
-    }
-
-    planMap = new Map((plans ?? []).map((plan) => [String(plan.id), String(plan.name)]));
-  }
-
-  const grouped = new Map<
-    string,
-    Array<{ id: string; membershipPlanName: string; endDate: string; status: string }>
-  >();
-
-  records.forEach((membership) => {
-    const clientId = String(membership.client_id);
-    const list = grouped.get(clientId) ?? [];
-    list.push({
-      id: String(membership.id),
-      membershipPlanName: planMap.get(String(membership.membership_plan_id)) ?? "Plan",
-      endDate: String(membership.end_date),
-      status: String(membership.status),
-    });
-    grouped.set(clientId, list);
-  });
-
-  return new Map(
-    clientIds.map((clientId) => [
-      clientId,
-      getMembershipAccessStatus(grouped.get(clientId) ?? []),
-    ]),
-  );
+  return getClientMembershipAccessLookup(supabase, clientIds);
 }
 
 function mapCheckIn(
@@ -186,9 +71,23 @@ export async function searchClientsForCheckIn(
       data: clients.map((client) => {
         const membership = membershipLookup.get(String(client.id)) ?? {
           status: "none" as const,
-          label: "No membership history",
-          activeMembershipId: null,
+          planName: "No membership history",
+          endDate: null,
+          membershipId: null,
+          totalPaid: 0,
+          remainingBalance: 0,
         };
+
+        const membershipLabel =
+          membership.status === "active"
+            ? `${membership.planName} active until ${membership.endDate}`
+            : membership.status === "expired"
+              ? `${membership.planName} expired on ${membership.endDate}`
+              : membership.status === "cancelled"
+                ? `${membership.planName} cancelled`
+                : membership.status === "pending_payment"
+                  ? `${membership.planName} awaiting payment · $${membership.remainingBalance.toFixed(2)} remaining`
+                  : "No membership history";
 
         return {
           id: String(client.id),
@@ -197,8 +96,8 @@ export async function searchClientsForCheckIn(
           fullName: `${String(client.first_name)} ${String(client.last_name)}`,
           status: client.status,
           membershipStatus: membership.status,
-          membershipLabel: membership.label,
-          activeMembershipId: membership.activeMembershipId,
+          membershipLabel,
+          activeMembershipId: membership.status === "active" ? membership.membershipId : null,
         };
       }),
       error: null,

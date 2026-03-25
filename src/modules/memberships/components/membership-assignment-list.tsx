@@ -8,6 +8,9 @@ type MembershipAssignmentListProps = {
     id: string;
     clientId: string;
     clientName: string;
+    planPrice: number;
+    totalPaid: number;
+    remainingBalance: number;
     startDate: string;
     endDate: string;
     status: MembershipStatus;
@@ -56,6 +59,10 @@ export function MembershipAssignmentList({
             </Link>
             <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
               {assignment.startDate} to {assignment.endDate}
+            </p>
+            <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
+              ${assignment.totalPaid.toFixed(2)} paid of ${assignment.planPrice.toFixed(2)} ·
+              ${assignment.remainingBalance.toFixed(2)} remaining
             </p>
           </div>
           <MembershipStatusBadge status={assignment.status} />

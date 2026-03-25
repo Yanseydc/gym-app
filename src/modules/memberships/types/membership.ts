@@ -29,9 +29,12 @@ export type ClientMembership = {
   clientId: string;
   membershipPlanId: string;
   planName: string;
+  planPrice: number;
   startDate: string;
   endDate: string;
   status: MembershipStatus;
+  totalPaid: number;
+  remainingBalance: number;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

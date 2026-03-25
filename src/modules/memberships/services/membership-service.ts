@@ -12,6 +12,15 @@ import type {
   MembershipStatus,
 } from "@/modules/memberships/types";
 
+type MembershipAccessSummary = {
+  membershipId: string | null;
+  planName: string;
+  endDate: string | null;
+  status: MembershipStatus | "none";
+  totalPaid: number;
+  remainingBalance: number;
+};
+
 function toIsoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -33,6 +42,24 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
 
   const today = toIsoDate(new Date());
   return endDate < today ? "expired" : "active";
+}
+
+function getEffectiveMembershipStatus(params: {
+  baseStatus: MembershipStatus;
+  endDate: string;
+  totalPaid: number;
+  planPrice: number;
+}): MembershipStatus {
+  if (params.baseStatus === "cancelled") {
+    return "cancelled";
+  }
+
+  if (params.totalPaid < params.planPrice) {
+    return "pending_payment";
+  }
+
+  const today = toIsoDate(new Date());
+  return params.endDate < today ? "expired" : "active";
 }
 
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
@@ -62,19 +89,146 @@ function normalizeMembershipPlanPayload(values: MembershipPlanFormValues) {
 function mapClientMembership(
   record: ClientMembershipRecord,
   planName: string,
+  planPrice: number,
+  totalPaid: number,
 ): ClientMembership {
+  const remainingBalance = Math.max(0, planPrice - totalPaid);
+  const effectiveStatus = getEffectiveMembershipStatus({
+    baseStatus: record.status,
+    endDate: record.end_date,
+    totalPaid,
+    planPrice,
+  });
+
   return {
     id: record.id,
     clientId: record.client_id,
     membershipPlanId: record.membership_plan_id,
     planName,
+    planPrice,
     startDate: record.start_date,
     endDate: record.end_date,
-    status: resolveMembershipStatus(record.end_date, record.status),
+    status: effectiveStatus,
+    totalPaid,
+    remainingBalance,
     notes: record.notes,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
+}
+
+export async function getClientMembershipAccessLookup(
+  supabase: AppSupabaseClient,
+  clientIds: string[],
+): Promise<Map<string, MembershipAccessSummary>> {
+  if (clientIds.length === 0) {
+    return new Map();
+  }
+
+  const { data, error } = await supabase
+    .from("client_memberships")
+    .select("*")
+    .in("client_id", clientIds)
+    .order("start_date", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const records = (data ?? []) as ClientMembershipRecord[];
+  const planIds = [...new Set(records.map((record) => record.membership_plan_id))];
+  const membershipIds = records.map((record) => record.id);
+
+  let planMap = new Map<string, { name: string; price: number }>();
+
+  if (planIds.length > 0) {
+    const { data: plans, error: plansError } = await supabase
+      .from("membership_plans")
+      .select("id, name, price")
+      .in("id", planIds);
+
+    if (plansError) {
+      throw new Error(plansError.message);
+    }
+
+    planMap = new Map(
+      (plans ?? []).map((plan) => [
+        String(plan.id),
+        {
+          name: String(plan.name),
+          price: Number(plan.price),
+        },
+      ]),
+    );
+  }
+
+  let paymentTotals = new Map<string, number>();
+
+  if (membershipIds.length > 0) {
+    const { data: payments, error: paymentsError } = await supabase
+      .from("payments")
+      .select("client_membership_id, amount")
+      .in("client_membership_id", membershipIds);
+
+    if (paymentsError) {
+      throw new Error(paymentsError.message);
+    }
+
+    paymentTotals = (payments ?? []).reduce((map, payment) => {
+      const membershipId = String(payment.client_membership_id);
+      map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+      return map;
+    }, new Map<string, number>());
+  }
+
+  const grouped = new Map<string, ClientMembership[]>();
+
+  records.forEach((record) => {
+    const clientId = String(record.client_id);
+    const list = grouped.get(clientId) ?? [];
+    list.push(
+      mapClientMembership(
+        record,
+        planMap.get(record.membership_plan_id)?.name ?? "Unknown plan",
+        planMap.get(record.membership_plan_id)?.price ?? 0,
+        paymentTotals.get(record.id) ?? 0,
+      ),
+    );
+    grouped.set(clientId, list);
+  });
+
+  return new Map<string, MembershipAccessSummary>(
+    clientIds.map((clientId) => {
+      const memberships = grouped.get(clientId) ?? [];
+      const latestMembership = memberships[0];
+
+      if (!latestMembership) {
+        return [
+          clientId,
+          {
+            membershipId: null,
+            planName: "No membership history",
+            endDate: null,
+            status: "none" as const,
+            totalPaid: 0,
+            remainingBalance: 0,
+          },
+        ];
+      }
+
+      return [
+        clientId,
+        {
+          membershipId: latestMembership.id,
+          planName: latestMembership.planName,
+          endDate: latestMembership.endDate,
+          status: latestMembership.status,
+          totalPaid: latestMembership.totalPaid,
+          remainingBalance: latestMembership.remainingBalance,
+        },
+      ];
+    }),
+  );
 }
 
 export async function listMembershipPlans(
@@ -249,35 +403,72 @@ export async function listClientMembershipHistory(
     };
   }
 
-  const records = (data ?? []) as ClientMembershipRecord[];
-  const planIds = [...new Set(records.map((record) => record.membership_plan_id))];
+  try {
+    const records = (data ?? []) as ClientMembershipRecord[];
+    const planIds = [...new Set(records.map((record) => record.membership_plan_id))];
+    let planMap = new Map<string, { name: string; price: number }>();
 
-  let planNameMap = new Map<string, string>();
+    if (planIds.length > 0) {
+      const { data: plans, error: plansError } = await supabase
+        .from("membership_plans")
+        .select("id, name, price")
+        .in("id", planIds);
 
-  if (planIds.length > 0) {
-    const { data: plans, error: plansError } = await supabase
-      .from("membership_plans")
-      .select("id, name")
-      .in("id", planIds);
+      if (plansError) {
+        return {
+          data: [],
+          error: plansError.message,
+        };
+      }
 
-    if (plansError) {
-      return {
-        data: [],
-        error: plansError.message,
-      };
+      planMap = new Map(
+        (plans ?? []).map((plan) => [
+          String(plan.id),
+          { name: String(plan.name), price: Number(plan.price) },
+        ]),
+      );
     }
 
-    planNameMap = new Map(
-      (plans ?? []).map((plan) => [String(plan.id), String(plan.name)]),
-    );
-  }
+    const membershipIds = records.map((record) => record.id);
+    let paymentTotals = new Map<string, number>();
 
-  return {
-    data: records.map((record) =>
-      mapClientMembership(record, planNameMap.get(record.membership_plan_id) ?? "Unknown plan"),
-    ),
-    error: null,
-  };
+    if (membershipIds.length > 0) {
+      const { data: payments, error: paymentsError } = await supabase
+        .from("payments")
+        .select("client_membership_id, amount")
+        .in("client_membership_id", membershipIds);
+
+      if (paymentsError) {
+        return {
+          data: [],
+          error: paymentsError.message,
+        };
+      }
+
+      paymentTotals = (payments ?? []).reduce((map, payment) => {
+        const membershipId = String(payment.client_membership_id);
+        map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+        return map;
+      }, new Map<string, number>());
+    }
+
+    return {
+      data: records.map((record) =>
+        mapClientMembership(
+          record,
+          planMap.get(record.membership_plan_id)?.name ?? "Unknown plan",
+          planMap.get(record.membership_plan_id)?.price ?? 0,
+          paymentTotals.get(record.id) ?? 0,
+        ),
+      ),
+      error: null,
+    };
+  } catch (lookupError) {
+    return {
+      data: [],
+      error: lookupError instanceof Error ? lookupError.message : "Unable to load memberships.",
+    };
+  }
 }
 
 export async function listMembershipAssignmentsByPlanId(
@@ -289,6 +480,9 @@ export async function listMembershipAssignmentsByPlanId(
       id: string;
       clientId: string;
       clientName: string;
+      planPrice: number;
+      totalPaid: number;
+      remainingBalance: number;
       startDate: string;
       endDate: string;
       status: MembershipStatus;
@@ -335,14 +529,60 @@ export async function listMembershipAssignmentsByPlanId(
     );
   }
 
+  const membershipIds = memberships.map((membership) => membership.id);
+  let paymentTotals = new Map<string, number>();
+
+  if (membershipIds.length > 0) {
+    const { data: payments, error: paymentsError } = await supabase
+      .from("payments")
+      .select("client_membership_id, amount")
+      .in("client_membership_id", membershipIds);
+
+    if (paymentsError) {
+      return {
+        data: [],
+        error: paymentsError.message,
+      };
+    }
+
+    paymentTotals = (payments ?? []).reduce((map, payment) => {
+      const membershipId = String(payment.client_membership_id);
+      map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+      return map;
+    }, new Map<string, number>());
+  }
+
+  const { data: planData, error: planError } = await supabase
+    .from("membership_plans")
+    .select("id, price")
+    .eq("id", membershipId)
+    .maybeSingle();
+
+  if (planError) {
+    return {
+      data: [],
+      error: planError.message,
+    };
+  }
+
+  const planPrice = planData ? Number(planData.price) : 0;
+
   return {
     data: memberships.map((membership) => ({
       id: membership.id,
       clientId: membership.client_id,
       clientName: clientMap.get(membership.client_id) ?? "Unknown client",
+      planPrice,
+      totalPaid: paymentTotals.get(membership.id) ?? 0,
+      remainingBalance: Math.max(0, planPrice - (paymentTotals.get(membership.id) ?? 0)),
       startDate: membership.start_date,
       endDate: membership.end_date,
-      status: resolveMembershipStatus(membership.end_date, membership.status),
+      status: getEffectiveMembershipStatus({
+        baseStatus: membership.status,
+        endDate: membership.end_date,
+        totalPaid: paymentTotals.get(membership.id) ?? 0,
+        planPrice,
+      }),
     })),
     error: null,
   };

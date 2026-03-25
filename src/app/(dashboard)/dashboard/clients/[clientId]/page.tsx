@@ -219,7 +219,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               memberships={membershipHistory.map((membership) => ({
                 id: membership.id,
                 clientId: membership.clientId,
-                label: `${membership.planName} · ${membership.startDate} to ${membership.endDate}`,
+                label: `${membership.planName} · ${membership.startDate} to ${membership.endDate} · $${membership.remainingBalance.toFixed(2)} remaining`,
               }))}
               submitLabel="Register payment"
               defaultValues={{
