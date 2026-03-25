@@ -4,6 +4,8 @@ export function MembershipStatusBadge({ status }: { status: MembershipStatus }) 
   const palette =
     status === "active"
       ? { background: "#dff4e8", color: "#1f6b42" }
+      : status === "pending_payment"
+        ? { background: "#fff0d6", color: "#9a5a00" }
       : status === "expired"
         ? { background: "#efe3d3", color: "#7a5a2f" }
         : { background: "#f8dddd", color: "#8a1c1c" };

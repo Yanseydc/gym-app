@@ -254,11 +254,12 @@ export async function createPaymentRecord(
   values: PaymentFormValues,
 ) {
   const membershipId = values.clientMembershipId || null;
+  let membershipStatus: string | null = null;
 
   if (membershipId) {
     const { data: membership, error: membershipError } = await supabase
       .from("client_memberships")
-      .select("id, client_id")
+      .select("id, client_id, status")
       .eq("id", membershipId)
       .maybeSingle();
 
@@ -275,9 +276,11 @@ export async function createPaymentRecord(
         error: "Selected membership does not belong to the selected client.",
       };
     }
+
+    membershipStatus = String(membership.status);
   }
 
-  return supabase
+  const paymentInsert = await supabase
     .from("payments")
     .insert({
       client_id: values.clientId,
@@ -292,6 +295,31 @@ export async function createPaymentRecord(
     })
     .select("id")
     .single();
+
+  if (paymentInsert.error || !paymentInsert.data) {
+    return paymentInsert;
+  }
+
+  if (membershipId && membershipStatus === "pending_payment") {
+    const membershipUpdate = await supabase
+      .from("client_memberships")
+      .update({
+        status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", membershipId)
+      .select("id")
+      .single();
+
+    if (membershipUpdate.error) {
+      return {
+        data: paymentInsert.data,
+        error: membershipUpdate.error.message,
+      };
+    }
+  }
+
+  return paymentInsert;
 }
 
 export const getPaymentsForPage = cache(async () => {

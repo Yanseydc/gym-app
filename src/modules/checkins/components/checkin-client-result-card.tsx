@@ -52,6 +52,8 @@ export function CheckInClientResultCard({
         >
           {client.membershipStatus === "expired"
             ? "This client has an expired membership. Entry should not be allowed."
+            : client.membershipStatus === "pending_payment"
+              ? "This client has a pending payment membership. Entry should not be allowed."
             : client.membershipStatus === "cancelled"
               ? "This client has a cancelled membership. Entry should not be allowed."
               : "This client does not have an active membership."}

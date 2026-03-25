@@ -40,7 +40,7 @@ function getMembershipAccessStatus(
   const today = toIsoDate(new Date());
   const sorted = [...memberships].sort((left, right) => right.endDate.localeCompare(left.endDate));
   const activeMembership = sorted.find(
-    (membership) => membership.status !== "cancelled" && membership.endDate >= today,
+    (membership) => membership.status === "active" && membership.endDate >= today,
   );
 
   if (activeMembership) {
@@ -57,6 +57,14 @@ function getMembershipAccessStatus(
     return {
       status: "cancelled",
       label: `${latest.membershipPlanName} cancelled`,
+      activeMembershipId: null,
+    };
+  }
+
+  if (latest.status === "pending_payment") {
+    return {
+      status: "pending_payment",
+      label: `${latest.membershipPlanName} awaiting payment`,
       activeMembershipId: null,
     };
   }

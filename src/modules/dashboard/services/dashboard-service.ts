@@ -59,17 +59,17 @@ async function getMembershipMetrics(supabase: AppSupabaseClient) {
     supabase
       .from("client_memberships")
       .select("*", { count: "exact", head: true })
-      .neq("status", "cancelled")
+      .eq("status", "active")
       .gte("end_date", today),
     supabase
       .from("client_memberships")
       .select("*", { count: "exact", head: true })
-      .neq("status", "cancelled")
+      .eq("status", "active")
       .lt("end_date", today),
     supabase
       .from("client_memberships")
       .select("*", { count: "exact", head: true })
-      .neq("status", "cancelled")
+      .eq("status", "active")
       .gte("end_date", today)
       .lte("end_date", soonDate),
   ]);

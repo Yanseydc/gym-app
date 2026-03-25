@@ -63,6 +63,7 @@ export async function createPayment(
   }
 
   revalidatePath("/dashboard/payments");
+  revalidatePath("/dashboard/memberships");
   revalidatePath(`/dashboard/clients/${parsed.data.clientId}`);
 
   if (presetClientId) {

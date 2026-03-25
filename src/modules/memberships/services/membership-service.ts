@@ -27,6 +27,10 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
     return "cancelled";
   }
 
+  if (baseStatus === "pending_payment") {
+    return "pending_payment";
+  }
+
   const today = toIsoDate(new Date());
   return endDate < today ? "expired" : "active";
 }
@@ -195,7 +199,7 @@ export async function assignMembershipToClientRecord(
   }
 
   const endDate = addDays(values.startDate, plan.duration_in_days);
-  const status = resolveMembershipStatus(endDate, "active");
+  const status: MembershipStatus = "pending_payment";
 
   return supabase
     .from("client_memberships")
