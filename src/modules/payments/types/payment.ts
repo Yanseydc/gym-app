@@ -45,3 +45,13 @@ export type PaymentMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof PaymentFormValues, string>>;
 };
+
+export type PaymentEditFormValues = {
+  concept: string;
+  notes: string;
+};
+
+export type PaymentEditMutationState = {
+  error?: string;
+  fieldErrors?: Partial<Record<keyof PaymentEditFormValues, string>>;
+};

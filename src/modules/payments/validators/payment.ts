@@ -11,3 +11,8 @@ export const paymentFormSchema = z.object({
   concept: z.string().trim().min(1, "Concept is required.").max(160),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });
+
+export const paymentEditFormSchema = z.object({
+  concept: z.string().trim().min(1, "Concept is required.").max(160),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+});

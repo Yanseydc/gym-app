@@ -5,6 +5,7 @@ import type { AppSupabaseClient } from "@/types/supabase";
 import type {
   Payment,
   PaymentClientOption,
+  PaymentEditFormValues,
   PaymentFormValues,
   PaymentMembershipOption,
   PaymentRecord,
@@ -440,9 +441,81 @@ export async function createPaymentRecord(
   return paymentInsert;
 }
 
+export async function getPaymentById(
+  supabase: AppSupabaseClient,
+  paymentId: string,
+): Promise<{ data: Payment | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("id", paymentId)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      data: null,
+      error: error.message,
+    };
+  }
+
+  if (!data) {
+    return {
+      data: null,
+      error: null,
+    };
+  }
+
+  try {
+    const record = data as PaymentRecord;
+    const clientMap = await getClientMap(supabase, [record.client_id]);
+    const membershipMap = await getMembershipLabelMap(
+      supabase,
+      record.client_membership_id ? [record.client_membership_id] : [],
+    );
+
+    return {
+      data: mapPayment(
+        record,
+        clientMap.get(record.client_id) ?? "Unknown client",
+        record.client_membership_id
+          ? membershipMap.get(record.client_membership_id)?.label ?? null
+          : null,
+      ),
+      error: null,
+    };
+  } catch (mappingError) {
+    return {
+      data: null,
+      error: mappingError instanceof Error ? mappingError.message : "Unable to load payment.",
+    };
+  }
+}
+
+export async function updatePaymentRecord(
+  supabase: AppSupabaseClient,
+  paymentId: string,
+  values: PaymentEditFormValues,
+) {
+  return supabase
+    .from("payments")
+    .update({
+      concept: values.concept.trim(),
+      notes: values.notes.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", paymentId)
+    .select("id, client_id")
+    .single();
+}
+
 export const getPaymentsForPage = cache(async () => {
   const supabase = await createClient();
   return listPayments(supabase);
+});
+
+export const getPaymentForPage = cache(async (paymentId: string) => {
+  const supabase = await createClient();
+  return getPaymentById(supabase, paymentId);
 });
 
 export const getClientPaymentsForPage = cache(async (clientId: string) => {

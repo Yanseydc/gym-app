@@ -1,6 +1,8 @@
 export type {
   Payment,
   PaymentClientOption,
+  PaymentEditFormValues,
+  PaymentEditMutationState,
   PaymentFormValues,
   PaymentMembershipOption,
   PaymentMethod,

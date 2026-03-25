@@ -76,6 +76,12 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
             <span>Membership: {payment.membershipLabel ?? "Not linked"}</span>
           </div>
 
+          <div>
+            <Link href={`/dashboard/payments/${payment.id}/edit`} style={{ fontWeight: 700 }}>
+              Edit payment
+            </Link>
+          </div>
+
           {payment.notes ? (
             <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
               {payment.notes}
