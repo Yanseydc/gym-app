@@ -7,4 +7,5 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 export type AppSupabaseClient = {
   auth: Pick<TypedSupabaseClient["auth"], "getUser" | "signInWithPassword">;
   from: TypedSupabaseClient["from"];
+  storage: TypedSupabaseClient["storage"];
 };

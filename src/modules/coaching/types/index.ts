@@ -13,6 +13,16 @@ export type {
   ClientOnboardingRecord,
 } from "@/modules/coaching/types/onboarding";
 export type {
+  ProgressCheckIn,
+  ProgressCheckInFormValues,
+  ProgressCheckInMutationState,
+  ProgressCheckInPhoto,
+  ProgressCheckInPhotoRecord,
+  ProgressCheckInRecord,
+  ProgressCheckInSummary,
+  ProgressPhotoType,
+} from "@/modules/coaching/types/progress-checkin";
+export type {
   ClientRoutine,
   ClientRoutineDay,
   ClientRoutineDayRecord,

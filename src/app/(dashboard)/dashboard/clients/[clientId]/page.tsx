@@ -6,7 +6,9 @@ import { ClientDetailCard } from "@/modules/clients/components/client-detail-car
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 import { ClientOnboardingCard } from "@/modules/coaching/components/onboarding-card";
+import { ProgressCheckInSection } from "@/modules/coaching/components/progress-checkin-card";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
+import { getProgressCheckInsForPage } from "@/modules/coaching/services/progress-checkin-service";
 import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 import { CheckInForm } from "@/modules/checkins/components/checkin-form";
@@ -43,6 +45,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: checkIns, error: checkInsError },
     { data: routines, error: routinesError },
     { data: onboarding, error: onboardingError },
+    { data: progressCheckIns, error: progressCheckInsError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
@@ -51,6 +54,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     getClientCheckInsForPage(clientId),
     getClientRoutineSummariesForPage(clientId),
     getOnboardingForPage(clientId),
+    getProgressCheckInsForPage(clientId),
   ]);
 
   if (error) {
@@ -104,6 +108,24 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             <ClientOnboardingCard clientId={client.id} onboarding={onboarding} />
           )}
         </section>
+      ) : null}
+
+      {user && hasModuleAccess(user.role, "coaching") ? (
+        progressCheckInsError ? (
+          <p
+            style={{
+              margin: 0,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "#fff2f2",
+              color: "#8a1c1c",
+            }}
+          >
+            {progressCheckInsError}
+          </p>
+        ) : (
+          <ProgressCheckInSection clientId={client.id} checkIns={progressCheckIns} />
+        )
       ) : null}
 
       {user && hasModuleAccess(user.role, "coaching") ? (

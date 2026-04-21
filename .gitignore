@@ -1,5 +1,6 @@
 .next
 .idea/
+tsconfig.tsbuildinfo
 node_modules
 .env
 .env.local
