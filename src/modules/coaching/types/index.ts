@@ -13,6 +13,12 @@ export type {
   ClientOnboardingRecord,
 } from "@/modules/coaching/types/onboarding";
 export type {
+  ClientPortalAccess,
+  PortalAccessFormValues,
+  PortalAccessMutationState,
+  PortalLinkedProfile,
+} from "@/modules/coaching/types/portal-access";
+export type {
   ProgressCheckIn,
   ProgressCheckInFormValues,
   ProgressCheckInMutationState,

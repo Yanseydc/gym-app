@@ -513,6 +513,30 @@ export type Database = {
         };
         Returns: boolean;
       };
+      lookup_portal_profile_by_email: {
+        Args: {
+          target_email: string;
+        };
+        Returns: {
+          email: string;
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          role: "admin" | "staff" | "coach" | "member";
+        }[];
+      };
+      lookup_portal_profile_by_id: {
+        Args: {
+          target_profile_id: string;
+        };
+        Returns: {
+          email: string;
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          role: "admin" | "staff" | "coach" | "member";
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -6,8 +6,10 @@ import { ClientDetailCard } from "@/modules/clients/components/client-detail-car
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 import { ClientOnboardingCard } from "@/modules/coaching/components/onboarding-card";
+import { ClientPortalAccessCard } from "@/modules/coaching/components/portal-access-card";
 import { ProgressCheckInSection } from "@/modules/coaching/components/progress-checkin-card";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
+import { getPortalAccessForPage } from "@/modules/coaching/services/portal-access-service";
 import { getProgressCheckInsForPage } from "@/modules/coaching/services/progress-checkin-service";
 import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
@@ -46,6 +48,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: routines, error: routinesError },
     { data: onboarding, error: onboardingError },
     { data: progressCheckIns, error: progressCheckInsError },
+    { data: portalAccess, error: portalAccessError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
@@ -55,6 +58,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     getClientRoutineSummariesForPage(clientId),
     getOnboardingForPage(clientId),
     getProgressCheckInsForPage(clientId),
+    getPortalAccessForPage(clientId),
   ]);
 
   if (error) {
@@ -89,6 +93,26 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       </Link>
 
       <ClientDetailCard client={client} />
+
+      {user && hasModuleAccess(user.role, "coaching") ? (
+        <section style={{ display: "grid", gap: 16 }}>
+          {portalAccessError ? (
+            <p
+              style={{
+                margin: 0,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "#fff2f2",
+                color: "#8a1c1c",
+              }}
+            >
+              {portalAccessError}
+            </p>
+          ) : (
+            <ClientPortalAccessCard clientId={client.id} portalAccess={portalAccess} />
+          )}
+        </section>
+      ) : null}
 
       {user && hasModuleAccess(user.role, "coaching") ? (
         <section style={{ display: "grid", gap: 16 }}>
