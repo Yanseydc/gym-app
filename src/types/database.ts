@@ -45,6 +45,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      client_checkin_photos: {
+        Row: {
+          client_checkin_id: string;
+          created_at: string;
+          id: string;
+          photo_type: "front" | "side" | "back";
+          storage_path: string;
+        };
+        Insert: {
+          client_checkin_id: string;
+          created_at?: string;
+          id?: string;
+          photo_type: "front" | "side" | "back";
+          storage_path: string;
+        };
+        Update: {
+          client_checkin_id?: string;
+          created_at?: string;
+          id?: string;
+          photo_type?: "front" | "side" | "back";
+          storage_path?: string;
+        };
+        Relationships: [];
+      };
+      client_checkins: {
+        Row: {
+          checkin_date: string;
+          client_id: string;
+          client_notes: string | null;
+          coach_notes: string | null;
+          created_at: string;
+          id: string;
+          updated_at: string;
+          weight_kg: number | null;
+        };
+        Insert: {
+          checkin_date?: string;
+          client_id: string;
+          client_notes?: string | null;
+          coach_notes?: string | null;
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+          weight_kg?: number | null;
+        };
+        Update: {
+          checkin_date?: string;
+          client_id?: string;
+          client_notes?: string | null;
+          coach_notes?: string | null;
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+          weight_kg?: number | null;
+        };
+        Relationships: [];
+      };
       client_memberships: {
         Row: {
           client_id: string;
@@ -81,6 +138,180 @@ export type Database = {
         };
         Relationships: [];
       };
+      client_onboarding_responses: {
+        Row: {
+          available_days: number;
+          available_schedule: string;
+          client_id: string;
+          created_at: string;
+          experience_level: "beginner" | "intermediate" | "advanced";
+          goal: string;
+          height_cm: number;
+          id: string;
+          injuries_notes: string | null;
+          notes: string | null;
+          updated_at: string;
+          weight_kg: number;
+        };
+        Insert: {
+          available_days: number;
+          available_schedule: string;
+          client_id: string;
+          created_at?: string;
+          experience_level: "beginner" | "intermediate" | "advanced";
+          goal: string;
+          height_cm: number;
+          id?: string;
+          injuries_notes?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+          weight_kg: number;
+        };
+        Update: {
+          available_days?: number;
+          available_schedule?: string;
+          client_id?: string;
+          created_at?: string;
+          experience_level?: "beginner" | "intermediate" | "advanced";
+          goal?: string;
+          height_cm?: number;
+          id?: string;
+          injuries_notes?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+          weight_kg?: number;
+        };
+        Relationships: [];
+      };
+      client_routine_days: {
+        Row: {
+          client_routine_id: string;
+          created_at: string;
+          day_index: number;
+          id: string;
+          notes: string | null;
+          title: string;
+        };
+        Insert: {
+          client_routine_id: string;
+          created_at?: string;
+          day_index: number;
+          id?: string;
+          notes?: string | null;
+          title: string;
+        };
+        Update: {
+          client_routine_id?: string;
+          created_at?: string;
+          day_index?: number;
+          id?: string;
+          notes?: string | null;
+          title?: string;
+        };
+        Relationships: [];
+      };
+      client_routine_exercises: {
+        Row: {
+          client_routine_day_id: string;
+          created_at: string;
+          exercise_id: string;
+          id: string;
+          notes: string | null;
+          reps_text: string;
+          rest_seconds: number | null;
+          sets_text: string;
+          sort_order: number;
+          target_weight_text: string | null;
+        };
+        Insert: {
+          client_routine_day_id: string;
+          created_at?: string;
+          exercise_id: string;
+          id?: string;
+          notes?: string | null;
+          reps_text: string;
+          rest_seconds?: number | null;
+          sets_text: string;
+          sort_order?: number;
+          target_weight_text?: string | null;
+        };
+        Update: {
+          client_routine_day_id?: string;
+          created_at?: string;
+          exercise_id?: string;
+          id?: string;
+          notes?: string | null;
+          reps_text?: string;
+          rest_seconds?: number | null;
+          sets_text?: string;
+          sort_order?: number;
+          target_weight_text?: string | null;
+        };
+        Relationships: [];
+      };
+      client_routines: {
+        Row: {
+          client_id: string;
+          coach_profile_id: string | null;
+          created_at: string;
+          ends_on: string | null;
+          id: string;
+          notes: string | null;
+          starts_on: string | null;
+          status: "draft" | "active" | "archived";
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          coach_profile_id?: string | null;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          notes?: string | null;
+          starts_on?: string | null;
+          status?: "draft" | "active" | "archived";
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string;
+          coach_profile_id?: string | null;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          notes?: string | null;
+          starts_on?: string | null;
+          status?: "draft" | "active" | "archived";
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      client_user_links: {
+        Row: {
+          client_id: string;
+          created_at: string;
+          id: string;
+          profile_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          created_at?: string;
+          id?: string;
+          profile_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string;
+          created_at?: string;
+          id?: string;
+          profile_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       check_ins: {
         Row: {
           checked_in_at: string;
@@ -102,6 +333,63 @@ export type Database = {
           created_at?: string;
           id?: string;
           notes?: string | null;
+        };
+        Relationships: [];
+      };
+      exercise_library: {
+        Row: {
+          coach_tips: string | null;
+          common_mistakes: string | null;
+          created_at: string;
+          description: string | null;
+          difficulty: "beginner" | "intermediate" | "advanced" | null;
+          equipment: string | null;
+          id: string;
+          instructions: string | null;
+          is_active: boolean;
+          name: string;
+          primary_muscle: string | null;
+          secondary_muscle: string | null;
+          slug: string;
+          thumbnail_url: string | null;
+          updated_at: string;
+          video_url: string | null;
+        };
+        Insert: {
+          coach_tips?: string | null;
+          common_mistakes?: string | null;
+          created_at?: string;
+          description?: string | null;
+          difficulty?: "beginner" | "intermediate" | "advanced" | null;
+          equipment?: string | null;
+          id?: string;
+          instructions?: string | null;
+          is_active?: boolean;
+          name: string;
+          primary_muscle?: string | null;
+          secondary_muscle?: string | null;
+          slug: string;
+          thumbnail_url?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Update: {
+          coach_tips?: string | null;
+          common_mistakes?: string | null;
+          created_at?: string;
+          description?: string | null;
+          difficulty?: "beginner" | "intermediate" | "advanced" | null;
+          equipment?: string | null;
+          id?: string;
+          instructions?: string | null;
+          is_active?: boolean;
+          name?: string;
+          primary_muscle?: string | null;
+          secondary_muscle?: string | null;
+          slug?: string;
+          thumbnail_url?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
         };
         Relationships: [];
       };
@@ -206,7 +494,26 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      can_access_client: {
+        Args: {
+          target_client_id: string;
+        };
+        Returns: boolean;
+      };
+      has_any_role: {
+        Args: {
+          allowed_roles: string[];
+        };
+        Returns: boolean;
+      };
+      is_linked_client: {
+        Args: {
+          target_client_id: string;
+        };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
