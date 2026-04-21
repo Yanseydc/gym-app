@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { getDefaultAuthenticatedRoute } from "@/config/routes";
 import { LoginForm } from "@/modules/auth/components/login-form";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 
@@ -7,7 +8,7 @@ export default async function LoginPage() {
   const user = await getCurrentUser();
 
   if (user) {
-    redirect("/dashboard");
+    redirect(getDefaultAuthenticatedRoute(user.role));
   }
 
   return (

@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 
+import { getDefaultAuthenticatedRoute } from "@/config/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { SignInState } from "@/modules/auth/types";
+import { getProfileByUserId } from "@/modules/auth/services/auth-service";
 import { signInSchema } from "@/modules/auth/validators/sign-in";
 import { signInWithEmailPassword } from "@/modules/auth/services/auth-service";
 
@@ -31,5 +33,12 @@ export async function signIn(
     };
   }
 
-  redirect("/dashboard");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const profile = user ? await getProfileByUserId(supabase, user.id) : null;
+  const role = profile?.role ?? "member";
+
+  redirect(getDefaultAuthenticatedRoute(role));
 }

@@ -5,7 +5,13 @@ import {
   canAccessPath,
   getAuthorizedHomePath,
 } from "@/lib/auth/permissions";
-import { authRoutes, defaultAuthenticatedRoute, protectedRoutes } from "@/config/routes";
+import {
+  authRoutes,
+  getDefaultAuthenticatedRoute,
+  isDashboardRoute,
+  isPortalRoute,
+  protectedRoutes,
+} from "@/config/routes";
 import { clientEnv } from "@/lib/env";
 import {
   getAuthenticatedUser,
@@ -65,8 +71,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isAuthRoute && user) {
+    const profile = await getProfileByUserId(supabase, user.id);
+    const role = profile?.role ?? "member";
     const url = request.nextUrl.clone();
-    url.pathname = defaultAuthenticatedRoute;
+    url.pathname = getDefaultAuthenticatedRoute(role);
     return NextResponse.redirect(url);
   }
 
@@ -77,9 +85,21 @@ export async function middleware(request: NextRequest) {
   const profile = await getProfileByUserId(supabase, user.id);
   const role = profile?.role ?? "member";
 
+  if (role === "member" && isDashboardRoute(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = getDefaultAuthenticatedRoute(role);
+    return NextResponse.redirect(url);
+  }
+
+  if (role !== "member" && isPortalRoute(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = getDefaultAuthenticatedRoute(role);
+    return NextResponse.redirect(url);
+  }
+
   if (!canAccessPath(role, pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = getAuthorizedHomePath(role);
+    url.pathname = role === "member" ? getDefaultAuthenticatedRoute(role) : getAuthorizedHomePath(role);
     return NextResponse.redirect(url);
   }
 
