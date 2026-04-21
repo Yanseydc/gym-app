@@ -5,6 +5,8 @@ import { hasModuleAccess } from "@/lib/auth/permissions";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
+import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
+import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 import { CheckInForm } from "@/modules/checkins/components/checkin-form";
 import { CheckInHistoryList } from "@/modules/checkins/components/checkin-history-list";
 import { CheckInStatusBadge } from "@/modules/checkins/components/checkin-status-badge";
@@ -37,12 +39,14 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: activePlans, error: activePlansError },
     { data: payments, error: paymentsError },
     { data: checkIns, error: checkInsError },
+    { data: routines, error: routinesError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
     getActiveMembershipPlansForPage(),
     getClientPaymentsForPage(clientId),
     getClientCheckInsForPage(clientId),
+    getClientRoutineSummariesForPage(clientId),
   ]);
 
   if (error) {
@@ -77,6 +81,55 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       </Link>
 
       <ClientDetailCard client={client} />
+
+      {user && hasModuleAccess(user.role, "coaching") ? (
+        <section style={{ display: "grid", gap: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ margin: "0 0 8px" }}>Coaching routines</h2>
+              <p style={{ margin: 0, color: "var(--muted)" }}>
+                Create and manage workout routines for this client.
+              </p>
+            </div>
+
+            <Link
+              href={`/dashboard/coaching/routines/new?clientId=${client.id}`}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 14,
+                background: "var(--surface-alt)",
+                fontWeight: 700,
+              }}
+            >
+              Create routine
+            </Link>
+          </div>
+
+          {routinesError ? (
+            <p
+              style={{
+                margin: 0,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "#fff2f2",
+                color: "#8a1c1c",
+              }}
+            >
+              {routinesError}
+            </p>
+          ) : (
+            <RoutineSummaryList clientId={client.id} routines={routines} />
+          )}
+        </section>
+      ) : null}
 
       <section style={{ display: "grid", gap: 16 }}>
         <div>

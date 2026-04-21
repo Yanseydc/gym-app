@@ -5,3 +5,21 @@ export type {
   ExerciseLibraryRecord,
   ExerciseMutationState,
 } from "@/modules/coaching/types/exercise";
+export type {
+  ClientRoutine,
+  ClientRoutineDay,
+  ClientRoutineDayRecord,
+  ClientRoutineExercise,
+  ClientRoutineExerciseRecord,
+  ClientRoutineRecord,
+  ClientRoutineStatus,
+  ClientRoutineSummary,
+  RoutineClientOption,
+  RoutineDayFormValues,
+  RoutineDayMutationState,
+  RoutineExerciseFormValues,
+  RoutineExerciseMutationState,
+  RoutineExerciseOption,
+  RoutineFormValues,
+  RoutineMutationState,
+} from "@/modules/coaching/types/routine";
