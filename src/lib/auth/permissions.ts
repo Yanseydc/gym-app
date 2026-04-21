@@ -3,6 +3,7 @@ import type { Role } from "@/lib/auth/roles";
 export const appModules = [
   "dashboard",
   "clients",
+  "coaching",
   "memberships",
   "payments",
   "checkins",
@@ -12,15 +13,16 @@ export const appModules = [
 export type AppModule = (typeof appModules)[number];
 
 export const rolePermissions: Record<Role, AppModule[]> = {
-  admin: ["dashboard", "clients", "memberships", "payments", "checkins", "classes"],
+  admin: ["dashboard", "clients", "coaching", "memberships", "payments", "checkins", "classes"],
   staff: ["dashboard", "clients", "memberships", "payments", "checkins"],
-  coach: [],
+  coach: ["coaching"],
   member: [],
 };
 
 export const moduleRoutes: Record<AppModule, string[]> = {
   dashboard: ["/dashboard"],
   clients: ["/dashboard/clients", "/dashboard/members"],
+  coaching: ["/dashboard/coaching/exercises"],
   memberships: ["/dashboard/memberships"],
   payments: ["/dashboard/payments"],
   checkins: ["/dashboard/checkins"],
