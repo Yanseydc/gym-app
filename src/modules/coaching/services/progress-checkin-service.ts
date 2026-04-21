@@ -14,6 +14,8 @@ import type {
 
 const CHECKIN_PHOTOS_BUCKET = "checkins";
 const photoTypes: ProgressPhotoType[] = ["front", "side", "back"];
+const ALLOWED_CHECKIN_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const MAX_CHECKIN_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 function mapProgressCheckInSummary(
   record: ProgressCheckInRecord,
@@ -100,9 +102,22 @@ async function uploadOrReplacePhoto(params: {
     return { error: null };
   }
 
-  if (!params.file.type.startsWith("image/")) {
+  console.info("[progress-checkin] processing photo upload", {
+    fileName: params.file.name,
+    fileSize: params.file.size,
+    fileType: params.file.type,
+    photoType: params.photoType,
+  });
+
+  if (!ALLOWED_CHECKIN_IMAGE_TYPES.includes(params.file.type as (typeof ALLOWED_CHECKIN_IMAGE_TYPES)[number])) {
     return {
-      error: `${params.photoType} photo must be an image.`,
+      error: `${params.photoType} photo must be JPG, PNG, or WEBP.`,
+    };
+  }
+
+  if (params.file.size > MAX_CHECKIN_IMAGE_SIZE_BYTES) {
+    return {
+      error: `${params.photoType} photo must be 10 MB or smaller.`,
     };
   }
 
@@ -110,6 +125,11 @@ async function uploadOrReplacePhoto(params: {
     checkinId: params.checkinId,
     clientId: params.clientId,
     file: params.file,
+    photoType: params.photoType,
+  });
+
+  console.info("[progress-checkin] generated storage path", {
+    path: storagePath,
     photoType: params.photoType,
   });
 
@@ -121,8 +141,17 @@ async function uploadOrReplacePhoto(params: {
     });
 
   if (uploadError) {
-    return {
+    console.error("[progress-checkin] storage upload failed", {
       error: uploadError.message,
+      fileName: params.file.name,
+      fileSize: params.file.size,
+      fileType: params.file.type,
+      path: storagePath,
+      photoType: params.photoType,
+    });
+
+    return {
+      error: `Storage upload failed for ${params.photoType} photo: ${uploadError.message}`,
     };
   }
 
@@ -136,8 +165,14 @@ async function uploadOrReplacePhoto(params: {
   if (photoLookupError) {
     await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
 
-    return {
+    console.error("[progress-checkin] photo lookup failed after upload", {
       error: photoLookupError.message,
+      path: storagePath,
+      photoType: params.photoType,
+    });
+
+    return {
+      error: `Database lookup failed after uploading ${params.photoType} photo: ${photoLookupError.message}`,
     };
   }
 
@@ -152,8 +187,14 @@ async function uploadOrReplacePhoto(params: {
     if (updateError) {
       await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
 
-      return {
+      console.error("[progress-checkin] photo record update failed", {
         error: updateError.message,
+        path: storagePath,
+        photoType: params.photoType,
+      });
+
+      return {
+        error: `Database update failed for ${params.photoType} photo: ${updateError.message}`,
       };
     }
 
@@ -173,8 +214,14 @@ async function uploadOrReplacePhoto(params: {
     if (insertError) {
       await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
 
-      return {
+      console.error("[progress-checkin] photo record insert failed", {
         error: insertError.message,
+        path: storagePath,
+        photoType: params.photoType,
+      });
+
+      return {
+        error: `Database insert failed for ${params.photoType} photo: ${insertError.message}`,
       };
     }
   }
