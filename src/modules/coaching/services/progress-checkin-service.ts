@@ -76,7 +76,7 @@ function getFileExtension(file: File) {
   return "jpg";
 }
 
-function buildPhotoPath(params: {
+function buildCheckinImagePath(params: {
   checkinId: string;
   clientId: string;
   file: File;
@@ -86,7 +86,7 @@ function buildPhotoPath(params: {
   const timestamp = Date.now();
   const uuid = crypto.randomUUID();
 
-  return `checkins/${params.clientId}/${params.checkinId}/${params.photoType}-${timestamp}-${uuid}.${extension}`;
+  return `${params.clientId}/${params.checkinId}/${params.photoType}-${timestamp}-${uuid}.${extension}`;
 }
 
 async function uploadOrReplacePhoto(params: {
@@ -106,7 +106,7 @@ async function uploadOrReplacePhoto(params: {
     };
   }
 
-  const storagePath = buildPhotoPath({
+  const storagePath = buildCheckinImagePath({
     checkinId: params.checkinId,
     clientId: params.clientId,
     file: params.file,
@@ -134,6 +134,8 @@ async function uploadOrReplacePhoto(params: {
     .maybeSingle();
 
   if (photoLookupError) {
+    await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
+
     return {
       error: photoLookupError.message,
     };
@@ -148,6 +150,8 @@ async function uploadOrReplacePhoto(params: {
       .eq("id", String(existingPhoto.id));
 
     if (updateError) {
+      await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
+
       return {
         error: updateError.message,
       };
@@ -167,6 +171,8 @@ async function uploadOrReplacePhoto(params: {
       });
 
     if (insertError) {
+      await params.supabase.storage.from(CHECKIN_PHOTOS_BUCKET).remove([storagePath]);
+
       return {
         error: insertError.message,
       };
