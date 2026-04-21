@@ -6,6 +6,13 @@ export type {
   ExerciseMutationState,
 } from "@/modules/coaching/types/exercise";
 export type {
+  ClientOnboarding,
+  ClientOnboardingExperienceLevel,
+  ClientOnboardingFormValues,
+  ClientOnboardingMutationState,
+  ClientOnboardingRecord,
+} from "@/modules/coaching/types/onboarding";
+export type {
   ClientRoutine,
   ClientRoutineDay,
   ClientRoutineDayRecord,

@@ -5,6 +5,8 @@ import { hasModuleAccess } from "@/lib/auth/permissions";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
+import { ClientOnboardingCard } from "@/modules/coaching/components/onboarding-card";
+import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 import { CheckInForm } from "@/modules/checkins/components/checkin-form";
@@ -40,6 +42,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     { data: payments, error: paymentsError },
     { data: checkIns, error: checkInsError },
     { data: routines, error: routinesError },
+    { data: onboarding, error: onboardingError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
@@ -47,6 +50,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     getClientPaymentsForPage(clientId),
     getClientCheckInsForPage(clientId),
     getClientRoutineSummariesForPage(clientId),
+    getOnboardingForPage(clientId),
   ]);
 
   if (error) {
@@ -81,6 +85,26 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       </Link>
 
       <ClientDetailCard client={client} />
+
+      {user && hasModuleAccess(user.role, "coaching") ? (
+        <section style={{ display: "grid", gap: 16 }}>
+          {onboardingError ? (
+            <p
+              style={{
+                margin: 0,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "#fff2f2",
+                color: "#8a1c1c",
+              }}
+            >
+              {onboardingError}
+            </p>
+          ) : (
+            <ClientOnboardingCard clientId={client.id} onboarding={onboarding} />
+          )}
+        </section>
+      ) : null}
 
       {user && hasModuleAccess(user.role, "coaching") ? (
         <section style={{ display: "grid", gap: 16 }}>
