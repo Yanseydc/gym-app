@@ -15,10 +15,10 @@ export function RoutineSummaryList({
     return (
       <article
         style={{
-          padding: 24,
-          borderRadius: 20,
+          padding: 18,
+          borderRadius: 18,
           border: "1px dashed var(--border)",
-          background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+          background: "rgba(255, 255, 255, 0.02)",
           color: "var(--muted)",
         }}
       >
@@ -34,13 +34,11 @@ export function RoutineSummaryList({
           key={routine.id}
           style={{
             display: "grid",
-            gap: 10,
-            padding: 18,
-            borderRadius: 20,
-            border: "1px solid rgba(0, 0, 0, 0.08)",
-            background:
-              "linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(255, 247, 238, 0.92))",
-            boxShadow: "0 16px 32px rgba(0, 0, 0, 0.08)",
+            gap: 8,
+            padding: 14,
+            borderRadius: 18,
+            border: "1px solid var(--border)",
+            background: "rgba(255, 255, 255, 0.035)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -53,10 +51,10 @@ export function RoutineSummaryList({
               width: 4,
               background:
                 routine.status === "active"
-                  ? "linear-gradient(180deg, #1f6b42, #66b782)"
+                  ? "linear-gradient(180deg, #3b9f68, #7fd2a0)"
                   : routine.status === "archived"
-                    ? "linear-gradient(180deg, #7a5a2f, #aa8457)"
-                    : "linear-gradient(180deg, #244f7b, #5f96c8)",
+                    ? "linear-gradient(180deg, #966a39, #c79a6d)"
+                    : "linear-gradient(180deg, #34658f, #67a3d7)",
             }}
           />
           <div
@@ -69,14 +67,14 @@ export function RoutineSummaryList({
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", fontSize: 19, lineHeight: 1.2 }}>
+              <strong style={{ display: "block", fontSize: 18, lineHeight: 1.2 }}>
                 {routine.title}
               </strong>
               <div
                 style={{
-                  marginTop: 8,
+                  marginTop: 6,
                   color: "var(--muted)",
-                  fontSize: 14,
+                  fontSize: 13,
                   lineHeight: 1.5,
                 }}
               >
@@ -99,8 +97,8 @@ export function RoutineSummaryList({
               gap: 8,
               flexWrap: "wrap",
               alignItems: "center",
-              paddingTop: 4,
-              borderTop: "1px solid rgba(0, 0, 0, 0.06)",
+              paddingTop: 8,
+              borderTop: "1px solid var(--border)",
             }}
           >
             <Link
@@ -339,10 +337,10 @@ function DetailChip({ label, value }: { label: string; value: string }) {
 function StatusPill({ status }: { status: ClientRoutineSummary["status"] }) {
   const styles =
     status === "active"
-      ? { background: "#dff4e8", color: "#1f6b42" }
+      ? { background: "var(--success-bg)", color: "var(--success)" }
       : status === "archived"
-        ? { background: "#efe3d3", color: "#7a5a2f" }
-        : { background: "#e7ecf5", color: "#31527a" };
+        ? { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" }
+        : { background: "rgba(78, 132, 189, 0.16)", color: "#8ab9ea" };
 
   return (
     <span
@@ -386,7 +384,8 @@ function DetailItem({
 const actionLinkStyles = {
   padding: "8px 12px",
   borderRadius: 999,
-  background: "rgba(239, 229, 212, 0.58)",
+  background: "var(--surface-alt)",
+  border: "1px solid var(--border)",
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: 13,
 } as const;
