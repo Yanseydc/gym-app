@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonPrimary } from "@/lib/ui";
 import { ClientList } from "@/modules/clients/components/client-list";
 import { ClientSearchForm } from "@/modules/clients/components/client-search-form";
 import { getClientsForPage } from "@/modules/clients/services/client-service";
@@ -21,16 +22,8 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   });
 
   return (
-    <div style={{ display: "grid", gap: 24 }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
+    <div className="clients-page">
+      <header className="clients-header">
         <div>
           <h1 style={{ margin: "0 0 8px" }}>Clients</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
@@ -38,16 +31,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           </p>
         </div>
 
-        <Link
-          href="/dashboard/clients/new"
-          style={{
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "var(--accent)",
-            color: "#fff",
-            fontWeight: 700,
-          }}
-        >
+        <Link href="/dashboard/clients/new" className={buttonPrimary} style={{ width: "fit-content" }}>
           New client
         </Link>
       </header>
@@ -60,8 +44,8 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fff2f2",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {error}

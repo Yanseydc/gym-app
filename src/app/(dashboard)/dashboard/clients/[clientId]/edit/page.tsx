@@ -27,8 +27,8 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fff2f2",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {error}
@@ -68,12 +68,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
       </header>
 
       <section
-        style={{
-          padding: 24,
-          borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
-        }}
+        className="clients-form-shell"
       >
         <ClientForm
           action={action}

@@ -33,7 +33,7 @@ export function ClientForm({
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
-      <div style={gridStyles}>
+      <div className="responsive-meta-grid" style={gridStyles}>
         <Field
           label="First name"
           name="firstName"
@@ -104,7 +104,7 @@ export function ClientForm({
         type="submit"
         disabled={pending}
         className={buttonPrimary}
-        style={{ width: "fit-content" }}
+        style={{ width: "fit-content", maxWidth: "100%" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -137,7 +137,6 @@ function FieldError({ message }: { message: string }) {
 const gridStyles: CSSProperties = {
   display: "grid",
   gap: 16,
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
 };
 
 const labelStyles: CSSProperties = {

@@ -8,12 +8,7 @@ export function ClientSearchForm({ defaultValue }: ClientSearchFormProps) {
   return (
     <form
       method="get"
-      style={{
-        display: "flex",
-        gap: 12,
-        flexWrap: "wrap",
-        alignItems: "center",
-      }}
+      className="clients-search-bar"
     >
       <input
         type="search"
@@ -21,12 +16,9 @@ export function ClientSearchForm({ defaultValue }: ClientSearchFormProps) {
         defaultValue={defaultValue}
         placeholder="Search by first or last name"
         className={input}
-        style={{
-          minWidth: 280,
-          flex: 1,
-        }}
+        style={{ minWidth: 0 }}
       />
-      <button type="submit" className={buttonPrimary}>
+      <button type="submit" className={buttonPrimary} style={{ width: "fit-content" }}>
         Search
       </button>
     </form>

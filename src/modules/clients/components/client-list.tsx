@@ -25,35 +25,20 @@ export function ClientList({ clients }: ClientListProps) {
   }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div className="clients-list">
       {clients.map((client) => (
         <Link
           key={client.id}
           href={`/dashboard/clients/${client.id}`}
-          style={{
-            display: "grid",
-            gap: 8,
-            padding: 18,
-            borderRadius: "var(--radius)",
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
-          }}
+          className="clients-list-card"
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 16,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="responsive-inline-header">
             <strong style={{ fontSize: 18 }}>
               {client.firstName} {client.lastName}
             </strong>
             <ClientStatusBadge status={client.status} />
           </div>
-          <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div className="responsive-meta-grid" style={{ color: "var(--muted)" }}>
             <span>{client.phone}</span>
             <span>{client.email || "No email"}</span>
           </div>

@@ -20,12 +20,7 @@ export default function NewClientPage() {
       </header>
 
       <section
-        style={{
-          padding: 24,
-          borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
-        }}
+        className="clients-form-shell"
       >
         <ClientForm action={createClient} submitLabel="Create client" />
       </section>
