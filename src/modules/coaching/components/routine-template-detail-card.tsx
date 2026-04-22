@@ -8,9 +8,9 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
         gap: 22,
         padding: 28,
         borderRadius: 28,
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-        boxShadow: "var(--shadow)",
+        border: "1px solid var(--border)",
+        background: "linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96))",
+        boxShadow: "0 18px 38px rgba(0, 0, 0, 0.16)",
       }}
     >
       <div style={{ display: "grid", gap: 8 }}>
@@ -53,7 +53,7 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
               padding: 24,
               borderRadius: 20,
               border: "1px dashed var(--border)",
-              background: "rgba(255, 250, 243, 0.92)",
+              background: "rgba(255, 255, 255, 0.02)",
               color: "var(--muted)",
             }}
           >
@@ -69,8 +69,8 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                   gap: 16,
                   padding: 22,
                   borderRadius: 22,
-                  border: "1px solid rgba(0, 0, 0, 0.06)",
-                  background: "rgba(255, 250, 243, 0.92)",
+                  border: "1px solid var(--border)",
+                  background: "rgba(255, 255, 255, 0.03)",
                 }}
               >
                 <div>
@@ -80,7 +80,7 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                       alignItems: "center",
                       padding: "6px 10px",
                       borderRadius: 999,
-                      background: "#fff",
+                      background: "rgba(209, 108, 67, 0.12)",
                       color: "var(--accent-strong)",
                       fontSize: 12,
                       fontWeight: 700,
@@ -112,8 +112,8 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                           gap: 12,
                           padding: 18,
                           borderRadius: 18,
-                          background: "#fff",
-                          border: "1px solid rgba(0, 0, 0, 0.06)",
+                          background: "linear-gradient(180deg, rgba(35, 41, 36, 0.98), rgba(27, 31, 28, 0.96))",
+                          border: "1px solid var(--border)",
                         }}
                       >
                         <strong>{exercise.exerciseName}</strong>
@@ -161,7 +161,8 @@ function DetailItem({
       style={{
         padding: 18,
         borderRadius: 18,
-        background: "rgba(239, 229, 212, 0.5)",
+        background: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid var(--border)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >
@@ -181,7 +182,8 @@ function DetailChip({ label, value }: { label: string; value: string }) {
         gap: 4,
         padding: "12px 14px",
         borderRadius: 14,
-        background: "rgba(239, 229, 212, 0.42)",
+        background: "rgba(255, 255, 255, 0.035)",
+        border: "1px solid var(--border)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>

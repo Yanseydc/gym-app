@@ -10,7 +10,7 @@ export function RoutineTemplateList({ templates }: { templates: RoutineTemplateS
           padding: 24,
           borderRadius: 20,
           border: "1px dashed var(--border)",
-          background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+          background: "rgba(255, 255, 255, 0.02)",
           color: "var(--muted)",
         }}
       >
@@ -29,9 +29,9 @@ export function RoutineTemplateList({ templates }: { templates: RoutineTemplateS
             gap: 14,
             padding: 20,
             borderRadius: 20,
-            border: "1px solid rgba(0, 0, 0, 0.06)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-            boxShadow: "var(--shadow)",
+            border: "1px solid var(--border)",
+            background: "linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96))",
+            boxShadow: "0 18px 38px rgba(0, 0, 0, 0.16)",
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -89,6 +89,7 @@ const actionLinkStyles = {
   padding: "10px 14px",
   borderRadius: 12,
   background: "var(--surface-alt)",
+  border: "1px solid var(--border)",
   fontWeight: 700,
   height: "fit-content",
 } as const;
