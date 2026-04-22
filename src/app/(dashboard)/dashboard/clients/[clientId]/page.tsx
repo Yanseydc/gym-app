@@ -71,8 +71,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fff2f2",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {error}
@@ -218,8 +218,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               borderRadius: 24,
               border: "1px solid rgba(0, 0, 0, 0.08)",
               background:
-                "linear-gradient(180deg, rgba(255, 248, 240, 0.98), rgba(255, 255, 255, 0.96))",
-              boxShadow: "0 18px 40px rgba(0, 0, 0, 0.08)",
+                "linear-gradient(180deg, rgba(24, 29, 25, 0.92), rgba(19, 24, 21, 0.9))",
             }}
           >
             <div
@@ -257,9 +256,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   padding: "12px 16px",
                   borderRadius: 14,
                   background: "var(--accent)",
-                  color: "#fff",
+                  color: "#121513",
                   fontWeight: 700,
-                  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.12)",
+                  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.16)",
                 }}
               >
                 Create routine
@@ -272,8 +271,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   margin: 0,
                   padding: "12px 14px",
                   borderRadius: 12,
-                  background: "#fff2f2",
-                  color: "#8a1c1c",
+                  background: "var(--danger-bg)",
+                  color: "var(--danger-fg)",
                 }}
               >
                 {routinesError}
@@ -289,8 +288,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 margin: 0,
                 padding: "12px 14px",
                 borderRadius: 12,
-                background: "#fff2f2",
-                color: "#8a1c1c",
+                background: "var(--danger-bg)",
+                color: "var(--danger-fg)",
               }}
             >
               {progressCheckInsError}
@@ -323,8 +322,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 margin: 0,
                 padding: "12px 14px",
                 borderRadius: 12,
-                background: "#fff2f2",
-                color: "#8a1c1c",
+                background: "var(--danger-bg)",
+                color: "var(--danger-fg)",
               }}
             >
               {membershipHistoryError}
@@ -342,8 +341,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             gap: 14,
             padding: 18,
             borderRadius: 18,
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            background: "rgba(255, 255, 255, 0.55)",
+            border: "1px solid var(--border)",
+            background: "rgba(255, 255, 255, 0.03)",
           }}
         >
           <div>
@@ -359,8 +358,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 margin: 0,
                 padding: "12px 14px",
                 borderRadius: 12,
-                background: "#fff2f2",
-                color: "#8a1c1c",
+                background: "var(--danger-bg)",
+                color: "var(--danger-fg)",
               }}
             >
               {activePlansError}
@@ -399,6 +398,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   padding: "12px 16px",
                   borderRadius: 14,
                   background: "var(--surface-alt)",
+                  border: "1px solid var(--border)",
                   fontWeight: 700,
                 }}
               >
@@ -412,8 +412,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   margin: 0,
                   padding: "12px 14px",
                   borderRadius: 12,
-                  background: "#fff2f2",
-                  color: "#8a1c1c",
+                  background: "var(--danger-bg)",
+                  color: "var(--danger-fg)",
                 }}
               >
                 {paymentsError}
@@ -429,8 +429,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               gap: 14,
               padding: 18,
               borderRadius: 18,
-              border: "1px solid rgba(0, 0, 0, 0.05)",
-              background: "rgba(255, 255, 255, 0.55)",
+              border: "1px solid var(--border)",
+              background: "rgba(255, 255, 255, 0.03)",
             }}
           >
             <div>
@@ -496,8 +496,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   margin: 0,
                   padding: "12px 14px",
                   borderRadius: 12,
-                  background: "#fff2f2",
-                  color: "#8a1c1c",
+                  background: "var(--danger-bg)",
+                  color: "var(--danger-fg)",
                 }}
               >
                 {checkInsError}
@@ -513,8 +513,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               gap: 14,
               padding: 18,
               borderRadius: 18,
-              border: "1px solid rgba(0, 0, 0, 0.05)",
-              background: "rgba(255, 255, 255, 0.55)",
+              border: "1px solid var(--border)",
+              background: "rgba(255, 255, 255, 0.03)",
             }}
           >
             <div>
@@ -531,8 +531,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 style={{
                   padding: 14,
                   borderRadius: 14,
-                  background: "#fff2f2",
-                  color: "#8a1c1c",
+                  background: "var(--danger-bg)",
+                  color: "var(--danger-fg)",
                 }}
               >
                 This client does not currently have an active membership, so check-in is blocked.
@@ -569,9 +569,9 @@ function SummaryCard({
         gap: 14,
         padding: 20,
         borderRadius: 20,
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-        boxShadow: "var(--shadow)",
+        border: "1px solid var(--border)",
+        background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
+        boxShadow: "0 12px 26px rgba(0, 0, 0, 0.14)",
         minHeight: 184,
       }}
     >
@@ -599,7 +599,7 @@ function SummaryCard({
         style={{
           padding: "10px 12px",
           borderRadius: 14,
-          background: "rgba(239, 229, 212, 0.42)",
+          background: "rgba(255, 255, 255, 0.04)",
           color: "var(--muted)",
           fontSize: 14,
           fontWeight: 600,
@@ -617,6 +617,7 @@ function SummaryCard({
               padding: "10px 14px",
               borderRadius: 12,
               background: "var(--surface-alt)",
+              border: "1px solid var(--border)",
               fontWeight: 700,
             }}
           >
@@ -637,8 +638,8 @@ function StatusChip({
 }) {
   const palette =
     tone === "success"
-      ? { background: "#dff4e8", color: "#1f6b42" }
-      : { background: "#ece8e1", color: "#6b6258" };
+      ? { background: "var(--success-bg)", color: "var(--success)" }
+      : { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" };
 
   return (
     <span

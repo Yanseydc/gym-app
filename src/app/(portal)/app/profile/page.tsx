@@ -20,9 +20,10 @@ export default async function PortalProfilePage() {
           gap: 12,
           padding: 24,
           borderRadius: 26,
-          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
-          border: "1px solid rgba(0, 0, 0, 0.06)",
-          boxShadow: "var(--shadow)",
+          background:
+            "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
+          border: "1px solid var(--border)",
+          boxShadow: "0 14px 28px rgba(0, 0, 0, 0.14)",
         }}
       >
         <span
@@ -48,7 +49,7 @@ export default async function PortalProfilePage() {
             padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+            background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
             color: "var(--muted)",
           }}
         >
@@ -96,8 +97,8 @@ export default async function PortalProfilePage() {
                 gap: 14,
                 padding: 22,
                 borderRadius: 22,
-                background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-                border: "1px solid rgba(0, 0, 0, 0.06)",
+                background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
+                border: "1px solid var(--border)",
               }}
             >
               <span
@@ -150,8 +151,8 @@ function MetricCard({ label, value }: { label: string; value: string }) {
         gap: 8,
         padding: 18,
         borderRadius: 18,
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-        border: "1px solid rgba(0, 0, 0, 0.06)",
+        background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
+        border: "1px solid var(--border)",
       }}
     >
       <span
@@ -186,9 +187,10 @@ function EditorialBlock({
         gap: 12,
         padding: 24,
         borderRadius: 24,
-        background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.95))",
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        boxShadow: "var(--shadow)",
+        background:
+          "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
+        border: "1px solid var(--border)",
+        boxShadow: "0 14px 28px rgba(0, 0, 0, 0.14)",
       }}
     >
       <span
@@ -220,8 +222,8 @@ function DetailItem({
       style={{
         padding: 18,
         borderRadius: 18,
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-        border: "1px solid rgba(0, 0, 0, 0.06)",
+        background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
+        border: "1px solid var(--border)",
       }}
     >
       <span style={{ display: "block", marginBottom: 8, color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>

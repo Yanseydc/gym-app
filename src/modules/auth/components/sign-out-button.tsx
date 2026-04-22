@@ -10,7 +10,7 @@ export function SignOutButton() {
           border: "1px solid var(--border)",
           padding: "12px 14px",
           borderRadius: 14,
-          background: "transparent",
+          background: "rgba(255, 255, 255, 0.02)",
           fontWeight: 600,
           cursor: "pointer",
         }}

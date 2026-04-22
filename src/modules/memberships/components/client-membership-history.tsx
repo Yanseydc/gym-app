@@ -20,7 +20,7 @@ export function ClientMembershipHistory({
           padding: 18,
           borderRadius: 16,
           border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.45)",
+          background: "rgba(255, 255, 255, 0.03)",
           color: "var(--muted)",
         }}
       >
@@ -34,14 +34,14 @@ export function ClientMembershipHistory({
       {memberships.map((membership) => (
         <article
           key={membership.id}
-          style={{
-            display: "grid",
-            gap: 10,
-            padding: 16,
-            borderRadius: 16,
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            background: "rgba(255, 255, 255, 0.55)",
-          }}
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 16,
+          borderRadius: 16,
+          border: "1px solid var(--border)",
+          background: "rgba(255, 255, 255, 0.03)",
+        }}
         >
           <div
             style={{
@@ -96,7 +96,7 @@ export function ClientMembershipHistory({
                   border: "1px solid var(--border)",
                   padding: "10px 14px",
                   borderRadius: 12,
-                  background: "transparent",
+                  background: "rgba(255, 255, 255, 0.02)",
                   fontWeight: 600,
                   cursor: "pointer",
                 }}
@@ -117,7 +117,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       style={{
         padding: 14,
         borderRadius: 14,
-        background: "rgba(239, 229, 212, 0.28)",
+        background: "rgba(255, 255, 255, 0.04)",
       }}
     >
       <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>

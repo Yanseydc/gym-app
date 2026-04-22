@@ -33,6 +33,7 @@ export function ProgressCheckInSection({
             padding: "12px 16px",
             borderRadius: 14,
             background: "var(--surface-alt)",
+            border: "1px solid var(--border)",
             fontWeight: 700,
           }}
         >
@@ -48,7 +49,7 @@ export function ProgressCheckInSection({
             padding: 18,
             borderRadius: 18,
             border: "1px dashed var(--border)",
-            background: "rgba(255, 255, 255, 0.45)",
+            background: "rgba(255, 255, 255, 0.03)",
           }}
         >
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -62,7 +63,7 @@ export function ProgressCheckInSection({
                 padding: "12px 16px",
                 borderRadius: 14,
                 background: "var(--accent)",
-                color: "#fff",
+                color: "#121513",
                 fontWeight: 700,
               }}
             >
@@ -80,8 +81,8 @@ export function ProgressCheckInSection({
                 gap: 12,
                 padding: 16,
                 borderRadius: 16,
-                border: "1px solid rgba(0, 0, 0, 0.05)",
-                background: "rgba(255, 255, 255, 0.55)",
+                border: "1px solid var(--border)",
+                background: "rgba(255, 255, 255, 0.03)",
               }}
             >
               <div
@@ -105,6 +106,7 @@ export function ProgressCheckInSection({
                     padding: "10px 14px",
                     borderRadius: 12,
                     background: "var(--surface-alt)",
+                    border: "1px solid var(--border)",
                     fontWeight: 700,
                   }}
                 >
@@ -152,7 +154,7 @@ function MetaPill({ label, value }: { label: string; value: string }) {
         gap: 4,
         padding: "10px 12px",
         borderRadius: 14,
-        background: "rgba(239, 229, 212, 0.28)",
+        background: "rgba(255, 255, 255, 0.04)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>

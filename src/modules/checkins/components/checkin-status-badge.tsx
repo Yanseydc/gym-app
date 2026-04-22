@@ -7,16 +7,16 @@ export function CheckInStatusBadge({
 }) {
   const palette =
     status === "active"
-      ? { background: "#dff4e8", color: "#1f6b42" }
+      ? { background: "var(--success-bg)", color: "var(--success)" }
       : status === "pending_payment"
-        ? { background: "#fff0d6", color: "#9a5a00" }
+        ? { background: "var(--warning-bg)", color: "var(--warning-fg)" }
         : status === "partial"
-          ? { background: "#ffe4c2", color: "#8c4a00" }
+          ? { background: "var(--warning-bg)", color: "var(--warning-fg)" }
       : status === "expired"
-        ? { background: "#efe3d3", color: "#7a5a2f" }
+        ? { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" }
         : status === "cancelled"
-          ? { background: "#f8dddd", color: "#8a1c1c" }
-          : { background: "#ece8e1", color: "#6b6258" };
+          ? { background: "var(--danger-bg)", color: "var(--danger-fg)" }
+          : { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" };
 
   return (
     <span

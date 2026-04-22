@@ -35,8 +35,9 @@ export default async function PortalHomePage() {
           gap: 10,
           padding: 24,
           borderRadius: 24,
-          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.48), rgba(255, 255, 255, 0.92))",
-          border: "1px solid rgba(0, 0, 0, 0.06)",
+          background:
+            "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
+          border: "1px solid var(--border)",
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -94,16 +95,16 @@ function SummaryCard({
   return (
     <Link
       href={href}
-      style={{
-        display: "grid",
-        gap: 10,
-        padding: 22,
-        borderRadius: 22,
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-        boxShadow: "var(--shadow)",
-        color: "inherit",
-      }}
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 22,
+          borderRadius: 22,
+          border: "1px solid var(--border)",
+          background: "linear-gradient(180deg, rgba(29, 35, 30, 0.98), rgba(21, 26, 23, 0.94))",
+          boxShadow: "0 12px 28px rgba(0, 0, 0, 0.14)",
+          color: "inherit",
+        }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
         {title}

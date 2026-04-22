@@ -25,9 +25,10 @@ export default async function PortalRoutinePage() {
           gap: 14,
           padding: 26,
           borderRadius: 26,
-          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.52), rgba(255, 255, 255, 0.98))",
-          border: "1px solid rgba(0, 0, 0, 0.08)",
-          boxShadow: "var(--shadow)",
+          background:
+            "linear-gradient(180deg, rgba(36, 44, 38, 0.98), rgba(24, 30, 26, 0.96))",
+          border: "1px solid var(--border-strong)",
+          boxShadow: "0 18px 42px rgba(0, 0, 0, 0.2)",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
@@ -41,8 +42,8 @@ export default async function PortalRoutinePage() {
             style={{
               padding: "9px 14px",
               borderRadius: 999,
-              background: "rgba(31, 107, 66, 0.12)",
-              color: "#1f6b42",
+              background: "var(--success-bg)",
+              color: "var(--success)",
               fontWeight: 700,
               fontSize: 13,
             }}
@@ -58,7 +59,7 @@ export default async function PortalRoutinePage() {
             padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+            background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
             color: "var(--muted)",
           }}
         >
@@ -74,9 +75,9 @@ export default async function PortalRoutinePage() {
                 gap: 16,
                 padding: 22,
                 borderRadius: 22,
-                border: "1px solid rgba(0, 0, 0, 0.06)",
-                background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-                boxShadow: "var(--shadow)",
+                border: "1px solid var(--border)",
+                background: "linear-gradient(180deg, rgba(27, 32, 28, 0.98), rgba(21, 26, 23, 0.95))",
+                boxShadow: "0 14px 28px rgba(0, 0, 0, 0.12)",
               }}
             >
               <div>
@@ -86,7 +87,7 @@ export default async function PortalRoutinePage() {
                     alignItems: "center",
                     padding: "6px 10px",
                     borderRadius: 999,
-                    background: "rgba(239, 229, 212, 0.75)",
+                    background: "rgba(209, 108, 67, 0.16)",
                     color: "var(--accent-strong)",
                     fontSize: 12,
                     fontWeight: 700,
@@ -122,8 +123,8 @@ export default async function PortalRoutinePage() {
                         gap: 12,
                         padding: 18,
                         borderRadius: 18,
-                        border: "1px solid rgba(0, 0, 0, 0.06)",
-                        background: "#fff",
+                        border: "1px solid var(--border)",
+                        background: "linear-gradient(180deg, rgba(33, 39, 34, 0.96), rgba(24, 29, 25, 0.94))",
                       }}
                     >
                       <div
@@ -144,9 +145,10 @@ export default async function PortalRoutinePage() {
                             style={{
                               padding: "10px 14px",
                               borderRadius: 12,
-                              background: "var(--surface-alt)",
+                              background: "rgba(209, 108, 67, 0.14)",
+                              border: "1px solid rgba(209, 108, 67, 0.22)",
                               fontWeight: 700,
-                              color: "inherit",
+                              color: "var(--accent-strong)",
                             }}
                           >
                             {t.routine.viewVideo}
@@ -178,8 +180,8 @@ export default async function PortalRoutinePage() {
                             gap: 6,
                             padding: 14,
                             borderRadius: 16,
-                            background: "rgba(255, 250, 243, 0.92)",
-                            border: "1px solid rgba(0, 0, 0, 0.05)",
+                            background: "rgba(255, 255, 255, 0.03)",
+                            border: "1px solid var(--border)",
                           }}
                         >
                           <span
@@ -218,8 +220,8 @@ function ExerciseMeta({ label, value }: { label: string; value: string }) {
         gap: 6,
         padding: "12px 14px",
         borderRadius: 16,
-        background: "linear-gradient(180deg, rgba(255, 250, 243, 0.92), rgba(239, 229, 212, 0.55))",
-        border: "1px solid rgba(0, 0, 0, 0.05)",
+        background: "linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02))",
+        border: "1px solid var(--border)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>

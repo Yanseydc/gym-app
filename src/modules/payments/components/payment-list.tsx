@@ -15,7 +15,7 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
           padding: 18,
           borderRadius: 16,
           border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.45)",
+          background: "rgba(255, 255, 255, 0.03)",
           color: "var(--muted)",
         }}
       >
@@ -29,14 +29,14 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
       {payments.map((payment) => (
         <article
           key={payment.id}
-          style={{
-            display: "grid",
-            gap: 8,
-            padding: 16,
-            borderRadius: 16,
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            background: "rgba(255, 255, 255, 0.55)",
-          }}
+        style={{
+          display: "grid",
+          gap: 8,
+          padding: 16,
+          borderRadius: 16,
+          border: "1px solid var(--border)",
+          background: "rgba(255, 255, 255, 0.03)",
+        }}
         >
           <div
             style={{
@@ -53,6 +53,7 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
                 padding: "6px 10px",
                 borderRadius: 999,
                 background: "var(--surface-alt)",
+                border: "1px solid var(--border)",
                 fontSize: 13,
                 fontWeight: 700,
                 textTransform: "capitalize",

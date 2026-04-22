@@ -16,6 +16,7 @@ export function AuthUserCard({ user }: AuthUserCardProps) {
         padding: 16,
         borderRadius: 16,
         background: "var(--surface-alt)",
+        border: "1px solid var(--border)",
       }}
     >
       <strong style={{ display: "block", marginBottom: 4 }}>

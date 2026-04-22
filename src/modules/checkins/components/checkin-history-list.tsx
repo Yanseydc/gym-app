@@ -18,7 +18,7 @@ export function CheckInHistoryList({
           padding: 18,
           borderRadius: 16,
           border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.45)",
+          background: "rgba(255, 255, 255, 0.03)",
           color: "var(--muted)",
         }}
       >
@@ -32,14 +32,14 @@ export function CheckInHistoryList({
       {checkIns.map((checkIn) => (
         <article
           key={checkIn.id}
-          style={{
-            display: "grid",
-            gap: 8,
-            padding: 16,
-            borderRadius: 16,
-            border: "1px solid rgba(0, 0, 0, 0.05)",
-            background: "rgba(255, 255, 255, 0.55)",
-          }}
+        style={{
+          display: "grid",
+          gap: 8,
+          padding: 16,
+          borderRadius: 16,
+          border: "1px solid var(--border)",
+          background: "rgba(255, 255, 255, 0.03)",
+        }}
         >
           <div
             style={{

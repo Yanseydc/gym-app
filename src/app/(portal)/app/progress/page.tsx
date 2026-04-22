@@ -23,8 +23,9 @@ export default async function PortalProgressPage() {
           gap: 10,
           padding: 22,
           borderRadius: 24,
-          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
-          border: "1px solid rgba(0, 0, 0, 0.06)",
+          background:
+            "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
+          border: "1px solid var(--border)",
         }}
       >
         <h1 style={{ margin: 0 }}>{t.progress.title}</h1>
@@ -39,7 +40,7 @@ export default async function PortalProgressPage() {
             padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+            background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
             color: "var(--muted)",
           }}
         >
@@ -57,9 +58,9 @@ export default async function PortalProgressPage() {
                       gap: 18,
                       padding: 22,
                       borderRadius: 22,
-                      border: "1px solid rgba(0, 0, 0, 0.06)",
-                      background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-                      boxShadow: "var(--shadow)",
+                      border: "1px solid var(--border)",
+                      background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
+                      boxShadow: "0 14px 28px rgba(0, 0, 0, 0.12)",
                     }}
                   >
                     <div
@@ -81,7 +82,7 @@ export default async function PortalProgressPage() {
                         style={{
                           padding: "8px 12px",
                           borderRadius: 999,
-                          background: "rgba(239, 229, 212, 0.75)",
+                          background: "rgba(209, 108, 67, 0.14)",
                           color: "var(--accent-strong)",
                           fontWeight: 700,
                         }}
@@ -124,7 +125,7 @@ export default async function PortalProgressPage() {
                                   objectFit: "cover",
                                   borderRadius: 14,
                                   border: "1px solid var(--border)",
-                                  background: "#fff",
+                                  background: "var(--surface-soft)",
                                 }}
                               />
                             ) : (
@@ -136,7 +137,7 @@ export default async function PortalProgressPage() {
                                   borderRadius: 14,
                                   border: "1px dashed var(--border)",
                                   color: "var(--muted)",
-                                  background: "#fff",
+                                  background: "var(--surface-soft)",
                                 }}
                               >
                                 {t.progress.noPhoto}
@@ -164,7 +165,8 @@ function NoteBlock({ label, value }: { label: string; value: string }) {
         gap: 6,
         padding: 14,
         borderRadius: 16,
-        background: "rgba(255, 250, 243, 0.88)",
+        background: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid var(--border)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>

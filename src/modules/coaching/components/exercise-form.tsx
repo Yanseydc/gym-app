@@ -135,7 +135,8 @@ export function ExerciseForm({
           alignItems: "center",
           padding: 16,
           borderRadius: 16,
-          background: "rgba(239, 229, 212, 0.45)",
+          background: "rgba(255, 255, 255, 0.03)",
+          border: "1px solid var(--border)",
         }}
       >
         <input
@@ -153,8 +154,8 @@ export function ExerciseForm({
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fbe4e4",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {state.error}
@@ -170,7 +171,7 @@ export function ExerciseForm({
           padding: "14px 18px",
           borderRadius: 14,
           background: "var(--accent)",
-          color: "#fff",
+          color: "#121513",
           fontWeight: 700,
           cursor: "pointer",
         }}
@@ -223,7 +224,7 @@ function TextAreaField({ defaultValue, error, label, name, rows }: TextAreaField
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
 
 const gridStyles: CSSProperties = {
@@ -241,6 +242,6 @@ const inputStyles: CSSProperties = {
   padding: "14px 16px",
   borderRadius: 14,
   border: "1px solid var(--border)",
-  background: "#fff",
+  background: "var(--input)",
   font: "inherit",
 };

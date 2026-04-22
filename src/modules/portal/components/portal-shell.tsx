@@ -31,7 +31,7 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
       style={{
         padding: "32px 0 64px",
         background:
-          "radial-gradient(circle at top left, rgba(239, 229, 212, 0.45), transparent 30%), linear-gradient(180deg, rgba(255, 250, 243, 0.7), rgba(255, 255, 255, 0))",
+          "radial-gradient(circle at top left, rgba(209, 108, 67, 0.12), transparent 32%), linear-gradient(180deg, rgba(21, 26, 22, 0.3), rgba(18, 22, 19, 0))",
       }}
     >
       <div
@@ -48,16 +48,16 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
             top: 24,
             padding: 24,
             borderRadius: 28,
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 22, 0.96))",
             border: "1px solid var(--border)",
-            boxShadow: "var(--shadow)",
+            boxShadow: "0 18px 42px rgba(0, 0, 0, 0.18)",
           }}
         >
           <div
             style={{
               marginBottom: 22,
               paddingBottom: 18,
-              borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+              borderBottom: "1px solid var(--border)",
             }}
           >
             <strong style={{ display: "block", marginBottom: 4, fontSize: 20 }}>GymOS</strong>
@@ -70,8 +70,9 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
               gap: 8,
               padding: 18,
               borderRadius: 20,
-              background: "linear-gradient(180deg, rgba(239, 229, 212, 0.52), rgba(255, 250, 243, 0.9))",
-              border: "1px solid rgba(0, 0, 0, 0.05)",
+              background:
+                "linear-gradient(180deg, rgba(34, 42, 36, 0.98), rgba(24, 30, 26, 0.96))",
+              border: "1px solid var(--border)",
               marginBottom: 20,
             }}
           >
@@ -101,19 +102,19 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
                     padding: "14px 15px",
                     borderRadius: 16,
                     background: isActive
-                      ? "linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, black 18%))"
+                      ? "linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 74%, black 26%))"
                       : isHovered
-                        ? "linear-gradient(180deg, rgba(239, 229, 212, 0.92), rgba(255, 250, 243, 1))"
-                        : "linear-gradient(180deg, var(--surface-alt), rgba(255, 250, 243, 0.9))",
+                        ? "linear-gradient(180deg, rgba(41, 49, 43, 0.98), rgba(31, 38, 33, 0.96))"
+                        : "linear-gradient(180deg, var(--surface-alt), rgba(30, 36, 31, 0.94))",
                     border: isActive
                       ? "1px solid color-mix(in srgb, var(--accent) 70%, black 30%)"
-                      : "1px solid rgba(0, 0, 0, 0.05)",
+                      : "1px solid var(--border)",
                     fontWeight: isActive ? 700 : 600,
-                    color: isActive ? "#fff" : "inherit",
+                    color: isActive ? "#121513" : "inherit",
                     boxShadow: isActive
-                      ? "0 10px 24px rgba(0, 0, 0, 0.14)"
+                      ? "0 12px 24px rgba(0, 0, 0, 0.2)"
                       : isHovered
-                        ? "0 6px 18px rgba(0, 0, 0, 0.08)"
+                        ? "0 6px 18px rgba(0, 0, 0, 0.14)"
                         : "none",
                     transform: isHovered && !isActive ? "translateX(2px)" : "translateX(0)",
                     transition:
@@ -135,9 +136,10 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
           style={{
             padding: 28,
             borderRadius: 28,
-            background: "linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(255, 255, 255, 0.92))",
+            background:
+              "linear-gradient(180deg, rgba(22, 27, 23, 0.98), rgba(18, 22, 19, 0.96))",
             border: "1px solid var(--border)",
-            boxShadow: "var(--shadow)",
+            boxShadow: "0 18px 42px rgba(0, 0, 0, 0.18)",
           }}
         >
           {children}

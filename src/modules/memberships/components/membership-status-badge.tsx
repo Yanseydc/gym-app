@@ -3,14 +3,14 @@ import type { MembershipStatus } from "@/modules/memberships/types";
 export function MembershipStatusBadge({ status }: { status: MembershipStatus }) {
   const palette =
     status === "active"
-      ? { background: "#dff4e8", color: "#1f6b42" }
+      ? { background: "var(--success-bg)", color: "var(--success)" }
       : status === "pending_payment"
-        ? { background: "#fff0d6", color: "#9a5a00" }
+        ? { background: "var(--warning-bg)", color: "var(--warning-fg)" }
         : status === "partial"
-          ? { background: "#ffe4c2", color: "#8c4a00" }
+          ? { background: "var(--warning-bg)", color: "var(--warning-fg)" }
       : status === "expired"
-        ? { background: "#efe3d3", color: "#7a5a2f" }
-        : { background: "#f8dddd", color: "#8a1c1c" };
+        ? { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" }
+        : { background: "var(--danger-bg)", color: "var(--danger-fg)" };
 
   return (
     <span

@@ -11,9 +11,9 @@ export function ClientDetailCard({ client }: { client: Client }) {
         gap: 22,
         padding: 28,
         borderRadius: 28,
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-        boxShadow: "var(--shadow)",
+        border: "1px solid var(--border-strong)",
+        background: "linear-gradient(180deg, rgba(36, 42, 37, 0.98), rgba(24, 29, 25, 0.95))",
+        boxShadow: "0 20px 44px rgba(0, 0, 0, 0.22)",
       }}
     >
       <div
@@ -51,6 +51,7 @@ export function ClientDetailCard({ client }: { client: Client }) {
             padding: "12px 16px",
             borderRadius: 14,
             background: "var(--surface-alt)",
+            border: "1px solid var(--border)",
             fontWeight: 700,
           }}
         >
@@ -95,7 +96,8 @@ function DetailItem({
       style={{
         padding: 16,
         borderRadius: 18,
-        background: "rgba(239, 229, 212, 0.48)",
+        background: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid var(--border)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >

@@ -32,9 +32,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
             top: 24,
             padding: 24,
             borderRadius: 24,
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 22, 0.96))",
             border: "1px solid var(--border)",
-            boxShadow: "var(--shadow)",
+            boxShadow: "0 16px 34px rgba(0, 0, 0, 0.18)",
           }}
         >
           <div style={{ marginBottom: 20 }}>
@@ -53,6 +53,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                   padding: "12px 14px",
                   borderRadius: 14,
                   background: "var(--surface-alt)",
+                  border: "1px solid transparent",
                   fontWeight: 600,
                 }}
               >
@@ -70,7 +71,8 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           style={{
             padding: 24,
             borderRadius: 24,
-            background: "rgba(255, 250, 243, 0.85)",
+            background:
+              "linear-gradient(180deg, rgba(22, 27, 23, 0.96), rgba(18, 22, 19, 0.94))",
             border: "1px solid var(--border)",
           }}
         >
