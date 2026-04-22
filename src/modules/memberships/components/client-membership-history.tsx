@@ -17,10 +17,10 @@ export function ClientMembershipHistory({
     return (
       <article
         style={{
-          padding: 20,
-          borderRadius: "var(--radius)",
+          padding: 18,
+          borderRadius: 16,
           border: "1px dashed var(--border)",
-          background: "var(--surface)",
+          background: "rgba(255, 255, 255, 0.45)",
           color: "var(--muted)",
         }}
       >
@@ -36,11 +36,11 @@ export function ClientMembershipHistory({
           key={membership.id}
           style={{
             display: "grid",
-            gap: 12,
-            padding: 18,
-            borderRadius: "var(--radius)",
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
+            gap: 10,
+            padding: 16,
+            borderRadius: 16,
+            border: "1px solid rgba(0, 0, 0, 0.05)",
+            background: "rgba(255, 255, 255, 0.55)",
           }}
         >
           <div
@@ -117,7 +117,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       style={{
         padding: 14,
         borderRadius: 14,
-        background: "rgba(239, 229, 212, 0.45)",
+        background: "rgba(239, 229, 212, 0.28)",
       }}
     >
       <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>

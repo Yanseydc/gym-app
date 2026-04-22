@@ -309,7 +309,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </p>
         </div>
 
-        <section style={{ display: "grid", gap: 16 }}>
+        <section style={{ display: "grid", gap: 14 }}>
           <div>
             <h3 style={{ margin: "0 0 8px" }}>Membership history</h3>
             <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -339,11 +339,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         <section
           style={{
             display: "grid",
-            gap: 16,
-            padding: 24,
-            borderRadius: 24,
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
+            gap: 14,
+            padding: 18,
+            borderRadius: 18,
+            border: "1px solid rgba(0, 0, 0, 0.05)",
+            background: "rgba(255, 255, 255, 0.55)",
           }}
         >
           <div>
@@ -376,7 +376,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
       {user && hasModuleAccess(user.role, "payments") ? (
         <>
-          <section style={{ display: "grid", gap: 16 }}>
+          <section style={{ display: "grid", gap: 14 }}>
             <div
               style={{
                 display: "flex",
@@ -426,11 +426,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <section
             style={{
               display: "grid",
-              gap: 16,
-              padding: 24,
-              borderRadius: 24,
-              border: "1px solid var(--border)",
-              background: "var(--surface)",
+              gap: 14,
+              padding: 18,
+              borderRadius: 18,
+              border: "1px solid rgba(0, 0, 0, 0.05)",
+              background: "rgba(255, 255, 255, 0.55)",
             }}
           >
             <div>
@@ -469,7 +469,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
       {user && hasModuleAccess(user.role, "checkins") ? (
         <>
-          <section style={{ display: "grid", gap: 16 }}>
+          <section style={{ display: "grid", gap: 14 }}>
             <div
               style={{
                 display: "flex",
@@ -510,11 +510,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <section
             style={{
               display: "grid",
-              gap: 16,
-              padding: 24,
-              borderRadius: 24,
-              border: "1px solid var(--border)",
-              background: "var(--surface)",
+              gap: 14,
+              padding: 18,
+              borderRadius: 18,
+              border: "1px solid rgba(0, 0, 0, 0.05)",
+              background: "rgba(255, 255, 255, 0.55)",
             }}
           >
             <div>

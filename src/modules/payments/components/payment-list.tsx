@@ -12,10 +12,10 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
     return (
       <article
         style={{
-          padding: 20,
-          borderRadius: "var(--radius)",
+          padding: 18,
+          borderRadius: 16,
           border: "1px dashed var(--border)",
-          background: "var(--surface)",
+          background: "rgba(255, 255, 255, 0.45)",
           color: "var(--muted)",
         }}
       >
@@ -31,11 +31,11 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
           key={payment.id}
           style={{
             display: "grid",
-            gap: 10,
-            padding: 18,
-            borderRadius: "var(--radius)",
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
+            gap: 8,
+            padding: 16,
+            borderRadius: 16,
+            border: "1px solid rgba(0, 0, 0, 0.05)",
+            background: "rgba(255, 255, 255, 0.55)",
           }}
         >
           <div

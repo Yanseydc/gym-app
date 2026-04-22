@@ -44,11 +44,11 @@ export function ProgressCheckInSection({
         <article
           style={{
             display: "grid",
-            gap: 16,
-            padding: 28,
-            borderRadius: 24,
+            gap: 14,
+            padding: 18,
+            borderRadius: 18,
             border: "1px dashed var(--border)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
+            background: "rgba(255, 255, 255, 0.45)",
           }}
         >
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -77,12 +77,11 @@ export function ProgressCheckInSection({
               key={checkIn.id}
               style={{
                 display: "grid",
-                gap: 14,
-                padding: 20,
-                borderRadius: 20,
-                border: "1px solid rgba(0, 0, 0, 0.06)",
-                background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-                boxShadow: "var(--shadow)",
+                gap: 12,
+                padding: 16,
+                borderRadius: 16,
+                border: "1px solid rgba(0, 0, 0, 0.05)",
+                background: "rgba(255, 255, 255, 0.55)",
               }}
             >
               <div
@@ -98,7 +97,7 @@ export function ProgressCheckInSection({
                   <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
                     Check-in
                   </span>
-                  <strong style={{ fontSize: 20 }}>{checkIn.checkinDate}</strong>
+                  <strong style={{ fontSize: 18 }}>{checkIn.checkinDate}</strong>
                 </div>
                 <Link
                   href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
@@ -151,9 +150,9 @@ function MetaPill({ label, value }: { label: string; value: string }) {
       style={{
         display: "grid",
         gap: 4,
-        padding: "12px 14px",
-        borderRadius: 16,
-        background: "rgba(255, 250, 243, 0.9)",
+        padding: "10px 12px",
+        borderRadius: 14,
+        background: "rgba(239, 229, 212, 0.28)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
