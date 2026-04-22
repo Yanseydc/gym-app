@@ -34,13 +34,13 @@ export function RoutineSummaryList({
           key={routine.id}
           style={{
             display: "grid",
-            gap: 12,
-            padding: 16,
-            borderRadius: 18,
-            border: "1px solid rgba(0, 0, 0, 0.06)",
+            gap: 10,
+            padding: 18,
+            borderRadius: 20,
+            border: "1px solid rgba(0, 0, 0, 0.08)",
             background:
-              "linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 243, 0.82))",
-            boxShadow: "0 10px 24px rgba(0, 0, 0, 0.06)",
+              "linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(255, 247, 238, 0.92))",
+            boxShadow: "0 16px 32px rgba(0, 0, 0, 0.08)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -53,10 +53,10 @@ export function RoutineSummaryList({
               width: 4,
               background:
                 routine.status === "active"
-                  ? "linear-gradient(180deg, #1f6b42, #4d9b6c)"
+                  ? "linear-gradient(180deg, #1f6b42, #66b782)"
                   : routine.status === "archived"
                     ? "linear-gradient(180deg, #7a5a2f, #aa8457)"
-                    : "linear-gradient(180deg, #31527a, #6a89b3)",
+                    : "linear-gradient(180deg, #244f7b, #5f96c8)",
             }}
           />
           <div
@@ -69,21 +69,23 @@ export function RoutineSummaryList({
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", fontSize: 18, lineHeight: 1.25 }}>
+              <strong style={{ display: "block", fontSize: 19, lineHeight: 1.2 }}>
                 {routine.title}
               </strong>
               <div
                 style={{
-                  marginTop: 6,
+                  marginTop: 8,
                   color: "var(--muted)",
                   fontSize: 14,
                   lineHeight: 1.5,
                 }}
               >
-                {routine.dayCount} day{routine.dayCount === 1 ? "" : "s"}
-                {" · "}
+                <span style={{ fontWeight: 700, color: "var(--accent-strong)" }}>
+                  {routine.dayCount} day{routine.dayCount === 1 ? "" : "s"}
+                </span>
+                <span> · </span>
                 {routine.startsOn ? `Starts ${routine.startsOn}` : "No start date"}
-                {" · "}
+                <span> · </span>
                 {routine.endsOn ? `Ends ${routine.endsOn}` : "No end date"}
               </div>
             </div>
@@ -94,9 +96,11 @@ export function RoutineSummaryList({
           <div
             style={{
               display: "flex",
-              gap: 10,
+              gap: 8,
               flexWrap: "wrap",
               alignItems: "center",
+              paddingTop: 4,
+              borderTop: "1px solid rgba(0, 0, 0, 0.06)",
             }}
           >
             <Link
@@ -380,9 +384,9 @@ function DetailItem({
 }
 
 const actionLinkStyles = {
-  padding: "9px 12px",
-  borderRadius: 12,
-  background: "rgba(239, 229, 212, 0.48)",
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: "rgba(239, 229, 212, 0.58)",
   fontWeight: 700,
   fontSize: 14,
 } as const;

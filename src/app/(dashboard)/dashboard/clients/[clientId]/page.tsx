@@ -213,12 +213,13 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <section
             style={{
               display: "grid",
-              gap: 16,
-              padding: 22,
-              borderRadius: 22,
-              border: "1px solid rgba(0, 0, 0, 0.06)",
-              background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.7))",
-              boxShadow: "var(--shadow)",
+              gap: 18,
+              padding: 24,
+              borderRadius: 24,
+              border: "1px solid rgba(0, 0, 0, 0.08)",
+              background:
+                "linear-gradient(180deg, rgba(255, 248, 240, 0.98), rgba(255, 255, 255, 0.96))",
+              boxShadow: "0 18px 40px rgba(0, 0, 0, 0.08)",
             }}
           >
             <div
@@ -234,18 +235,18 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 <span
                   style={{
                     display: "inline-block",
-                    marginBottom: 8,
-                    color: "var(--muted)",
+                    marginBottom: 10,
+                    color: "var(--accent-strong)",
                     fontSize: 12,
                     fontWeight: 700,
-                    letterSpacing: "0.05em",
+                    letterSpacing: "0.08em",
                     textTransform: "uppercase",
                   }}
                 >
                   Training plans
                 </span>
-                <h3 style={{ margin: "0 0 6px" }}>Routines</h3>
-                <p style={{ margin: 0, color: "var(--muted)" }}>
+                <h3 style={{ margin: "0 0 6px", fontSize: 26, lineHeight: 1.1 }}>Routines</h3>
+                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
                   Create, reuse, and adjust training plans without leaving the client view.
                 </p>
               </div>
@@ -255,8 +256,10 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 style={{
                   padding: "12px 16px",
                   borderRadius: 14,
-                  background: "var(--surface-alt)",
+                  background: "var(--accent)",
+                  color: "#fff",
                   fontWeight: 700,
+                  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.12)",
                 }}
               >
                 Create routine
