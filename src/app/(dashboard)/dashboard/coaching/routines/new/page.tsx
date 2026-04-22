@@ -48,11 +48,11 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          {t("nav.coaching")}
+          {t("coaching.createPage.workflow")}
         </span>
-        <h1 style={{ margin: 0 }}>{t("clients.detail.createRoutine")}</h1>
+        <h1 style={{ margin: 0 }}>{t("coaching.createPage.createTitle")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          {t("clients.detail.routinesHelper")}
+          {t("coaching.createPage.createDescription")}
         </p>
       </header>
 
@@ -84,11 +84,11 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
         <aside className="coaching-support-panel">
           <div style={{ display: "grid", gap: 8 }}>
             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              {t("clients.detail.actions")}
+              {t("coaching.createPage.nextSteps")}
             </span>
-            <strong style={{ fontSize: 18 }}>{t("common.save")} first, build after</strong>
+            <strong style={{ fontSize: 18 }}>{t("coaching.createPage.saveFirst")}</strong>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              After creating the routine, you will continue to the routine workspace to add day blocks and assign exercises.
+              {t("coaching.createPage.saveFirstDescription")}
             </p>
           </div>
 
@@ -102,12 +102,12 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
               background: "rgba(255, 255, 255, 0.025)",
             }}
           >
-            <strong style={{ fontSize: 15 }}>What you can define now</strong>
+            <strong style={{ fontSize: 15 }}>{t("coaching.createPage.whatYouCanDefine")}</strong>
             <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.65 }}>
-              <li>client and title</li>
-              <li>draft, active or archived status</li>
-              <li>optional start and end dates</li>
-              <li>high-level coaching notes</li>
+              <li>{t("coaching.createPage.defineClientAndTitle")}</li>
+              <li>{t("coaching.createPage.defineStatus")}</li>
+              <li>{t("coaching.createPage.defineDates")}</li>
+              <li>{t("coaching.createPage.defineNotes")}</li>
             </ul>
           </div>
         </aside>

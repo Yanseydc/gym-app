@@ -84,6 +84,9 @@
     "createDescription": "Register a new client in the gym system.",
     "editTitle": "Edit client",
     "editDescription": "Update the selected client record.",
+    "loading": "Loading clients...",
+    "loadError": "Unable to load clients",
+    "tryAgain": "Try again",
     "form": {
       "firstName": "First name",
       "lastName": "Last name",
@@ -227,6 +230,19 @@
       "reps": "Reps",
       "weight": "Weight",
       "rest": "Rest"
+    },
+    "createPage": {
+      "workflow": "Coaching workflow",
+      "createTitle": "Create routine",
+      "createDescription": "Create a client routine, then add days and exercises from the exercise library.",
+      "nextSteps": "Next steps",
+      "saveFirst": "Save first, build after",
+      "saveFirstDescription": "After creating the routine, you will continue to the routine workspace to add day blocks and assign exercises.",
+      "whatYouCanDefine": "What you can define now",
+      "defineClientAndTitle": "client and title",
+      "defineStatus": "draft, active or archived status",
+      "defineDates": "optional start and end dates",
+      "defineNotes": "high-level coaching notes"
     }
   },
   "memberships": {

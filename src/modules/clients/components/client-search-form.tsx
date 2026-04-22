@@ -1,3 +1,5 @@
+"use client";
+
 import { buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 

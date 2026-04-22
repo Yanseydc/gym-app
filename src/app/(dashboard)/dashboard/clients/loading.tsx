@@ -1,4 +1,10 @@
+"use client";
+
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+
 export default function ClientsLoading() {
+  const { t } = useAdminText();
+
   return (
     <div
       style={{
@@ -8,7 +14,7 @@ export default function ClientsLoading() {
         background: "var(--surface)",
       }}
     >
-      Loading clients...
+      {t("clients.title")}...
     </div>
   );
 }

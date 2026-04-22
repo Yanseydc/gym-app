@@ -84,6 +84,9 @@
     "createDescription": "Registra un nuevo cliente en el sistema del gimnasio.",
     "editTitle": "Editar cliente",
     "editDescription": "Actualiza el registro del cliente seleccionado.",
+    "loading": "Cargando clientes...",
+    "loadError": "No se pudieron cargar los clientes",
+    "tryAgain": "Intentar de nuevo",
     "form": {
       "firstName": "Nombre",
       "lastName": "Apellido",
@@ -227,6 +230,19 @@
       "reps": "Reps",
       "weight": "Peso",
       "rest": "Descanso"
+    },
+    "createPage": {
+      "workflow": "Flujo de coaching",
+      "createTitle": "Crear rutina",
+      "createDescription": "Crea una rutina para un cliente y luego agrega días y ejercicios desde la biblioteca.",
+      "nextSteps": "Siguientes pasos",
+      "saveFirst": "Guarda primero, construye después",
+      "saveFirstDescription": "Después de crear la rutina, continuarás al workspace de rutina para agregar bloques de día y asignar ejercicios.",
+      "whatYouCanDefine": "Lo que puedes definir ahora",
+      "defineClientAndTitle": "cliente y título",
+      "defineStatus": "estado borrador, activo o archivado",
+      "defineDates": "fechas opcionales de inicio y fin",
+      "defineNotes": "notas generales de coaching"
     }
   },
   "memberships": {

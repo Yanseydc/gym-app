@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
