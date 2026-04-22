@@ -206,82 +206,79 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <div>
             <h2 style={{ margin: "0 0 8px" }}>Coaching workspace</h2>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              Detailed planning, routine management, and progress history.
+              Detailed planning and routine management for this client.
             </p>
           </div>
 
-          <div
+          <section
             style={{
               display: "grid",
-              gap: 18,
-              gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+              gap: 16,
+              padding: 22,
+              borderRadius: 22,
+              border: "1px solid rgba(0, 0, 0, 0.06)",
+              background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.7))",
+              boxShadow: "var(--shadow)",
             }}
           >
-            <section style={{ display: "grid", gap: 16 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "flex-start",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: "0 0 6px" }}>Routines</h3>
-                  <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Create and manage workout routines for this client.
-                  </p>
-                </div>
-
-                <Link
-                  href={`/dashboard/coaching/routines/new?clientId=${client.id}`}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <span
                   style={{
-                    padding: "12px 16px",
-                    borderRadius: 14,
-                    background: "var(--surface-alt)",
+                    display: "inline-block",
+                    marginBottom: 8,
+                    color: "var(--muted)",
+                    fontSize: 12,
                     fontWeight: 700,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
                   }}
                 >
-                  Create routine
-                </Link>
+                  Training plans
+                </span>
+                <h3 style={{ margin: "0 0 6px" }}>Routines</h3>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Create, reuse, and adjust training plans without leaving the client view.
+                </p>
               </div>
 
-              {routinesError ? (
-                <p
-                  style={{
-                    margin: 0,
-                    padding: "12px 14px",
-                    borderRadius: 12,
-                    background: "#fff2f2",
-                    color: "#8a1c1c",
-                  }}
-                >
-                  {routinesError}
-                </p>
-              ) : (
-                <RoutineSummaryList clientId={client.id} routines={routines} />
-              )}
-            </section>
+              <Link
+                href={`/dashboard/coaching/routines/new?clientId=${client.id}`}
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 14,
+                  background: "var(--surface-alt)",
+                  fontWeight: 700,
+                }}
+              >
+                Create routine
+              </Link>
+            </div>
 
-            <section style={{ display: "grid", gap: 16 }}>
-              {onboardingError ? (
-                <p
-                  style={{
-                    margin: 0,
-                    padding: "12px 14px",
-                    borderRadius: 12,
-                    background: "#fff2f2",
-                    color: "#8a1c1c",
-                  }}
-                >
-                  {onboardingError}
-                </p>
-              ) : (
-                <ClientOnboardingCard clientId={client.id} onboarding={onboarding} />
-              )}
-            </section>
-          </div>
+            {routinesError ? (
+              <p
+                style={{
+                  margin: 0,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "#fff2f2",
+                  color: "#8a1c1c",
+                }}
+              >
+                {routinesError}
+              </p>
+            ) : (
+              <RoutineSummaryList clientId={client.id} routines={routines} />
+            )}
+          </section>
 
           {progressCheckInsError ? (
             <p

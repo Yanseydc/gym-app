@@ -1,10 +1,11 @@
 import { duplicateRoutine } from "@/modules/coaching/services/duplicate-routine";
 
 const actionButtonStyles = {
-  padding: "10px 14px",
+  padding: "9px 12px",
   borderRadius: 12,
-  background: "var(--surface-alt)",
+  background: "rgba(239, 229, 212, 0.48)",
   fontWeight: 700,
+  fontSize: 14,
   border: "none",
   cursor: "pointer",
   font: "inherit",

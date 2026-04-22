@@ -34,14 +34,31 @@ export function RoutineSummaryList({
           key={routine.id}
           style={{
             display: "grid",
-            gap: 14,
-            padding: 20,
-            borderRadius: 20,
+            gap: 12,
+            padding: 16,
+            borderRadius: 18,
             border: "1px solid rgba(0, 0, 0, 0.06)",
-            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
-            boxShadow: "var(--shadow)",
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 243, 0.82))",
+            boxShadow: "0 10px 24px rgba(0, 0, 0, 0.06)",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: "0 auto 0 0",
+              width: 4,
+              background:
+                routine.status === "active"
+                  ? "linear-gradient(180deg, #1f6b42, #4d9b6c)"
+                  : routine.status === "archived"
+                    ? "linear-gradient(180deg, #7a5a2f, #aa8457)"
+                    : "linear-gradient(180deg, #31527a, #6a89b3)",
+            }}
+          />
           <div
             style={{
               display: "flex",
@@ -51,10 +68,23 @@ export function RoutineSummaryList({
               alignItems: "center",
             }}
           >
-            <div>
-              <strong style={{ fontSize: 20 }}>{routine.title}</strong>
-              <div style={{ color: "var(--muted)", marginTop: 4 }}>
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ display: "block", fontSize: 18, lineHeight: 1.25 }}>
+                {routine.title}
+              </strong>
+              <div
+                style={{
+                  marginTop: 6,
+                  color: "var(--muted)",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                }}
+              >
                 {routine.dayCount} day{routine.dayCount === 1 ? "" : "s"}
+                {" · "}
+                {routine.startsOn ? `Starts ${routine.startsOn}` : "No start date"}
+                {" · "}
+                {routine.endsOn ? `Ends ${routine.endsOn}` : "No end date"}
               </div>
             </div>
 
@@ -63,16 +93,12 @@ export function RoutineSummaryList({
 
           <div
             style={{
-              display: "grid",
+              display: "flex",
               gap: 10,
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              flexWrap: "wrap",
+              alignItems: "center",
             }}
           >
-            <DetailChip label="Starts on" value={routine.startsOn || "No start date"} />
-            <DetailChip label="Ends on" value={routine.endsOn || "No end date"} />
-          </div>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link
               href={`/dashboard/coaching/routines/${routine.id}`}
               style={actionLinkStyles}
@@ -354,8 +380,9 @@ function DetailItem({
 }
 
 const actionLinkStyles = {
-  padding: "10px 14px",
+  padding: "9px 12px",
   borderRadius: 12,
-  background: "var(--surface-alt)",
+  background: "rgba(239, 229, 212, 0.48)",
   fontWeight: 700,
+  fontSize: 14,
 } as const;
