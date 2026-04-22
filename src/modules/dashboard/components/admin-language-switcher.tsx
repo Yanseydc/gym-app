@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -23,9 +22,15 @@ export function AdminLanguageSwitcher() {
           const isActive = locale === nextLocale;
 
           return (
-            <Link
+            <button
               key={nextLocale}
-              href={href}
+              type="button"
+              onClick={() => {
+                if (!isActive) {
+                  window.location.assign(href);
+                }
+              }}
+              disabled={isActive}
               style={{
                 padding: "8px 12px",
                 borderRadius: 12,
@@ -34,10 +39,12 @@ export function AdminLanguageSwitcher() {
                 color: isActive ? "#121513" : "var(--foreground)",
                 fontWeight: 700,
                 fontSize: 13,
+                cursor: isActive ? "default" : "pointer",
+                opacity: isActive ? 1 : undefined,
               }}
             >
               {nextLocale.toUpperCase()}
-            </Link>
+            </button>
           );
         })}
       </div>
