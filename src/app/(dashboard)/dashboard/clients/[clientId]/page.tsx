@@ -34,10 +34,14 @@ type ClientDetailPageProps = {
   params: Promise<{
     clientId: string;
   }>;
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
 };
 
-export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
+export default async function ClientDetailPage({ params, searchParams }: ClientDetailPageProps) {
   const { clientId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const user = await getCurrentUser();
   const [
     { data: client, error },
@@ -92,6 +96,30 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   const canAccessMemberships = Boolean(user && hasModuleAccess(user.role, "memberships"));
   const canAccessPayments = Boolean(user && hasModuleAccess(user.role, "payments"));
   const canAccessCheckIns = Boolean(user && hasModuleAccess(user.role, "checkins"));
+  const canAccessOperations = canAccessMemberships || canAccessPayments || canAccessCheckIns;
+  const requestedTab = resolvedSearchParams?.tab;
+  const activeTab =
+    requestedTab === "coaching" && canAccessCoaching
+      ? "coaching"
+      : requestedTab === "operations" && canAccessOperations
+        ? "operations"
+        : "overview";
+  const baseClientPath = `/dashboard/clients/${client.id}`;
+  const tabs = [
+    { id: "overview", label: "Overview", href: baseClientPath, visible: true },
+    {
+      id: "coaching",
+      label: "Coaching",
+      href: `${baseClientPath}?tab=coaching`,
+      visible: canAccessCoaching,
+    },
+    {
+      id: "operations",
+      label: "Operations",
+      href: `${baseClientPath}?tab=operations`,
+      visible: canAccessOperations,
+    },
+  ].filter((tab) => tab.visible);
 
   return (
     <div style={{ display: "grid", gap: 32 }}>
@@ -99,9 +127,46 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         Back to clients
       </Link>
 
-      <ClientDetailCard client={client} />
+      <nav
+        aria-label="Client detail sections"
+        style={{
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap",
+          padding: 8,
+          borderRadius: 18,
+          border: "1px solid var(--border)",
+          background: "rgba(255, 255, 255, 0.025)",
+          width: "fit-content",
+        }}
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
 
-      {canAccessCoaching ? (
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              style={{
+                padding: "10px 14px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 14,
+                background: isActive ? "var(--accent)" : "transparent",
+                color: isActive ? "#121513" : "var(--foreground)",
+                border: isActive ? "1px solid transparent" : "1px solid var(--border)",
+                transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
+              }}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {activeTab === "overview" ? <ClientDetailCard client={client} /> : null}
+
+      {activeTab === "overview" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 14 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <h2 style={{ margin: "0 0 8px" }}>Coaching summary</h2>
@@ -206,7 +271,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </section>
       ) : null}
 
-      {canAccessCoaching ? (
+      {activeTab === "coaching" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 16 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <h2 style={{ margin: "0 0 8px" }}>Coaching workspace</h2>
@@ -277,6 +342,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </section>
       ) : null}
 
+      {activeTab === "operations" && canAccessOperations ? (
       <section style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
           <h2 style={{ margin: "0 0 8px" }}>Operations</h2>
@@ -464,6 +530,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </section>
         </div>
       </section>
+      ) : null}
     </div>
   );
 }
