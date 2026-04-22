@@ -6,7 +6,6 @@ import { ClientDetailCard } from "@/modules/clients/components/client-detail-car
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 import { ClientOnboardingCard } from "@/modules/coaching/components/onboarding-card";
-import { ClientPortalAccessCard } from "@/modules/coaching/components/portal-access-card";
 import { ProgressCheckInSection } from "@/modules/coaching/components/progress-checkin-card";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { getPortalAccessForPage } from "@/modules/coaching/services/portal-access-service";
@@ -86,6 +85,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     notFound();
   }
 
+  const activeRoutine = routines.find((routine) => routine.status === "active") ?? null;
+  const latestProgressCheckIn = progressCheckIns[0] ?? null;
+
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
@@ -96,94 +98,192 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
       {user && hasModuleAccess(user.role, "coaching") ? (
         <section style={{ display: "grid", gap: 16 }}>
-          {portalAccessError ? (
-            <p
-              style={{
-                margin: 0,
-                padding: "12px 14px",
-                borderRadius: 12,
-                background: "#fff2f2",
-                color: "#8a1c1c",
-              }}
-            >
-              {portalAccessError}
+          <div>
+            <h2 style={{ margin: "0 0 8px" }}>Coaching summary</h2>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+              Key signals and quick actions for this client.
             </p>
-          ) : (
-            <ClientPortalAccessCard clientId={client.id} portalAccess={portalAccess} />
-          )}
-        </section>
-      ) : null}
-
-      {user && hasModuleAccess(user.role, "coaching") ? (
-        <section style={{ display: "grid", gap: 16 }}>
-          {onboardingError ? (
-            <p
-              style={{
-                margin: 0,
-                padding: "12px 14px",
-                borderRadius: 12,
-                background: "#fff2f2",
-                color: "#8a1c1c",
-              }}
-            >
-              {onboardingError}
-            </p>
-          ) : (
-            <ClientOnboardingCard clientId={client.id} onboarding={onboarding} />
-          )}
-        </section>
-      ) : null}
-
-      {user && hasModuleAccess(user.role, "coaching") ? (
-        progressCheckInsError ? (
-          <p
-            style={{
-              margin: 0,
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "#fff2f2",
-              color: "#8a1c1c",
-            }}
-          >
-            {progressCheckInsError}
-          </p>
-        ) : (
-          <ProgressCheckInSection clientId={client.id} checkIns={progressCheckIns} />
-        )
-      ) : null}
-
-      {user && hasModuleAccess(user.role, "coaching") ? (
-        <section style={{ display: "grid", gap: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <h2 style={{ margin: "0 0 8px" }}>Coaching routines</h2>
-              <p style={{ margin: 0, color: "var(--muted)" }}>
-                Create and manage workout routines for this client.
-              </p>
-            </div>
-
-            <Link
-              href={`/dashboard/coaching/routines/new?clientId=${client.id}`}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 14,
-                background: "var(--surface-alt)",
-                fontWeight: 700,
-              }}
-            >
-              Create routine
-            </Link>
           </div>
 
-          {routinesError ? (
+          <div
+            style={{
+              display: "grid",
+              gap: 16,
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            }}
+          >
+            <SummaryCard
+              eyebrow="Portal access"
+              title={
+                portalAccess
+                  ? [portalAccess.profile.firstName, portalAccess.profile.lastName].filter(Boolean).join(" ") ||
+                    portalAccess.profile.email
+                  : portalAccessError
+                    ? "Access unavailable"
+                    : "Not linked yet"
+              }
+              description={
+                portalAccess
+                  ? portalAccess.profile.email
+                  : portalAccessError ?? "Link a member profile to unlock the client portal."
+              }
+              meta={portalAccess ? `Linked ${new Date(portalAccess.linkedAt).toLocaleDateString()}` : "Manual setup"}
+              actionHref={
+                portalAccess
+                  ? undefined
+                  : `/dashboard/clients/${client.id}/portal-access/new`
+              }
+              actionLabel={portalAccess ? undefined : "Link portal user"}
+            />
+
+            <SummaryCard
+              eyebrow="Onboarding snapshot"
+              title={onboarding ? onboarding.goal : onboardingError ? "Onboarding unavailable" : "No onboarding yet"}
+              description={
+                onboarding
+                  ? `${onboarding.availableDays} days/week · ${onboarding.experienceLevel}`
+                  : onboardingError ?? "Capture the baseline details used for planning."
+              }
+              meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : "Planning setup"}
+              actionHref={`/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`}
+              actionLabel={onboarding ? "Edit onboarding" : "Create onboarding"}
+            />
+
+            <SummaryCard
+              eyebrow="Active routine"
+              title={activeRoutine ? activeRoutine.title : routinesError ? "Routines unavailable" : "No active routine"}
+              description={
+                activeRoutine
+                  ? `${activeRoutine.dayCount} day blocks`
+                  : routinesError ?? "Create or apply a routine to keep coaching moving."
+              }
+              meta={activeRoutine ? `Updated ${new Date(activeRoutine.updatedAt).toLocaleDateString()}` : "Training plan"}
+              actionHref={
+                activeRoutine
+                  ? `/dashboard/coaching/routines/${activeRoutine.id}`
+                  : `/dashboard/coaching/routines/new?clientId=${client.id}`
+              }
+              actionLabel={activeRoutine ? "View routine" : "Create routine"}
+              status={activeRoutine ? <StatusChip label="Active" tone="success" /> : undefined}
+            />
+
+            <SummaryCard
+              eyebrow="Latest progress"
+              title={
+                latestProgressCheckIn
+                  ? latestProgressCheckIn.checkinDate
+                  : progressCheckInsError
+                    ? "Check-ins unavailable"
+                    : "No check-ins yet"
+              }
+              description={
+                latestProgressCheckIn
+                  ? latestProgressCheckIn.photoTypes.length > 0
+                    ? `${latestProgressCheckIn.photoTypes.length} photos attached`
+                    : "No photos attached"
+                  : progressCheckInsError ?? "Capture quick progress snapshots over time."
+              }
+              meta={
+                latestProgressCheckIn
+                  ? latestProgressCheckIn.weightKg
+                    ? `${latestProgressCheckIn.weightKg} kg`
+                    : "Weight not recorded"
+                  : "Progress tracking"
+              }
+              actionHref={
+                latestProgressCheckIn
+                  ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
+                  : `/dashboard/clients/${client.id}/progress-checkins/new`
+              }
+              actionLabel={latestProgressCheckIn ? "Open latest check-in" : "Create first check-in"}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      {user && hasModuleAccess(user.role, "coaching") ? (
+        <section style={{ display: "grid", gap: 18 }}>
+          <div>
+            <h2 style={{ margin: "0 0 8px" }}>Coaching workspace</h2>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+              Detailed planning, routine management, and progress history.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 18,
+              gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+            }}
+          >
+            <section style={{ display: "grid", gap: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <h3 style={{ margin: "0 0 6px" }}>Routines</h3>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>
+                    Create and manage workout routines for this client.
+                  </p>
+                </div>
+
+                <Link
+                  href={`/dashboard/coaching/routines/new?clientId=${client.id}`}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: 14,
+                    background: "var(--surface-alt)",
+                    fontWeight: 700,
+                  }}
+                >
+                  Create routine
+                </Link>
+              </div>
+
+              {routinesError ? (
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "#fff2f2",
+                    color: "#8a1c1c",
+                  }}
+                >
+                  {routinesError}
+                </p>
+              ) : (
+                <RoutineSummaryList clientId={client.id} routines={routines} />
+              )}
+            </section>
+
+            <section style={{ display: "grid", gap: 16 }}>
+              {onboardingError ? (
+                <p
+                  style={{
+                    margin: 0,
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "#fff2f2",
+                    color: "#8a1c1c",
+                  }}
+                >
+                  {onboardingError}
+                </p>
+              ) : (
+                <ClientOnboardingCard clientId={client.id} onboarding={onboarding} />
+              )}
+            </section>
+          </div>
+
+          {progressCheckInsError ? (
             <p
               style={{
                 margin: 0,
@@ -193,37 +293,46 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                 color: "#8a1c1c",
               }}
             >
-              {routinesError}
+              {progressCheckInsError}
             </p>
           ) : (
-            <RoutineSummaryList clientId={client.id} routines={routines} />
+            <ProgressCheckInSection clientId={client.id} checkIns={progressCheckIns} />
           )}
         </section>
       ) : null}
 
-      <section style={{ display: "grid", gap: 16 }}>
+      <section style={{ display: "grid", gap: 18 }}>
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Membership history</h2>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            Current and past memberships assigned to this client.
+          <h2 style={{ margin: "0 0 8px" }}>Operations</h2>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+            Memberships, payments, and check-in activity for this client.
           </p>
         </div>
 
-        {membershipHistoryError ? (
-          <p
-            style={{
-              margin: 0,
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "#fff2f2",
-              color: "#8a1c1c",
-            }}
-          >
-            {membershipHistoryError}
-          </p>
-        ) : (
-          <ClientMembershipHistory clientId={client.id} memberships={membershipHistory} />
-        )}
+        <section style={{ display: "grid", gap: 16 }}>
+          <div>
+            <h3 style={{ margin: "0 0 8px" }}>Membership history</h3>
+            <p style={{ margin: 0, color: "var(--muted)" }}>
+              Current and past memberships assigned to this client.
+            </p>
+          </div>
+
+          {membershipHistoryError ? (
+            <p
+              style={{
+                margin: 0,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "#fff2f2",
+                color: "#8a1c1c",
+              }}
+            >
+              {membershipHistoryError}
+            </p>
+          ) : (
+            <ClientMembershipHistory clientId={client.id} memberships={membershipHistory} />
+          )}
+        </section>
       </section>
 
       {user && hasModuleAccess(user.role, "memberships") ? (
@@ -433,5 +542,117 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </>
       ) : null}
     </div>
+  );
+}
+
+function SummaryCard({
+  actionHref,
+  actionLabel,
+  description,
+  eyebrow,
+  meta,
+  status,
+  title,
+}: {
+  actionHref?: string;
+  actionLabel?: string;
+  description: string;
+  eyebrow: string;
+  meta: string;
+  status?: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <article
+      style={{
+        display: "grid",
+        gap: 14,
+        padding: 20,
+        borderRadius: 20,
+        border: "1px solid rgba(0, 0, 0, 0.06)",
+        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
+        boxShadow: "var(--shadow)",
+        minHeight: 184,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+        <span
+          style={{
+            color: "var(--muted)",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+          }}
+        >
+          {eyebrow}
+        </span>
+        {status}
+      </div>
+
+      <div style={{ display: "grid", gap: 6 }}>
+        <strong style={{ fontSize: 20, lineHeight: 1.25 }}>{title}</strong>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
+      </div>
+
+      <div
+        style={{
+          padding: "10px 12px",
+          borderRadius: 14,
+          background: "rgba(239, 229, 212, 0.42)",
+          color: "var(--muted)",
+          fontSize: 14,
+          fontWeight: 600,
+        }}
+      >
+        {meta}
+      </div>
+
+      {actionHref && actionLabel ? (
+        <div>
+          <Link
+            href={actionHref}
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: "var(--surface-alt)",
+              fontWeight: 700,
+            }}
+          >
+            {actionLabel}
+          </Link>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function StatusChip({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: "neutral" | "success";
+}) {
+  const palette =
+    tone === "success"
+      ? { background: "#dff4e8", color: "#1f6b42" }
+      : { background: "#ece8e1", color: "#6b6258" };
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 700,
+        ...palette,
+      }}
+    >
+      {label}
+    </span>
   );
 }

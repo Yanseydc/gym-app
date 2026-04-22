@@ -8,11 +8,12 @@ export function ClientDetailCard({ client }: { client: Client }) {
     <article
       style={{
         display: "grid",
-        gap: 20,
-        padding: 24,
-        borderRadius: 24,
-        border: "1px solid var(--border)",
-        background: "var(--surface)",
+        gap: 22,
+        padding: 28,
+        borderRadius: 28,
+        border: "1px solid rgba(0, 0, 0, 0.06)",
+        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
+        boxShadow: "var(--shadow)",
       }}
     >
       <div
@@ -25,6 +26,19 @@ export function ClientDetailCard({ client }: { client: Client }) {
         }}
       >
         <div>
+          <span
+            style={{
+              display: "inline-block",
+              marginBottom: 10,
+              color: "var(--muted)",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            Client overview
+          </span>
           <h1 style={{ margin: "0 0 8px" }}>
             {client.firstName} {client.lastName}
           </h1>
@@ -54,8 +68,8 @@ function DetailGrid({ client }: { client: Client }) {
     <div
       style={{
         display: "grid",
-        gap: 16,
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: 14,
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
       }}
     >
       <DetailItem label="Phone" value={client.phone} />
@@ -80,13 +94,25 @@ function DetailItem({
     <div
       style={{
         padding: 16,
-        borderRadius: 16,
-        background: "rgba(239, 229, 212, 0.5)",
+        borderRadius: 18,
+        background: "rgba(239, 229, 212, 0.48)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >
-      <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>
-      <strong style={{ whiteSpace: "pre-wrap" }}>{value}</strong>
+      <span
+        style={{
+          display: "block",
+          marginBottom: 8,
+          color: "var(--muted)",
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+      <strong style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{value}</strong>
     </div>
   );
 }
