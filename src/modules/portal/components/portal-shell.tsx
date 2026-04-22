@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { getPortalText } from "@/lib/i18n/portal";
 import { SignOutButton } from "@/modules/auth/components/sign-out-button";
@@ -13,6 +17,8 @@ type PortalShellProps = Readonly<{
 
 export function PortalShell({ children, client, user }: PortalShellProps) {
   const t = getPortalText();
+  const pathname = usePathname();
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
   const navigation = [
     { href: "/app", label: t.shell.nav.home },
     { href: "/app/routine", label: t.shell.nav.routine },
@@ -70,7 +76,7 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
             }}
           >
             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              Cuenta vinculada
+              {t.shell.linkedAccount}
             </span>
             <strong>
               {client.firstName} {client.lastName}
@@ -79,22 +85,45 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
           </div>
 
           <nav style={{ display: "grid", gap: 12 }}>
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  padding: "13px 14px",
-                  borderRadius: 16,
-                  background: "linear-gradient(180deg, var(--surface-alt), rgba(255, 250, 243, 0.9))",
-                  border: "1px solid rgba(0, 0, 0, 0.05)",
-                  fontWeight: 600,
-                  color: "inherit",
-                }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const isActive = pathname === item.href;
+              const isHovered = hoveredHref === item.href;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onMouseEnter={() => setHoveredHref(item.href)}
+                  onMouseLeave={() =>
+                    setHoveredHref((current) => (current === item.href ? null : current))
+                  }
+                  style={{
+                    padding: "14px 15px",
+                    borderRadius: 16,
+                    background: isActive
+                      ? "linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, black 18%))"
+                      : isHovered
+                        ? "linear-gradient(180deg, rgba(239, 229, 212, 0.92), rgba(255, 250, 243, 1))"
+                        : "linear-gradient(180deg, var(--surface-alt), rgba(255, 250, 243, 0.9))",
+                    border: isActive
+                      ? "1px solid color-mix(in srgb, var(--accent) 70%, black 30%)"
+                      : "1px solid rgba(0, 0, 0, 0.05)",
+                    fontWeight: isActive ? 700 : 600,
+                    color: isActive ? "#fff" : "inherit",
+                    boxShadow: isActive
+                      ? "0 10px 24px rgba(0, 0, 0, 0.14)"
+                      : isHovered
+                        ? "0 6px 18px rgba(0, 0, 0, 0.08)"
+                        : "none",
+                    transform: isHovered && !isActive ? "translateX(2px)" : "translateX(0)",
+                    transition:
+                      "background 160ms ease, box-shadow 160ms ease, transform 160ms ease, color 160ms ease, border-color 160ms ease",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div style={{ marginTop: 20 }}>

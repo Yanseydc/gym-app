@@ -1,6 +1,7 @@
 const portalMessages = {
   shell: {
     brandSubtitle: "Portal del cliente",
+    linkedAccount: "Cuenta vinculada",
     nav: {
       home: "Inicio",
       routine: "Mi rutina",
@@ -40,6 +41,10 @@ const portalMessages = {
     reps: "Repeticiones",
     weight: "Peso",
     rest: "Descanso",
+    activeBadge: "Rutina activa",
+    noDayNotes: "Sigue este bloque tal como aparece en tu plan.",
+    exerciseNotes: "Indicaciones",
+    viewVideo: "Ver video",
     notAvailable: "N/D",
     secondsShort: "seg",
   },
@@ -116,4 +121,3 @@ export function getPortalText() {
     },
   };
 }
-

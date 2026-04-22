@@ -22,17 +22,34 @@ export default async function PortalRoutinePage() {
       <header
         style={{
           display: "grid",
-          gap: 10,
-          padding: 22,
-          borderRadius: 24,
-          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
-          border: "1px solid rgba(0, 0, 0, 0.06)",
+          gap: 14,
+          padding: 26,
+          borderRadius: 26,
+          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.52), rgba(255, 255, 255, 0.98))",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
+          boxShadow: "var(--shadow)",
         }}
       >
-        <h1 style={{ margin: 0 }}>{t.routine.title}</h1>
-        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          {t.routine.description}
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: "grid", gap: 8 }}>
+            <h1 style={{ margin: 0, fontSize: 36, lineHeight: 1.1 }}>{t.routine.title}</h1>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6, fontSize: 16 }}>
+              {t.routine.description}
+            </p>
+          </div>
+          <span
+            style={{
+              padding: "9px 14px",
+              borderRadius: 999,
+              background: "rgba(31, 107, 66, 0.12)",
+              color: "#1f6b42",
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            {t.routine.activeBadge}
+          </span>
+        </div>
       </header>
 
       {!routine ? (
@@ -86,7 +103,11 @@ export default async function PortalRoutinePage() {
                   <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
                     {day.notes}
                   </p>
-                ) : null}
+                ) : (
+                  <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
+                    {t.routine.noDayNotes}
+                  </p>
+                )}
               </div>
 
               {day.exercises.length === 0 ? (
@@ -105,7 +126,33 @@ export default async function PortalRoutinePage() {
                         background: "#fff",
                       }}
                     >
-                      <strong>{exercise.exerciseName}</strong>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
+                        <strong style={{ fontSize: 18, lineHeight: 1.3 }}>{exercise.exerciseName}</strong>
+                        {exercise.videoUrl ? (
+                          <a
+                            href={exercise.videoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: 12,
+                              background: "var(--surface-alt)",
+                              fontWeight: 700,
+                              color: "inherit",
+                            }}
+                          >
+                            {t.routine.viewVideo}
+                          </a>
+                        ) : null}
+                      </div>
                       <div
                         style={{
                           display: "grid",
@@ -125,9 +172,31 @@ export default async function PortalRoutinePage() {
                         />
                       </div>
                       {exercise.notes ? (
-                        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                          {exercise.notes}
-                        </p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: 6,
+                            padding: 14,
+                            borderRadius: 16,
+                            background: "rgba(255, 250, 243, 0.92)",
+                            border: "1px solid rgba(0, 0, 0, 0.05)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "var(--muted)",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              letterSpacing: "0.04em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {t.routine.exerciseNotes}
+                          </span>
+                          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+                            {exercise.notes}
+                          </p>
+                        </div>
                       ) : null}
                     </article>
                   ))}
@@ -146,16 +215,17 @@ function ExerciseMeta({ label, value }: { label: string; value: string }) {
     <div
       style={{
         display: "grid",
-        gap: 4,
-        padding: "10px 12px",
-        borderRadius: 14,
-        background: "rgba(255, 250, 243, 0.9)",
+        gap: 6,
+        padding: "12px 14px",
+        borderRadius: 16,
+        background: "linear-gradient(180deg, rgba(255, 250, 243, 0.92), rgba(239, 229, 212, 0.55))",
+        border: "1px solid rgba(0, 0, 0, 0.05)",
       }}
     >
-      <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+      <span style={{ color: "var(--muted)", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
         {label}
       </span>
-      <strong>{value}</strong>
+      <strong style={{ fontSize: 16, lineHeight: 1.3 }}>{value}</strong>
     </div>
   );
 }
