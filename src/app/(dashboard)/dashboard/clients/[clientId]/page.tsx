@@ -97,10 +97,13 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   const canAccessPayments = Boolean(user && hasModuleAccess(user.role, "payments"));
   const canAccessCheckIns = Boolean(user && hasModuleAccess(user.role, "checkins"));
   const canAccessOperations = canAccessMemberships || canAccessPayments || canAccessCheckIns;
+  const canAccessHistory = canAccessMemberships || canAccessPayments || canAccessCheckIns;
   const requestedTab = resolvedSearchParams?.tab;
   const activeTab =
     requestedTab === "coaching" && canAccessCoaching
       ? "coaching"
+      : requestedTab === "history" && canAccessHistory
+        ? "history"
       : requestedTab === "operations" && canAccessOperations
         ? "operations"
         : "overview";
@@ -112,6 +115,12 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       label: "Coaching",
       href: `${baseClientPath}?tab=coaching`,
       visible: canAccessCoaching,
+    },
+    {
+      id: "history",
+      label: "History",
+      href: `${baseClientPath}?tab=history`,
+      visible: canAccessHistory,
     },
     {
       id: "operations",
@@ -342,37 +351,30 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
         </section>
       ) : null}
 
-      {activeTab === "operations" && canAccessOperations ? (
+      {activeTab === "history" && canAccessHistory ? (
       <section style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <h2 style={{ margin: "0 0 8px" }}>Operations</h2>
+          <h2 style={{ margin: "0 0 8px" }}>History</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Review activity history and complete quick front-desk actions without losing context.
+            Review the client timeline without mixing it with day-to-day operational actions.
           </p>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 18,
-            gridTemplateColumns: "minmax(0, 1.15fr) minmax(320px, 0.85fr)",
-            alignItems: "start",
-          }}
-        >
-          <section style={contentPanelStyles}>
-            <div
-              style={{
-                display: "grid",
-                gap: 6,
-              }}
-            >
-              <span style={sectionEyebrowStyles}>History</span>
-              <h3 style={{ margin: 0, fontSize: 22 }}>Client activity history</h3>
-              <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                Membership lifecycle, payments, and front-desk check-ins in one reading flow.
-              </p>
-            </div>
+        <section style={contentPanelStyles}>
+          <div
+            style={{
+              display: "grid",
+              gap: 6,
+            }}
+          >
+            <span style={sectionEyebrowStyles}>Timeline</span>
+            <h3 style={{ margin: 0, fontSize: 22 }}>Client activity history</h3>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+              Membership lifecycle, payments, and front-desk check-ins in one reading flow.
+            </p>
+          </div>
 
+          {canAccessMemberships ? (
             <section style={{ display: "grid", gap: 14 }}>
               <div>
                 <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Membership history</h4>
@@ -387,70 +389,68 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                 <ClientMembershipHistory clientId={client.id} memberships={membershipHistory} />
               )}
             </section>
+          ) : null}
 
-            {canAccessPayments ? (
-              <section style={{ display: "grid", gap: 14 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Payment history</h4>
-                    <p style={{ margin: 0, color: "var(--muted)" }}>
-                      Manual payments registered for this client.
-                    </p>
-                  </div>
+          {canAccessPayments ? (
+            <section style={{ display: "grid", gap: 14 }}>
+              <div>
+                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Payment history</h4>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Manual payments registered for this client.
+                </p>
+              </div>
 
-                  <Link href={`/dashboard/payments/new?clientId=${client.id}`} className={buttonSecondary}>
-                    Open payment page
-                  </Link>
+              {paymentsError ? (
+                <p style={errorBoxStyles}>{paymentsError}</p>
+              ) : (
+                <PaymentList payments={payments} showClient={false} />
+              )}
+            </section>
+          ) : null}
+
+          {canAccessCheckIns ? (
+            <section style={{ display: "grid", gap: 14 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Check-in history</h4>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>
+                    Reception log for this client.
+                  </p>
                 </div>
+                {membershipHistory[0] ? (
+                  <CheckInStatusBadge status={membershipHistory[0].status} />
+                ) : null}
+              </div>
 
-                {paymentsError ? (
-                  <p style={errorBoxStyles}>{paymentsError}</p>
-                ) : (
-                  <PaymentList payments={payments} showClient={false} />
-                )}
-              </section>
-            ) : null}
+              {checkInsError ? (
+                <p style={errorBoxStyles}>{checkInsError}</p>
+              ) : (
+                <CheckInHistoryList checkIns={checkIns} showClient={false} />
+              )}
+            </section>
+          ) : null}
+        </section>
+      </section>
+      ) : null}
 
-            {canAccessCheckIns ? (
-              <section style={{ display: "grid", gap: 14 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Check-in history</h4>
-                    <p style={{ margin: 0, color: "var(--muted)" }}>
-                      Reception log for this client.
-                    </p>
-                  </div>
-                  {membershipHistory[0] ? (
-                    <CheckInStatusBadge status={membershipHistory[0].status} />
-                  ) : null}
-                </div>
+      {activeTab === "operations" && canAccessOperations ? (
+      <section style={{ display: "grid", gap: 16 }}>
+        <div style={{ display: "grid", gap: 6 }}>
+          <h2 style={{ margin: "0 0 8px" }}>Operations</h2>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+            Quick front-desk actions only. Keep forms lightweight and separate from longer reading contexts.
+          </p>
+        </div>
 
-                {checkInsError ? (
-                  <p style={errorBoxStyles}>{checkInsError}</p>
-                ) : (
-                  <CheckInHistoryList checkIns={checkIns} showClient={false} />
-                )}
-              </section>
-            ) : null}
-          </section>
-
-          <section style={contentPanelStyles}>
+          <section style={{ ...contentPanelStyles, gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
               <span style={sectionEyebrowStyles}>Actions</span>
               <h3 style={{ margin: 0, fontSize: 22 }}>Quick operations</h3>
@@ -528,7 +528,6 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               </UtilityFormPanel>
             ) : null}
           </section>
-        </div>
       </section>
       ) : null}
     </div>

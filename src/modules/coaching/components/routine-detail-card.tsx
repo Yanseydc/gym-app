@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { buttonSecondary } from "@/lib/ui";
+import { ArchiveRoutineButton } from "@/modules/coaching/components/archive-routine-button";
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
 import type { ClientRoutine, ClientRoutineSummary } from "@/modules/coaching/types";
@@ -118,6 +119,11 @@ export function RoutineSummaryList({
               routineId={routine.id}
               returnPath={`/dashboard/clients/${clientId}`}
             />
+            <ArchiveRoutineButton
+              routineId={routine.id}
+              returnPath={`/dashboard/clients/${clientId}?tab=coaching`}
+              status={routine.status}
+            />
             <SaveRoutineTemplateLink
               routineId={routine.id}
               returnPath={`/dashboard/clients/${clientId}`}
@@ -174,6 +180,11 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
           <DuplicateRoutineButton
             routineId={routine.id}
             returnPath={`/dashboard/coaching/routines/${routine.id}`}
+          />
+          <ArchiveRoutineButton
+            routineId={routine.id}
+            returnPath={`/dashboard/coaching/routines/${routine.id}`}
+            status={routine.status}
           />
           <SaveRoutineTemplateLink
             routineId={routine.id}
