@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getPortalText } from "@/lib/i18n/portal";
 import { SignOutButton } from "@/modules/auth/components/sign-out-button";
 import type { AuthUser } from "@/modules/auth/types";
 import type { LinkedPortalClient } from "@/modules/portal/types";
@@ -10,14 +11,15 @@ type PortalShellProps = Readonly<{
   user: AuthUser;
 }>;
 
-const navigation = [
-  { href: "/app", label: "Home" },
-  { href: "/app/routine", label: "My Routine" },
-  { href: "/app/progress", label: "My Progress" },
-  { href: "/app/profile", label: "My Profile" },
-] as const;
-
 export function PortalShell({ children, client, user }: PortalShellProps) {
+  const t = getPortalText();
+  const navigation = [
+    { href: "/app", label: t.shell.nav.home },
+    { href: "/app/routine", label: t.shell.nav.routine },
+    { href: "/app/progress", label: t.shell.nav.progress },
+    { href: "/app/profile", label: t.shell.nav.profile },
+  ] as const;
+
   return (
     <main style={{ padding: "40px 0 64px" }}>
       <div
@@ -41,7 +43,7 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
         >
           <div style={{ marginBottom: 20 }}>
             <strong style={{ display: "block", marginBottom: 4 }}>GymOS</strong>
-            <span style={{ color: "var(--muted)" }}>Client portal</span>
+            <span style={{ color: "var(--muted)" }}>{t.shell.brandSubtitle}</span>
           </div>
 
           <div

@@ -1,7 +1,9 @@
+import { getPortalText } from "@/lib/i18n/portal";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getRoutineForPage, getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 
 export default async function PortalRoutinePage() {
+  const t = getPortalText();
   const { data: linkedClient } = await getLinkedClientForCurrentUser();
 
   if (!linkedClient) {
@@ -18,9 +20,9 @@ export default async function PortalRoutinePage() {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>My routine</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.routine.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          This is your current active workout plan.
+          {t.routine.description}
         </p>
       </header>
 
@@ -34,7 +36,7 @@ export default async function PortalRoutinePage() {
             color: "var(--muted)",
           }}
         >
-          No active routine assigned yet.
+          {t.routine.empty}
         </article>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
@@ -52,7 +54,7 @@ export default async function PortalRoutinePage() {
             >
               <div>
                 <strong style={{ fontSize: 18 }}>
-                  Day {day.dayIndex}: {day.title}
+                  {t.routine.dayTitle(day.dayIndex, day.title)}
                 </strong>
                 {day.notes ? (
                   <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -62,7 +64,7 @@ export default async function PortalRoutinePage() {
               </div>
 
               {day.exercises.length === 0 ? (
-                <p style={{ margin: 0, color: "var(--muted)" }}>No exercises added yet.</p>
+                <p style={{ margin: 0, color: "var(--muted)" }}>{t.routine.noExercises}</p>
               ) : (
                 <div style={{ display: "grid", gap: 12 }}>
                   {day.exercises.map((exercise) => (
@@ -79,10 +81,10 @@ export default async function PortalRoutinePage() {
                     >
                       <strong>{exercise.exerciseName}</strong>
                       <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
-                        <span>Sets: {exercise.setsText}</span>
-                        <span>Reps: {exercise.repsText}</span>
-                        <span>Weight: {exercise.targetWeightText || "N/A"}</span>
-                        <span>Rest: {exercise.restSeconds ?? "N/A"} sec</span>
+                        <span>{t.routine.sets}: {exercise.setsText}</span>
+                        <span>{t.routine.reps}: {exercise.repsText}</span>
+                        <span>{t.routine.weight}: {exercise.targetWeightText || t.routine.notAvailable}</span>
+                        <span>{t.routine.rest}: {exercise.restSeconds ?? t.routine.notAvailable} {t.routine.secondsShort}</span>
                       </div>
                       {exercise.notes ? (
                         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>

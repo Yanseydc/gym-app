@@ -1,7 +1,9 @@
+import { getPortalText } from "@/lib/i18n/portal";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 
 export default async function PortalProfilePage() {
+  const t = getPortalText();
   const { data: linkedClient } = await getLinkedClientForCurrentUser();
 
   if (!linkedClient) {
@@ -13,9 +15,9 @@ export default async function PortalProfilePage() {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>My profile</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.profile.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          This is the coaching context currently on file for your account.
+          {t.profile.description}
         </p>
       </header>
 
@@ -29,7 +31,7 @@ export default async function PortalProfilePage() {
             color: "var(--muted)",
           }}
         >
-          No onboarding information available yet.
+          {t.profile.empty}
         </article>
       ) : (
         <div
@@ -39,17 +41,17 @@ export default async function PortalProfilePage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           }}
         >
-          <DetailItem label="Weight" value={`${onboarding.weightKg} kg`} />
-          <DetailItem label="Height" value={`${onboarding.heightCm} cm`} />
-          <DetailItem label="Goal" value={onboarding.goal} fullWidth />
-          <DetailItem label="Available days" value={`${onboarding.availableDays} / week`} />
-          <DetailItem label="Available schedule" value={onboarding.availableSchedule} fullWidth />
+          <DetailItem label={t.profile.labels.weight} value={`${onboarding.weightKg} kg`} />
+          <DetailItem label={t.profile.labels.height} value={`${onboarding.heightCm} cm`} />
+          <DetailItem label={t.profile.labels.goal} value={onboarding.goal} fullWidth />
+          <DetailItem label={t.profile.labels.availableDays} value={`${onboarding.availableDays} ${t.profile.perWeek}`} />
+          <DetailItem label={t.profile.labels.availableSchedule} value={onboarding.availableSchedule} fullWidth />
           <DetailItem
-            label="Experience level"
-            value={onboarding.experienceLevel[0].toUpperCase() + onboarding.experienceLevel.slice(1)}
+            label={t.profile.labels.experienceLevel}
+            value={t.profile.experienceLevels[onboarding.experienceLevel]}
           />
-          <DetailItem label="Injuries notes" value={onboarding.injuriesNotes || "No injuries noted"} fullWidth />
-          <DetailItem label="Notes" value={onboarding.notes || "No notes"} fullWidth />
+          <DetailItem label={t.profile.labels.injuriesNotes} value={onboarding.injuriesNotes || t.profile.noInjuries} fullWidth />
+          <DetailItem label={t.profile.labels.notes} value={onboarding.notes || t.profile.noNotes} fullWidth />
         </div>
       )}
     </div>

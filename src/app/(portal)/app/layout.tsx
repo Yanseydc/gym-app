@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { getPortalText } from "@/lib/i18n/portal";
 import { PortalShell } from "@/modules/portal/components/portal-shell";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
@@ -9,6 +10,7 @@ type PortalLayoutProps = Readonly<{
 }>;
 
 export default async function PortalLayout({ children }: PortalLayoutProps) {
+  const t = getPortalText();
   const [user, linkedClientResult] = await Promise.all([
     getCurrentUser(),
     getLinkedClientForCurrentUser(),
@@ -35,10 +37,9 @@ export default async function PortalLayout({ children }: PortalLayoutProps) {
             borderRadius: 24,
           }}
         >
-          <h1 style={{ margin: 0 }}>Client portal unavailable</h1>
+          <h1 style={{ margin: 0 }}>{t.layout.unavailableTitle}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            {linkedClientResult.error ??
-              "Your account is not linked to a client record yet. Please contact the gym staff."}
+            {linkedClientResult.error ?? t.layout.unavailableFallback}
           </p>
         </section>
       </main>

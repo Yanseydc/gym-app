@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { getPortalText } from "@/lib/i18n/portal";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { getProgressCheckInsForPage } from "@/modules/coaching/services/progress-checkin-service";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 
 export default async function PortalHomePage() {
+  const t = getPortalText();
   const { data: linkedClient } = await getLinkedClientForCurrentUser();
 
   if (!linkedClient) {
@@ -29,10 +31,10 @@ export default async function PortalHomePage() {
     <div style={{ display: "grid", gap: 24 }}>
       <header>
         <h1 style={{ margin: "0 0 8px" }}>
-          Welcome, {linkedClient.firstName}
+          {t.home.welcome(linkedClient.firstName)}
         </h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Your coaching portal shows your current routine, progress check-ins, and profile context.
+          {t.home.description}
         </p>
       </header>
 
@@ -44,21 +46,21 @@ export default async function PortalHomePage() {
         }}
       >
         <SummaryCard
-          title="My Routine"
-          value={activeRoutine ? activeRoutine.title : "No active routine"}
-          helper={activeRoutine ? `${activeRoutine.dayCount} day blocks` : "Ask your coach for your latest plan"}
+          title={t.home.routineTitle}
+          value={activeRoutine ? activeRoutine.title : t.home.routineEmptyValue}
+          helper={activeRoutine ? t.home.routineDayBlocks(activeRoutine.dayCount) : t.home.routineEmptyHelper}
           href="/app/routine"
         />
         <SummaryCard
-          title="My Progress"
-          value={latestCheckIn ? latestCheckIn.checkinDate : "No check-ins yet"}
-          helper={latestCheckIn ? `${latestCheckIn.photoTypes.length} photos attached` : "Progress updates will appear here"}
+          title={t.home.progressTitle}
+          value={latestCheckIn ? latestCheckIn.checkinDate : t.home.progressEmptyValue}
+          helper={latestCheckIn ? t.home.progressPhotosAttached(latestCheckIn.photoTypes.length) : t.home.progressEmptyHelper}
           href="/app/progress"
         />
         <SummaryCard
-          title="My Profile"
-          value={onboarding ? onboarding.goal : "No onboarding yet"}
-          helper={onboarding ? `${onboarding.availableDays} training days per week` : "Your coaching context will appear here"}
+          title={t.home.profileTitle}
+          value={onboarding ? onboarding.goal : t.home.profileEmptyValue}
+          helper={onboarding ? t.home.profileTrainingDays(onboarding.availableDays) : t.home.profileEmptyHelper}
           href="/app/profile"
         />
       </div>

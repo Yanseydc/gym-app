@@ -1,7 +1,9 @@
+import { getPortalText } from "@/lib/i18n/portal";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getProgressCheckInsForPage, getProgressCheckInForPage } from "@/modules/coaching/services/progress-checkin-service";
 
 export default async function PortalProgressPage() {
+  const t = getPortalText();
   const { data: linkedClient } = await getLinkedClientForCurrentUser();
 
   if (!linkedClient) {
@@ -16,9 +18,9 @@ export default async function PortalProgressPage() {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>My progress</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.progress.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Review your progress check-ins, notes, and photos.
+          {t.progress.description}
         </p>
       </header>
 
@@ -32,7 +34,7 @@ export default async function PortalProgressPage() {
             color: "var(--muted)",
           }}
         >
-          No progress check-ins yet.
+          {t.progress.empty}
         </article>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
@@ -61,19 +63,19 @@ export default async function PortalProgressPage() {
                     >
                       <strong>{result.data.checkinDate}</strong>
                       <span style={{ color: "var(--muted)" }}>
-                        Weight: {result.data.weightKg ? `${result.data.weightKg} kg` : "N/A"}
+                        {t.progress.weight}: {result.data.weightKg ? `${result.data.weightKg} kg` : t.progress.notAvailable}
                       </span>
                     </div>
 
                     {result.data.clientNotes ? (
                       <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                        Client notes: {result.data.clientNotes}
+                        {t.progress.clientNotes}: {result.data.clientNotes}
                       </p>
                     ) : null}
 
                     {result.data.coachNotes ? (
                       <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                        Coach notes: {result.data.coachNotes}
+                        {t.progress.coachNotes}: {result.data.coachNotes}
                       </p>
                     ) : null}
 
@@ -91,12 +93,12 @@ export default async function PortalProgressPage() {
                         return (
                           <div key={photoType} style={{ display: "grid", gap: 8 }}>
                             <span style={{ fontWeight: 600 }}>
-                              {photoType[0].toUpperCase() + photoType.slice(1)}
+                              {t.progress.photoTypes[photoType]}
                             </span>
                             {photo?.signedUrl ? (
                               <img
                                 src={photo.signedUrl}
-                                alt={`${photoType} progress photo`}
+                                alt={t.progress.photoAlt(t.progress.photoTypes[photoType])}
                                 style={{
                                   width: "100%",
                                   aspectRatio: "3 / 4",
@@ -118,7 +120,7 @@ export default async function PortalProgressPage() {
                                   background: "#fff",
                                 }}
                               >
-                                No photo
+                                {t.progress.noPhoto}
                               </div>
                             )}
                           </div>
