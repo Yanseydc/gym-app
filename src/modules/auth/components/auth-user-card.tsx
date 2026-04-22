@@ -1,10 +1,11 @@
 import type { AuthUser } from "@/modules/auth/types";
 
 type AuthUserCardProps = {
+  roleLabel?: string;
   user: AuthUser;
 };
 
-export function AuthUserCard({ user }: AuthUserCardProps) {
+export function AuthUserCard({ roleLabel, user }: AuthUserCardProps) {
   const fullName = [user.profile.firstName, user.profile.lastName]
     .filter(Boolean)
     .join(" ");
@@ -23,7 +24,7 @@ export function AuthUserCard({ user }: AuthUserCardProps) {
         {fullName || user.email}
       </strong>
       <span style={{ color: "var(--muted)", textTransform: "capitalize" }}>
-        {user.role}
+        {roleLabel ?? user.role}
       </span>
     </div>
   );

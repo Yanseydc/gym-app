@@ -1,12 +1,15 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import type { RecentDashboardClient } from "@/modules/dashboard/types";
 
 type RecentClientsPanelProps = {
   clients: RecentDashboardClient[];
 };
 
-export function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
+export async function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
+  const { t, locale } = await getAdminText();
+
   return (
     <section
       style={{
@@ -19,14 +22,14 @@ export function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
       }}
     >
       <div>
-        <h2 style={{ margin: "0 0 8px" }}>Recent clients</h2>
+        <h2 style={{ margin: "0 0 8px" }}>{t("dashboard.recentClientsTitle")}</h2>
         <p style={{ margin: 0, color: "var(--muted)" }}>
-          Most recently created client records.
+          {t("dashboard.recentClientsDescription")}
         </p>
       </div>
 
       {clients.length === 0 ? (
-        <EmptyState message="No clients registered yet." />
+        <EmptyState message={t("dashboard.recentClientsEmpty")} />
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
           {clients.map((client) => (
@@ -48,7 +51,9 @@ export function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
                   <Link href={`/dashboard/clients/${client.id}`}>{client.fullName}</Link>
                 </strong>
                 <span style={{ color: "var(--muted)" }}>
-                  Added {new Date(client.createdAt).toLocaleDateString()}
+                  {t("dashboard.recentClientsAdded", {
+                    date: new Date(client.createdAt).toLocaleDateString(locale),
+                  })}
                 </span>
               </div>
               <span
@@ -62,7 +67,7 @@ export function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
                   textTransform: "capitalize",
                 }}
               >
-                {client.status}
+                {t(`common.status.${client.status}`)}
               </span>
             </article>
           ))}

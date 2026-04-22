@@ -1,4 +1,7 @@
+"use client";
+
 import { buttonSecondary } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { duplicateRoutine } from "@/modules/coaching/services/duplicate-routine";
 
 type DuplicateRoutineButtonProps = {
@@ -10,10 +13,12 @@ export function DuplicateRoutineButton({
   routineId,
   returnPath,
 }: DuplicateRoutineButtonProps) {
+  const { t } = useAdminText();
+
   return (
     <form action={duplicateRoutine.bind(null, routineId, returnPath)}>
       <button type="submit" className={buttonSecondary}>
-        Duplicate routine
+        {t("coaching.routines.duplicate")}
       </button>
     </form>
   );

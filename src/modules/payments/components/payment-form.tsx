@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { usePaymentForm } from "@/modules/payments/hooks/use-payment-form";
 import type {
   PaymentClientOption,
@@ -34,6 +35,7 @@ export function PaymentForm({
   defaultValues,
   lockClient = false,
 }: PaymentFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = usePaymentForm(action);
   const [selectedClientId, setSelectedClientId] = useState(defaultValues?.clientId ?? "");
   const [selectedMembershipId, setSelectedMembershipId] = useState(
@@ -50,7 +52,7 @@ export function PaymentForm({
       <div style={gridStyles}>
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={labelStyles}>Client</span>
+            <span style={labelStyles}>{t("payments.form.client")}</span>
             <select
               name="clientId"
               value={selectedClientId}
@@ -61,7 +63,7 @@ export function PaymentForm({
               className={input}
             >
               <option value="">
-                Select a client
+                {t("payments.form.selectClient")}
               </option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -74,7 +76,7 @@ export function PaymentForm({
         ) : null}
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Membership</span>
+          <span style={labelStyles}>{t("payments.form.membership")}</span>
           <select
             name="clientMembershipId"
             key={selectedClientId || "no-client"}
@@ -84,7 +86,7 @@ export function PaymentForm({
             }}
             className={input}
           >
-            <option value="">Select a membership</option>
+            <option value="">{t("payments.form.selectMembership")}</option>
             {visibleMemberships.map((membership) => (
               <option key={membership.id} value={membership.id}>
                 {membership.label}
@@ -106,15 +108,15 @@ export function PaymentForm({
                 fontSize: 14,
               }}
             >
-              <span>Plan price: ${selectedMembership.planPrice.toFixed(2)}</span>
-              <span>Total paid: ${selectedMembership.totalPaid.toFixed(2)}</span>
-              <span>Remaining balance: ${selectedMembership.remainingBalance.toFixed(2)}</span>
+              <span>{t("payments.form.planPrice")}: ${selectedMembership.planPrice.toFixed(2)}</span>
+              <span>{t("payments.form.totalPaid")}: ${selectedMembership.totalPaid.toFixed(2)}</span>
+              <span>{t("payments.form.remainingBalance")}: ${selectedMembership.remainingBalance.toFixed(2)}</span>
             </div>
           ) : null}
         </label>
 
         <Field
-          label="Amount"
+          label={t("payments.form.amount")}
           name="amount"
           type="number"
           step="0.01"
@@ -123,15 +125,15 @@ export function PaymentForm({
         />
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Payment method</span>
+          <span style={labelStyles}>{t("payments.form.paymentMethod")}</span>
           <select
             name="paymentMethod"
             defaultValue={defaultValues?.paymentMethod ?? "cash"}
             className={input}
           >
-            <option value="cash">Cash</option>
-            <option value="transfer">Transfer</option>
-            <option value="card">Card</option>
+            <option value="cash">{t("payments.form.cash")}</option>
+            <option value="transfer">{t("payments.form.transfer")}</option>
+            <option value="card">{t("payments.form.card")}</option>
           </select>
           {state.fieldErrors?.paymentMethod ? (
             <FieldError message={state.fieldErrors.paymentMethod} />
@@ -139,7 +141,7 @@ export function PaymentForm({
         </label>
 
         <Field
-          label="Payment date"
+          label={t("payments.form.paymentDate")}
           name="paymentDate"
           type="date"
           defaultValue={defaultValues?.paymentDate ?? today}
@@ -147,7 +149,7 @@ export function PaymentForm({
         />
 
         <Field
-          label="Concept"
+          label={t("payments.form.concept")}
           name="concept"
           defaultValue={defaultValues?.concept ?? ""}
           error={state.fieldErrors?.concept}
@@ -155,7 +157,7 @@ export function PaymentForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t("payments.form.notes")}</span>
         <textarea
           name="notes"
           rows={4}
@@ -186,7 +188,7 @@ export function PaymentForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("common.saving") : submitLabel}
       </button>
     </form>
   );

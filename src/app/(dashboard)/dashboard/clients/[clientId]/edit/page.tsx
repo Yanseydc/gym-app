@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { ClientForm } from "@/modules/clients/components/client-form";
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { updateClient } from "@/modules/clients/services/update-client";
@@ -13,6 +14,7 @@ type EditClientPageProps = {
 };
 
 export default async function EditClientPage({ params }: EditClientPageProps) {
+  const { t } = await getAdminText();
   const { clientId } = await params;
   const { data: client, error } = await getClientForPage(clientId);
 
@@ -20,7 +22,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to clients
+          {t("common.backToClients")}
         </Link>
         <p
           style={{
@@ -57,13 +59,13 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
         href={`/dashboard/clients/${client.id}`}
         style={{ color: "var(--muted)", fontWeight: 600 }}
       >
-        Back to client
+        {t("common.backToClient")}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit client</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t("clients.editTitle")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update the selected client record.
+          {t("clients.editDescription")}
         </p>
       </header>
 
@@ -73,7 +75,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
         <ClientForm
           action={action}
           defaultValues={defaultValues}
-          submitLabel="Save changes"
+          submitLabel={t("common.saveChanges")}
         />
       </section>
     </div>

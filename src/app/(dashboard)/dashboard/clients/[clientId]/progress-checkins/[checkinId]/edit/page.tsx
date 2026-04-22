@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { ProgressCheckInForm } from "@/modules/coaching/components/progress-checkin-form";
 import { getProgressCheckInForPage } from "@/modules/coaching/services/progress-checkin-service";
 import { updateProgressCheckIn } from "@/modules/coaching/services/update-progress-checkin";
@@ -15,6 +16,7 @@ type EditProgressCheckInPageProps = {
 };
 
 export default async function EditProgressCheckInPage({ params }: EditProgressCheckInPageProps) {
+  const { t } = await getAdminText();
   const { checkinId, clientId } = await params;
   const [{ data: client, error }, { data: checkIn, error: checkInError }] = await Promise.all([
     getClientForPage(clientId),
@@ -25,7 +27,7 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to client
+          {t("common.backToClient")}
         </Link>
         <p
           style={{
@@ -56,7 +58,7 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to client
+        {t("common.backToClient")}
       </Link>
 
       <header
@@ -70,9 +72,9 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          Coaching progress
+          {t("nav.coaching")}
         </span>
-        <h1 style={{ margin: 0 }}>Edit progress check-in</h1>
+        <h1 style={{ margin: 0 }}>{t("coaching.progress.edit")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Update notes, weight and photos for {client.firstName} {client.lastName}.
         </p>
@@ -83,7 +85,7 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
           action={updateProgressCheckIn.bind(null, clientId, checkinId)}
           defaultValues={defaultValues}
           existingCheckIn={checkIn}
-          submitLabel="Save changes"
+          submitLabel={t("common.saveChanges")}
         />
       </section>
     </div>

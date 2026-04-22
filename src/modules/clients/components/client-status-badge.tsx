@@ -1,6 +1,10 @@
+"use client";
+
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type { ClientStatus } from "@/modules/clients/types";
 
 export function ClientStatusBadge({ status }: { status: ClientStatus }) {
+  const { t } = useAdminText();
   const isActive = status === "active";
 
   return (
@@ -18,7 +22,7 @@ export function ClientStatusBadge({ status }: { status: ClientStatus }) {
         textTransform: "capitalize",
       }}
     >
-      {status}
+      {t(`common.status.${status}`)}
     </span>
   );
 }

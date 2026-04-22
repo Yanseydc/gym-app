@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonGhost } from "@/lib/ui";
 import { cancelClientMembership } from "@/modules/memberships/services/cancel-client-membership";
 import type { ClientMembership } from "@/modules/memberships/types";
@@ -10,10 +11,11 @@ type ClientMembershipHistoryProps = {
   memberships: ClientMembership[];
 };
 
-export function ClientMembershipHistory({
+export async function ClientMembershipHistory({
   clientId,
   memberships,
 }: ClientMembershipHistoryProps) {
+  const { t } = await getAdminText();
   if (memberships.length === 0) {
     return (
       <article
@@ -25,7 +27,7 @@ export function ClientMembershipHistory({
           color: "var(--muted)",
         }}
       >
-        No membership history yet.
+        {t("memberships.empty")}
       </article>
     );
   }
@@ -53,17 +55,17 @@ export function ClientMembershipHistory({
                 {membership.planName}
               </Link>
               <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
-                {membership.startDate} to {membership.endDate}
+                {t("common.dateRange", { start: membership.startDate, end: membership.endDate })}
               </p>
             </div>
             <MembershipStatusBadge status={membership.status} />
           </div>
 
           <div className="responsive-meta-grid">
-            <DetailItem label="Plan price" value={`$${membership.planPrice.toFixed(2)}`} />
-            <DetailItem label="Total paid" value={`$${membership.totalPaid.toFixed(2)}`} />
+            <DetailItem label={t("memberships.planPrice")} value={`$${membership.planPrice.toFixed(2)}`} />
+            <DetailItem label={t("memberships.totalPaid")} value={`$${membership.totalPaid.toFixed(2)}`} />
             <DetailItem
-              label="Remaining balance"
+              label={t("memberships.remainingBalance")}
               value={`$${membership.remainingBalance.toFixed(2)}`}
             />
           </div>
@@ -80,7 +82,7 @@ export function ClientMembershipHistory({
                 type="submit"
                 className={buttonGhost}
               >
-                Cancel membership
+                {t("memberships.cancel")}
               </button>
             </form>
           ) : null}

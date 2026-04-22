@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useClientMembershipForm } from "@/modules/memberships/hooks/use-client-membership-form";
 import type {
   ClientMembershipMutationState,
@@ -30,20 +31,21 @@ export function MembershipAssignmentForm({
   action,
   plans,
 }: MembershipAssignmentFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useClientMembershipForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <div style={gridStyles}>
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Membership plan</span>
+          <span style={labelStyles}>{t("memberships.form.plan")}</span>
           <select
             name="membershipPlanId"
             defaultValue={defaultValues.membershipPlanId}
             className={input}
           >
             <option value="" disabled>
-              Select a plan
+              {t("memberships.form.selectPlan")}
             </option>
             {plans.map((plan) => (
               <option key={plan.id} value={plan.id}>
@@ -57,7 +59,7 @@ export function MembershipAssignmentForm({
         </label>
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Start date</span>
+          <span style={labelStyles}>{t("memberships.form.startDate")}</span>
           <input
             type="date"
             name="startDate"
@@ -69,7 +71,7 @@ export function MembershipAssignmentForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t("memberships.form.notes")}</span>
         <textarea
           name="notes"
           defaultValue={defaultValues.notes}
@@ -100,7 +102,7 @@ export function MembershipAssignmentForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Assigning..." : "Assign membership"}
+        {pending ? t("memberships.form.assigning") : t("memberships.form.assign")}
       </button>
     </form>
   );

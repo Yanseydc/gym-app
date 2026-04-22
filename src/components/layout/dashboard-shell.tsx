@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 
 import { appNavigation } from "@/config/navigation";
 import { hasModuleAccess } from "@/lib/auth/permissions";
+import { AdminLanguageSwitcher } from "@/modules/dashboard/components/admin-language-switcher";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { AuthUserCard } from "@/modules/auth/components/auth-user-card";
 import { SignOutButton } from "@/modules/auth/components/sign-out-button";
 import type { AuthUser } from "@/modules/auth/types";
@@ -12,6 +16,7 @@ type DashboardShellProps = Readonly<{
 }>;
 
 export function DashboardShell({ children, user }: DashboardShellProps) {
+  const { t } = useAdminText();
   const visibleNavigation = appNavigation.filter((item) =>
     hasModuleAccess(user.role, item.module),
   );
@@ -23,13 +28,13 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           <summary className="dashboard-mobile-nav-toggle">
             <div style={{ display: "grid", gap: 4 }}>
               <strong>GymOS</strong>
-              <span style={{ color: "var(--muted)", fontSize: 13 }}>Operación central</span>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>{t("dashboardShell.brandSubtitle")}</span>
             </div>
-            <span style={{ color: "var(--accent-strong)", fontWeight: 700 }}>Menu</span>
+            <span style={{ color: "var(--accent-strong)", fontWeight: 700 }}>{t("common.menu")}</span>
           </summary>
 
           <div className="dashboard-mobile-nav-panel">
-            <AuthUserCard user={user} />
+            <AuthUserCard user={user} roleLabel={t(`common.role.${user.role}`)} />
 
             <nav className="dashboard-sidebar-nav">
               {visibleNavigation.map((item) => (
@@ -44,12 +49,13 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                     fontWeight: 600,
                   }}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               ))}
             </nav>
 
-            <SignOutButton />
+            <AdminLanguageSwitcher />
+            <SignOutButton label={t("common.signOut")} />
           </div>
         </details>
 
@@ -67,10 +73,10 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         >
           <div style={{ marginBottom: 20 }}>
             <strong style={{ display: "block", marginBottom: 4 }}>GymOS</strong>
-            <span style={{ color: "var(--muted)" }}>Operación central</span>
+            <span style={{ color: "var(--muted)" }}>{t("dashboardShell.brandSubtitle")}</span>
           </div>
 
-          <AuthUserCard user={user} />
+          <AuthUserCard user={user} roleLabel={t(`common.role.${user.role}`)} />
 
           <nav className="dashboard-sidebar-nav">
             {visibleNavigation.map((item) => (
@@ -85,13 +91,17 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                   fontWeight: 600,
                 }}
               >
-                {item.label}
-              </Link>
+                  {t(item.labelKey)}
+                </Link>
             ))}
           </nav>
 
           <div style={{ marginTop: 20 }}>
-            <SignOutButton />
+            <AdminLanguageSwitcher />
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <SignOutButton label={t("common.signOut")} />
           </div>
         </aside>
 

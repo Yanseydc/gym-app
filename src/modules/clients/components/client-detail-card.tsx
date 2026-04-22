@@ -1,10 +1,13 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonSecondary } from "@/lib/ui";
 import type { Client } from "@/modules/clients/types";
 import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
 
-export function ClientDetailCard({ client }: { client: Client }) {
+export async function ClientDetailCard({ client }: { client: Client }) {
+  const { t, locale } = await getAdminText();
+
   return (
     <article
       style={{
@@ -30,7 +33,7 @@ export function ClientDetailCard({ client }: { client: Client }) {
               textTransform: "uppercase",
             }}
           >
-            Client overview
+            {t("clients.detail.hero")}
           </span>
           <h1 style={{ margin: "0 0 8px" }}>
             {client.firstName} {client.lastName}
@@ -42,23 +45,41 @@ export function ClientDetailCard({ client }: { client: Client }) {
           href={`/dashboard/clients/${client.id}/edit`}
           className={buttonSecondary}
         >
-          Edit client
+          {t("clients.detail.editClient")}
         </Link>
       </div>
 
-      <DetailGrid client={client} />
+      <DetailGrid client={client} locale={locale} t={t} />
     </article>
   );
 }
 
-function DetailGrid({ client }: { client: Client }) {
+function DetailGrid({
+  client,
+  locale,
+  t,
+}: {
+  client: Client;
+  locale: string;
+  t: (key: string, values?: Record<string, string | number>) => string;
+}) {
+  const labels = {
+    phone: t("clients.form.phone"),
+    email: t("clients.form.email"),
+    created: t("clients.detail.created"),
+    updated: t("clients.detail.updated"),
+    notes: t("clients.detail.notes"),
+  };
+  const emailValue = client.email || t("common.notProvided");
+  const notesValue = client.notes || t("common.noNotes");
+
   return (
     <div className="responsive-meta-grid">
-      <DetailItem label="Phone" value={client.phone} />
-      <DetailItem label="Email" value={client.email || "Not provided"} />
-      <DetailItem label="Created" value={new Date(client.createdAt).toLocaleString()} />
-      <DetailItem label="Updated" value={new Date(client.updatedAt).toLocaleString()} />
-      <DetailItem label="Notes" value={client.notes || "No notes"} fullWidth />
+      <DetailItem label={labels.phone} value={client.phone} />
+      <DetailItem label={labels.email} value={emailValue} />
+      <DetailItem label={labels.created} value={new Date(client.createdAt).toLocaleString(locale)} />
+      <DetailItem label={labels.updated} value={new Date(client.updatedAt).toLocaleString(locale)} />
+      <DetailItem label={labels.notes} value={notesValue} fullWidth />
     </div>
   );
 }

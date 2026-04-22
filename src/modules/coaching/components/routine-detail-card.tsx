@@ -1,18 +1,20 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonSecondary } from "@/lib/ui";
 import { ArchiveRoutineButton } from "@/modules/coaching/components/archive-routine-button";
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
 import type { ClientRoutine, ClientRoutineSummary } from "@/modules/coaching/types";
 
-export function RoutineSummaryList({
+export async function RoutineSummaryList({
   clientId,
   routines,
 }: {
   clientId: string;
   routines: ClientRoutineSummary[];
 }) {
+  const { t, locale } = await getAdminText();
   if (routines.length === 0) {
     return (
       <article
@@ -24,7 +26,7 @@ export function RoutineSummaryList({
           color: "var(--muted)",
         }}
       >
-        No routines created yet for this client.
+        {t("coaching.routines.empty")}
       </article>
     );
   }
@@ -81,16 +83,16 @@ export function RoutineSummaryList({
                 }}
               >
                 <span style={{ fontWeight: 700, color: "var(--accent-strong)" }}>
-                  {routine.dayCount} day{routine.dayCount === 1 ? "" : "s"}
+                  {t("common.days", { count: routine.dayCount })}
                 </span>
                 <span> · </span>
-                {routine.startsOn ? `Starts ${routine.startsOn}` : "No start date"}
+                {routine.startsOn ? t("coaching.routines.starts", { date: routine.startsOn }) : t("coaching.routines.noStartDate")}
                 <span> · </span>
-                {routine.endsOn ? `Ends ${routine.endsOn}` : "No end date"}
+                {routine.endsOn ? t("coaching.routines.ends", { date: routine.endsOn }) : t("coaching.routines.noEndDate")}
               </div>
             </div>
 
-            <StatusPill status={routine.status} />
+            <StatusPill status={routine.status} label={t(`common.status.${routine.status}`)} />
           </div>
 
           <div
@@ -107,13 +109,13 @@ export function RoutineSummaryList({
               href={`/dashboard/coaching/routines/${routine.id}`}
               className={actionLinkStyles}
             >
-              View routine
+              {t("coaching.routines.view")}
             </Link>
             <Link
               href={`/dashboard/coaching/routines/${routine.id}/edit`}
               className={actionLinkStyles}
             >
-              Edit routine
+              {t("coaching.routines.edit")}
             </Link>
             <DuplicateRoutineButton
               routineId={routine.id}
@@ -135,10 +137,11 @@ export function RoutineSummaryList({
   );
 }
 
-export function RoutineDetailCard({ routine, showEditLink = false }: {
+export async function RoutineDetailCard({ routine, showEditLink = false }: {
   routine: ClientRoutine;
   showEditLink?: boolean;
 }) {
+  const { t, locale } = await getAdminText();
   return (
     <article
       style={{
@@ -160,14 +163,14 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
         <div className="responsive-inline-header">
           <div style={{ minWidth: 0, display: "grid", gap: 10 }}>
             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              Routine overview
+              {t("coaching.routines.overview")}
             </span>
             <div style={{ display: "grid", gap: 8 }}>
               <h1 style={{ margin: 0, fontSize: "clamp(1.9rem, 3vw, 2.35rem)", lineHeight: 1.05 }}>
                 {routine.title}
               </h1>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <StatusPill status={routine.status} />
+                <StatusPill status={routine.status} label={t(`common.status.${routine.status}`)} />
                 <span style={{ color: "var(--muted)" }}>{routine.clientName}</span>
               </div>
             </div>
@@ -176,7 +179,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
           <div className="responsive-actions-wrap" style={{ alignItems: "stretch" }}>
           {showEditLink ? (
             <Link href={`/dashboard/coaching/routines/${routine.id}/edit`} className={actionLinkStyles}>
-              Edit routine
+              {t("coaching.routines.edit")}
             </Link>
           ) : null}
           <DuplicateRoutineButton
@@ -206,26 +209,26 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
           }}
         >
           <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-            Planning notes
+            {t("coaching.routines.planningNotes")}
           </span>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.65 }}>
-            {routine.notes || "No coaching notes yet for this routine."}
+            {routine.notes || t("coaching.routines.planningNotesEmpty")}
           </p>
         </div>
       </div>
 
       <div className="coaching-detail-meta-grid">
-        <DetailItem label="Starts on" value={routine.startsOn || "Not set"} />
-        <DetailItem label="Ends on" value={routine.endsOn || "Not set"} />
-        <DetailItem label="Updated" value={new Date(routine.updatedAt).toLocaleString()} />
-        <DetailItem label="Days" value={`${routine.days.length}`} />
+        <DetailItem label={t("coaching.routines.startsOn")} value={routine.startsOn || t("common.notAvailable")} />
+        <DetailItem label={t("coaching.routines.endsOn")} value={routine.endsOn || t("common.notAvailable")} />
+        <DetailItem label={t("coaching.routines.updated")} value={new Date(routine.updatedAt).toLocaleString(locale)} />
+        <DetailItem label={t("coaching.routines.daysLabel")} value={`${routine.days.length}`} />
       </div>
 
       <section style={{ display: "grid", gap: 16 }}>
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Routine days</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.routines.routineDays")}</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Ordered day blocks and prescribed exercises for this client.
+            {t("coaching.routines.routineDaysDescription")}
           </p>
         </div>
 
@@ -239,7 +242,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
               color: "var(--muted)",
             }}
           >
-            No days added yet.
+            {t("coaching.routines.noDays")}
           </article>
         ) : (
           <div style={{ display: "grid", gap: 16 }}>
@@ -269,8 +272,8 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
                     }}
-                  >
-                    Day {day.dayIndex}
+                    >
+                    {t("coaching.routines.day", { index: day.dayIndex })}
                   </span>
                   <strong style={{ display: "block", fontSize: 20, marginTop: 10 }}>
                     {day.title}
@@ -281,13 +284,13 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                     </p>
                   ) : (
                     <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
-                      No notes for this day.
+                      {t("coaching.routines.noDayNotes")}
                     </p>
                   )}
                 </div>
 
                 {day.exercises.length === 0 ? (
-                  <p style={{ margin: 0, color: "var(--muted)" }}>No exercises added yet.</p>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noExercises")}</p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
                     {day.exercises.map((exercise) => (
@@ -305,7 +308,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                         <div className="responsive-inline-header">
                           <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                              Exercise {exercise.sortOrder}
+                              {t("coaching.routines.exercise", { index: exercise.sortOrder })}
                             </span>
                             <strong style={{ lineHeight: 1.35 }}>
                               {exercise.exerciseName}
@@ -320,10 +323,10 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                             gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                           }}
                         >
-                          <DetailChip label="Sets" value={exercise.setsText} />
-                          <DetailChip label="Reps" value={exercise.repsText} />
-                          <DetailChip label="Weight" value={exercise.targetWeightText || "N/A"} />
-                          <DetailChip label="Rest" value={`${exercise.restSeconds ?? "N/A"} sec`} />
+                          <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
+                          <DetailChip label={t("coaching.routines.reps")} value={exercise.repsText} />
+                          <DetailChip label={t("coaching.routines.weight")} value={exercise.targetWeightText || t("common.notAvailable")} />
+                          <DetailChip label={t("coaching.routines.rest")} value={`${exercise.restSeconds ?? t("common.notAvailable")} sec`} />
                         </div>
                         {exercise.notes ? (
                           <div
@@ -337,7 +340,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                             }}
                           >
                             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                              Exercise notes
+                              {t("coaching.routines.exerciseNotes")}
                             </span>
                             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
                               {exercise.notes}
@@ -377,7 +380,7 @@ function DetailChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusPill({ status }: { status: ClientRoutineSummary["status"] }) {
+function StatusPill({ label, status }: { label: string; status: ClientRoutineSummary["status"] }) {
   const styles =
     status === "active"
       ? { background: "var(--success-bg)", color: "var(--success)" }
@@ -395,7 +398,7 @@ function StatusPill({ status }: { status: ClientRoutineSummary["status"] }) {
         ...styles,
       }}
     >
-      {status[0].toUpperCase() + status.slice(1)}
+      {label}
     </span>
   );
 }

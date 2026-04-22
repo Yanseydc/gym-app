@@ -1,28 +1,31 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { ClientForm } from "@/modules/clients/components/client-form";
 import { createClient } from "@/modules/clients/services/create-client";
 
-export default function NewClientPage() {
+export default async function NewClientPage() {
+  const { t } = await getAdminText();
+
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div>
         <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to clients
+          {t("common.backToClients")}
         </Link>
       </div>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Create client</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t("clients.createTitle")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Register a new client in the gym system.
+          {t("clients.createDescription")}
         </p>
       </header>
 
       <section
         className="clients-form-shell"
       >
-        <ClientForm action={createClient} submitLabel="Create client" />
+        <ClientForm action={createClient} submitLabel={t("clients.form.submitCreate")} />
       </section>
     </div>
   );

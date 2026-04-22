@@ -1,3 +1,6 @@
+"use client";
+
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type { ClientMembershipAccessStatus } from "@/modules/checkins/types";
 
 export function CheckInStatusBadge({
@@ -5,6 +8,7 @@ export function CheckInStatusBadge({
 }: {
   status: ClientMembershipAccessStatus;
 }) {
+  const { t } = useAdminText();
   const palette =
     status === "active"
       ? { background: "var(--success-bg)", color: "var(--success)" }
@@ -31,7 +35,7 @@ export function CheckInStatusBadge({
         ...palette,
       }}
     >
-      {status}
+      {t(`common.status.${status}`)}
     </span>
   );
 }

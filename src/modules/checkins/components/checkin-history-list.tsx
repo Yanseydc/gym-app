@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import type { ClientCheckIn } from "@/modules/checkins/types";
 
 type CheckInHistoryListProps = {
@@ -7,10 +8,11 @@ type CheckInHistoryListProps = {
   showClient?: boolean;
 };
 
-export function CheckInHistoryList({
+export async function CheckInHistoryList({
   checkIns,
   showClient = true,
 }: CheckInHistoryListProps) {
+  const { t, locale } = await getAdminText();
   if (checkIns.length === 0) {
     return (
       <div
@@ -22,7 +24,7 @@ export function CheckInHistoryList({
           color: "var(--muted)",
         }}
       >
-        No check-ins registered yet.
+        {t("checkins.empty")}
       </div>
     );
   }
@@ -50,7 +52,7 @@ export function CheckInHistoryList({
               )}
             </strong>
             <span style={{ color: "var(--muted)" }}>
-              {new Date(checkIn.checkedInAt).toLocaleString()}
+              {new Date(checkIn.checkedInAt).toLocaleString(locale)}
             </span>
           </div>
           {checkIn.notes ? (

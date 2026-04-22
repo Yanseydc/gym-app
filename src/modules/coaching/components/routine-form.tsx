@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineForm } from "@/modules/coaching/hooks/use-routine-form";
 import type {
   RoutineClientOption,
@@ -37,6 +38,7 @@ export function RoutineForm({
   submitLabel,
   lockClient = false,
 }: RoutineFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useRoutineForm(action);
 
   return (
@@ -49,18 +51,18 @@ export function RoutineForm({
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <strong style={{ fontSize: 18 }}>Routine setup</strong>
+        <strong style={{ fontSize: 18 }}>{t("coaching.routines.overview")}</strong>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Define the routine basics first. You can add days and exercises right after saving.
+          {t("clients.detail.routinesHelper")}
         </p>
       </div>
 
       <div style={gridStyles}>
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={labelStyles}>Client</span>
+            <span style={labelStyles}>{t("payments.form.client")}</span>
             <select name="clientId" defaultValue={defaultValues.clientId} className={input}>
-              <option value="">Select a client</option>
+              <option value="">{t("payments.form.selectClient")}</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.label}
@@ -74,24 +76,24 @@ export function RoutineForm({
         )}
 
         <Field
-          label="Title"
+          label={t("common.title")}
           name="title"
           defaultValue={defaultValues.title}
           error={state.fieldErrors?.title}
         />
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Status</span>
+          <span style={labelStyles}>{t("clients.form.status")}</span>
           <select name="status" defaultValue={defaultValues.status} className={input}>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
+            <option value="draft">{t("common.status.draft")}</option>
+            <option value="active">{t("common.status.active")}</option>
+            <option value="archived">{t("common.status.archived")}</option>
           </select>
           {state.fieldErrors?.status ? <FieldError message={state.fieldErrors.status} /> : null}
         </label>
 
         <Field
-          label="Starts on"
+          label={t("coaching.routines.startsOn")}
           name="startsOn"
           type="date"
           defaultValue={defaultValues.startsOn}
@@ -99,7 +101,7 @@ export function RoutineForm({
         />
 
         <Field
-          label="Ends on"
+          label={t("coaching.routines.endsOn")}
           name="endsOn"
           type="date"
           defaultValue={defaultValues.endsOn}
@@ -108,7 +110,7 @@ export function RoutineForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t("clients.detail.notes")}</span>
         <textarea
           name="notes"
           rows={5}
@@ -139,7 +141,7 @@ export function RoutineForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("common.saving") : submitLabel}
       </button>
     </form>
   );

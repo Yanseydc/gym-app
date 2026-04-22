@@ -1,14 +1,16 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import type { ClientOnboarding } from "@/modules/coaching/types";
 
-export function ClientOnboardingCard({
+export async function ClientOnboardingCard({
   clientId,
   onboarding,
 }: {
   clientId: string;
   onboarding: ClientOnboarding | null;
 }) {
+  const { t } = await getAdminText();
   if (!onboarding) {
     return (
       <article
@@ -22,9 +24,9 @@ export function ClientOnboardingCard({
         }}
       >
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Coaching onboarding</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.onboarding.title")}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            No onboarding captured yet for this client.
+            {t("coaching.onboarding.empty")}
           </p>
         </div>
 
@@ -40,7 +42,7 @@ export function ClientOnboardingCard({
               fontWeight: 700,
             }}
           >
-            Create onboarding
+            {t("coaching.onboarding.create")}
           </Link>
         </div>
       </article>
@@ -70,11 +72,11 @@ export function ClientOnboardingCard({
       >
         <div>
           <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            Cliente preparado para coaching
+            {t("coaching.onboarding.latestSnapshot")}
           </span>
-          <h2 style={{ margin: "0 0 8px" }}>Coaching onboarding</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.onboarding.title")}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Latest onboarding snapshot used for coaching planning.
+            {t("coaching.onboarding.latestDescription")}
           </p>
         </div>
 
@@ -87,7 +89,7 @@ export function ClientOnboardingCard({
             fontWeight: 700,
           }}
         >
-          Edit onboarding
+          {t("coaching.onboarding.edit")}
         </Link>
       </div>
 
@@ -98,17 +100,17 @@ export function ClientOnboardingCard({
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        <DetailItem label="Weight" value={`${onboarding.weightKg} kg`} />
-        <DetailItem label="Height" value={`${onboarding.heightCm} cm`} />
-        <DetailItem label="Available days" value={`${onboarding.availableDays} / week`} />
+        <DetailItem label={t("coaching.onboarding.weight")} value={`${onboarding.weightKg} kg`} />
+        <DetailItem label={t("coaching.onboarding.height")} value={`${onboarding.heightCm} cm`} />
+        <DetailItem label={t("coaching.onboarding.availableDays")} value={`${onboarding.availableDays} / week`} />
         <DetailItem
-          label="Experience level"
+          label={t("coaching.onboarding.experienceLevel")}
           value={onboarding.experienceLevel[0].toUpperCase() + onboarding.experienceLevel.slice(1)}
         />
-        <DetailItem label="Goal" value={onboarding.goal} fullWidth />
-        <DetailItem label="Available schedule" value={onboarding.availableSchedule} fullWidth />
-        <DetailItem label="Injuries notes" value={onboarding.injuriesNotes || "No injuries noted"} fullWidth />
-        <DetailItem label="Notes" value={onboarding.notes || "No notes"} fullWidth />
+        <DetailItem label={t("coaching.onboarding.goal")} value={onboarding.goal} fullWidth />
+        <DetailItem label={t("coaching.onboarding.availableSchedule")} value={onboarding.availableSchedule} fullWidth />
+        <DetailItem label={t("coaching.onboarding.injuriesNotes")} value={onboarding.injuriesNotes || t("coaching.onboarding.noInjuries")} fullWidth />
+        <DetailItem label={t("coaching.onboarding.notes")} value={onboarding.notes || t("common.noNotes")} fullWidth />
       </div>
     </article>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { createRoutine } from "@/modules/coaching/services/create-routine";
 import { getRoutineClientOptionsForPage } from "@/modules/coaching/services/routine-service";
@@ -12,6 +13,7 @@ type NewRoutinePageProps = {
 };
 
 export default async function NewRoutinePage({ searchParams }: NewRoutinePageProps) {
+  const { t } = await getAdminText();
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const { data: clients, error } = await getRoutineClientOptionsForPage();
 
@@ -31,7 +33,7 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
           href={resolvedSearchParams.clientId ? `/dashboard/clients/${resolvedSearchParams.clientId}` : "/dashboard/coaching/exercises"}
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back
+          {t("common.back")}
         </Link>
       </div>
 
@@ -46,11 +48,11 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          Coaching workflow
+          {t("nav.coaching")}
         </span>
-        <h1 style={{ margin: 0 }}>Create routine</h1>
+        <h1 style={{ margin: 0 }}>{t("clients.detail.createRoutine")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Create a client routine, then add days and exercises from the exercise library.
+          {t("clients.detail.routinesHelper")}
         </p>
       </header>
 
@@ -74,7 +76,7 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
             action={createRoutine}
             clients={clients}
             defaultValues={defaultValues}
-            submitLabel="Create routine"
+            submitLabel={t("clients.detail.createRoutine")}
             lockClient={Boolean(resolvedSearchParams.clientId)}
           />
         </section>
@@ -82,9 +84,9 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
         <aside className="coaching-support-panel">
           <div style={{ display: "grid", gap: 8 }}>
             <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              Next steps
+              {t("clients.detail.actions")}
             </span>
-            <strong style={{ fontSize: 18 }}>Save first, build after</strong>
+            <strong style={{ fontSize: 18 }}>{t("common.save")} first, build after</strong>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
               After creating the routine, you will continue to the routine workspace to add day blocks and assign exercises.
             </p>

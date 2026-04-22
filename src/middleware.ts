@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { ADMIN_LOCALE_COOKIE, resolveAdminLocale } from "@/lib/i18n/admin-shared";
 import {
   canAccessPath,
   getAuthorizedHomePath,
@@ -36,6 +37,21 @@ type SupabaseCookie = {
 export async function middleware(request: NextRequest) {
   const response = await updateSession(request);
   const pathname = request.nextUrl.pathname;
+  const requestedLocale = request.nextUrl.searchParams.get("lang");
+
+  if (pathname.startsWith("/dashboard") && requestedLocale) {
+    const locale = resolveAdminLocale(requestedLocale);
+    const url = request.nextUrl.clone();
+    url.searchParams.delete("lang");
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.cookies.set(ADMIN_LOCALE_COOKIE, locale, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+
+    return redirectResponse;
+  }
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonPrimary } from "@/lib/ui";
 import { ClientList } from "@/modules/clients/components/client-list";
 import { ClientSearchForm } from "@/modules/clients/components/client-search-form";
@@ -13,6 +14,7 @@ type ClientsPageProps = {
 };
 
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
+  const { t } = await getAdminText();
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const filters = clientSearchSchema.parse({
     search: resolvedSearchParams.search,
@@ -25,14 +27,14 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
     <div className="clients-page">
       <header className="clients-header">
         <div>
-          <h1 style={{ margin: "0 0 8px" }}>Clients</h1>
+          <h1 style={{ margin: "0 0 8px" }}>{t("clients.title")}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Create, search and manage gym clients from one place.
+            {t("clients.description")}
           </p>
         </div>
 
         <Link href="/dashboard/clients/new" className={buttonPrimary} style={{ width: "fit-content" }}>
-          New client
+          {t("clients.newClient")}
         </Link>
       </header>
 

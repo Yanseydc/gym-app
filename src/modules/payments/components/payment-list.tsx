@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import type { Payment } from "@/modules/payments/types";
 
 type PaymentListProps = {
@@ -7,7 +8,8 @@ type PaymentListProps = {
   showClient?: boolean;
 };
 
-export function PaymentList({ payments, showClient = true }: PaymentListProps) {
+export async function PaymentList({ payments, showClient = true }: PaymentListProps) {
+  const { t } = await getAdminText();
   if (payments.length === 0) {
     return (
       <article
@@ -19,7 +21,7 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
           color: "var(--muted)",
         }}
       >
-        No payments found.
+        {t("payments.empty")}
       </article>
     );
   }
@@ -58,20 +60,20 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
           <div style={{ color: "var(--muted)", display: "grid", gap: 6 }}>
             {showClient ? (
               <span>
-                Client:{" "}
+                {t("payments.client")}:{" "}
                 <Link href={`/dashboard/clients/${payment.clientId}`} style={{ fontWeight: 700 }}>
                   {payment.clientName}
                 </Link>
               </span>
             ) : null}
-            <span>Concept: {payment.concept}</span>
-            <span>Date: {payment.paymentDate}</span>
-            <span>Membership: {payment.membershipLabel ?? "Not linked"}</span>
+            <span>{t("payments.concept")}: {payment.concept}</span>
+            <span>{t("payments.date")}: {payment.paymentDate}</span>
+            <span>{t("payments.membership")}: {payment.membershipLabel ?? t("payments.notLinked")}</span>
           </div>
 
           <div>
             <Link href={`/dashboard/payments/${payment.id}/edit`} style={{ fontWeight: 700 }}>
-              Edit payment
+              {t("payments.edit")}
             </Link>
           </div>
 

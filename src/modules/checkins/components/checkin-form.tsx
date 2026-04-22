@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useCheckInForm } from "@/modules/checkins/hooks/use-checkin-form";
 import type { CheckInMutationState } from "@/modules/checkins/types";
 
@@ -14,16 +15,17 @@ type CheckInFormProps = {
 };
 
 export function CheckInForm({ action }: CheckInFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useCheckInForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={{ fontWeight: 600 }}>Notes</span>
+        <span style={{ fontWeight: 600 }}>{t("checkins.notes")}</span>
         <textarea
           name="notes"
           rows={3}
-          placeholder="Optional reception notes"
+          placeholder={t("checkins.placeholder")}
           className={input}
           style={{ resize: "vertical" }}
         />
@@ -52,7 +54,7 @@ export function CheckInForm({ action }: CheckInFormProps) {
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Registering..." : "Register check-in"}
+        {pending ? t("checkins.registering") : t("checkins.register")}
       </button>
     </form>
   );

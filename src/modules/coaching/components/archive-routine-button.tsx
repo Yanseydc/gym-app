@@ -1,4 +1,7 @@
+"use client";
+
 import { buttonGhost } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { archiveRoutine } from "@/modules/coaching/services/archive-routine";
 import type { ClientRoutineStatus } from "@/modules/coaching/types";
 
@@ -13,6 +16,7 @@ export function ArchiveRoutineButton({
   returnPath,
   status,
 }: ArchiveRoutineButtonProps) {
+  const { t } = useAdminText();
   if (status === "archived") {
     return null;
   }
@@ -20,7 +24,7 @@ export function ArchiveRoutineButton({
   return (
     <form action={archiveRoutine.bind(null, routineId, returnPath)}>
       <button type="submit" className={buttonGhost}>
-        Archive routine
+        {t("coaching.routines.archive")}
       </button>
     </form>
   );

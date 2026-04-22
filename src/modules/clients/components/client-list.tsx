@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type { Client } from "@/modules/clients/types";
 import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
 
@@ -8,6 +9,7 @@ type ClientListProps = {
 };
 
 export function ClientList({ clients }: ClientListProps) {
+  const { t } = useAdminText();
   if (clients.length === 0) {
     return (
       <article
@@ -19,7 +21,7 @@ export function ClientList({ clients }: ClientListProps) {
           color: "var(--muted)",
         }}
       >
-        No clients found.
+        {t("clients.empty")}
       </article>
     );
   }
@@ -40,7 +42,7 @@ export function ClientList({ clients }: ClientListProps) {
           </div>
           <div className="responsive-meta-grid" style={{ color: "var(--muted)" }}>
             <span>{client.phone}</span>
-            <span>{client.email || "No email"}</span>
+            <span>{client.email || t("common.notProvided")}</span>
           </div>
         </Link>
       ))}

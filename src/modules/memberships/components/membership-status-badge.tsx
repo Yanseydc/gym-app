@@ -1,6 +1,10 @@
+"use client";
+
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type { MembershipStatus } from "@/modules/memberships/types";
 
 export function MembershipStatusBadge({ status }: { status: MembershipStatus }) {
+  const { t } = useAdminText();
   const palette =
     status === "active"
       ? { background: "var(--success-bg)", color: "var(--success)" }
@@ -25,7 +29,7 @@ export function MembershipStatusBadge({ status }: { status: MembershipStatus }) 
         ...palette,
       }}
     >
-      {status}
+      {t(`common.status.${status}`)}
     </span>
   );
 }

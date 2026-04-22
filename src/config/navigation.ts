@@ -2,16 +2,16 @@ import type { AppModule } from "@/lib/auth/permissions";
 
 export type NavigationItem = {
   href: string;
-  label: string;
+  labelKey: string;
   module: AppModule;
 };
 
 export const appNavigation: NavigationItem[] = [
-  { href: "/dashboard", label: "Dashboard", module: "dashboard" },
-  { href: "/dashboard/clients", label: "Clients", module: "clients" },
-  { href: "/dashboard/coaching/exercises", label: "Coaching", module: "coaching" },
-  { href: "/dashboard/memberships", label: "Memberships", module: "memberships" },
-  { href: "/dashboard/classes", label: "Classes", module: "classes" },
-  { href: "/dashboard/checkins", label: "Check-ins", module: "checkins" },
-  { href: "/dashboard/payments", label: "Payments", module: "payments" },
+  { href: "/dashboard", labelKey: "nav.dashboard", module: "dashboard" },
+  { href: "/dashboard/clients", labelKey: "nav.clients", module: "clients" },
+  { href: "/dashboard/coaching/exercises", labelKey: "nav.coaching", module: "coaching" },
+  { href: "/dashboard/memberships", labelKey: "nav.memberships", module: "memberships" },
+  { href: "/dashboard/classes", labelKey: "nav.classes", module: "classes" },
+  { href: "/dashboard/checkins", labelKey: "nav.checkins", module: "checkins" },
+  { href: "/dashboard/payments", labelKey: "nav.payments", module: "payments" },
 ];

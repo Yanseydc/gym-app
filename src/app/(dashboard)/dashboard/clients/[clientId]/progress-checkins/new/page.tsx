@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { ProgressCheckInForm } from "@/modules/coaching/components/progress-checkin-form";
 import { createProgressCheckIn } from "@/modules/coaching/services/create-progress-checkin";
 import { getClientForPage } from "@/modules/clients/services/client-service";
@@ -12,6 +13,7 @@ type NewProgressCheckInPageProps = {
 };
 
 export default async function NewProgressCheckInPage({ params }: NewProgressCheckInPageProps) {
+  const { t } = await getAdminText();
   const { clientId } = await params;
   const { data: client, error } = await getClientForPage(clientId);
 
@@ -19,7 +21,7 @@ export default async function NewProgressCheckInPage({ params }: NewProgressChec
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to client
+          {t("common.backToClient")}
         </Link>
         <p
           style={{
@@ -43,7 +45,7 @@ export default async function NewProgressCheckInPage({ params }: NewProgressChec
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to client
+        {t("common.backToClient")}
       </Link>
 
       <header
@@ -57,9 +59,9 @@ export default async function NewProgressCheckInPage({ params }: NewProgressChec
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          Coaching progress
+          {t("nav.coaching")}
         </span>
-        <h1 style={{ margin: 0 }}>Create progress check-in</h1>
+        <h1 style={{ margin: 0 }}>{t("coaching.progress.newCheckin")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Capture a new progress snapshot for {client.firstName} {client.lastName}.
         </p>
@@ -68,7 +70,7 @@ export default async function NewProgressCheckInPage({ params }: NewProgressChec
       <section className="coaching-form-shell">
         <ProgressCheckInForm
           action={createProgressCheckIn.bind(null, clientId)}
-          submitLabel="Create check-in"
+          submitLabel={t("coaching.progress.newCheckin")}
         />
       </section>
     </div>

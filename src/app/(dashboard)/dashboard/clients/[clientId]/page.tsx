@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
 import { hasModuleAccess } from "@/lib/auth/permissions";
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { getClientForPage } from "@/modules/clients/services/client-service";
@@ -40,6 +41,7 @@ type ClientDetailPageProps = {
 };
 
 export default async function ClientDetailPage({ params, searchParams }: ClientDetailPageProps) {
+  const { t, locale } = await getAdminText();
   const { clientId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const user = await getCurrentUser();
@@ -69,7 +71,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to clients
+          {t("common.backToClients")}
         </Link>
         <p
           style={{
@@ -109,22 +111,22 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
         : "overview";
   const baseClientPath = `/dashboard/clients/${client.id}`;
   const tabs = [
-    { id: "overview", label: "Overview", href: baseClientPath, visible: true },
+    { id: "overview", label: t("clients.detail.tabs.overview"), href: baseClientPath, visible: true },
     {
       id: "coaching",
-      label: "Coaching",
+      label: t("clients.detail.tabs.coaching"),
       href: `${baseClientPath}?tab=coaching`,
       visible: canAccessCoaching,
     },
     {
       id: "history",
-      label: "History",
+      label: t("clients.detail.tabs.history"),
       href: `${baseClientPath}?tab=history`,
       visible: canAccessHistory,
     },
     {
       id: "operations",
-      label: "Operations",
+      label: t("clients.detail.tabs.operations"),
       href: `${baseClientPath}?tab=operations`,
       visible: canAccessOperations,
     },
@@ -133,7 +135,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   return (
     <div className="client-detail-page">
       <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to clients
+        {t("common.backToClients")}
       </Link>
 
       <nav aria-label="Client detail sections" className="client-tabs-nav">
@@ -157,97 +159,97 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       {activeTab === "overview" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 14 }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <h2 style={{ margin: "0 0 8px" }}>Coaching summary</h2>
+            <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.summaryTitle")}</h2>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              Key signals and quick actions for this client.
+              {t("clients.detail.summaryDescription")}
             </p>
           </div>
 
           <div className="client-summary-grid">
             <SummaryCard
-              eyebrow="Portal access"
+              eyebrow={t("clients.detail.portalAccess")}
               title={
                 portalAccess
                   ? [portalAccess.profile.firstName, portalAccess.profile.lastName].filter(Boolean).join(" ") ||
                     portalAccess.profile.email
                   : portalAccessError
-                    ? "Access unavailable"
-                    : "Not linked yet"
+                    ? t("clients.detail.accessUnavailable")
+                    : t("clients.detail.notLinkedYet")
               }
               description={
                 portalAccess
                   ? portalAccess.profile.email
-                  : portalAccessError ?? "Link a member profile to unlock the client portal."
+                  : portalAccessError ?? t("clients.detail.portalAccessDescription")
               }
-              meta={portalAccess ? `Linked ${new Date(portalAccess.linkedAt).toLocaleDateString()}` : "Manual setup"}
+              meta={portalAccess ? t("common.linked", { date: new Date(portalAccess.linkedAt).toLocaleDateString(locale) }) : t("common.manualSetup")}
               actionHref={
                 portalAccess
                   ? undefined
                   : `/dashboard/clients/${client.id}/portal-access/new`
               }
-              actionLabel={portalAccess ? undefined : "Link portal user"}
+              actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
             />
 
             <SummaryCard
-              eyebrow="Onboarding snapshot"
-              title={onboarding ? onboarding.goal : onboardingError ? "Onboarding unavailable" : "No onboarding yet"}
+              eyebrow={t("clients.detail.onboardingSnapshot")}
+              title={onboarding ? onboarding.goal : onboardingError ? t("clients.detail.onboardingUnavailable") : t("clients.detail.noOnboardingYet")}
               description={
                 onboarding
-                  ? `${onboarding.availableDays} days/week · ${onboarding.experienceLevel}`
-                  : onboardingError ?? "Capture the baseline details used for planning."
+                  ? `${t("common.daysPerWeek", { count: onboarding.availableDays })} · ${onboarding.experienceLevel}`
+                  : onboardingError ?? t("clients.detail.onboardingDescription")
               }
-              meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : "Planning setup"}
+              meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : t("common.planningSetup")}
               actionHref={`/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`}
-              actionLabel={onboarding ? "Edit onboarding" : "Create onboarding"}
+              actionLabel={onboarding ? t("clients.detail.editOnboarding") : t("clients.detail.createOnboarding")}
             />
 
             <SummaryCard
-              eyebrow="Active routine"
-              title={activeRoutine ? activeRoutine.title : routinesError ? "Routines unavailable" : "No active routine"}
+              eyebrow={t("clients.detail.activeRoutine")}
+              title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutine")}
               description={
                 activeRoutine
-                  ? `${activeRoutine.dayCount} day blocks`
-                  : routinesError ?? "Create or apply a routine to keep coaching moving."
+                  ? t("common.days", { count: activeRoutine.dayCount })
+                  : routinesError ?? t("clients.detail.routinesDescription")
               }
-              meta={activeRoutine ? `Updated ${new Date(activeRoutine.updatedAt).toLocaleDateString()}` : "Training plan"}
+              meta={activeRoutine ? t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }) : t("common.trainingPlan")}
               actionHref={
                 activeRoutine
                   ? `/dashboard/coaching/routines/${activeRoutine.id}`
                   : `/dashboard/coaching/routines/new?clientId=${client.id}`
               }
-              actionLabel={activeRoutine ? "View routine" : "Create routine"}
-              status={activeRoutine ? <StatusChip label="Active" tone="success" /> : undefined}
+              actionLabel={activeRoutine ? t("clients.detail.viewRoutine") : t("clients.detail.createRoutine")}
+              status={activeRoutine ? <StatusChip label={t("common.status.active")} tone="success" /> : undefined}
             />
 
             <SummaryCard
-              eyebrow="Latest progress"
+              eyebrow={t("clients.detail.latestProgress")}
               title={
                 latestProgressCheckIn
                   ? latestProgressCheckIn.checkinDate
                   : progressCheckInsError
-                    ? "Check-ins unavailable"
-                    : "No check-ins yet"
+                    ? t("clients.detail.checkinsUnavailable")
+                    : t("clients.detail.noCheckinsYet")
               }
               description={
                 latestProgressCheckIn
                   ? latestProgressCheckIn.photoTypes.length > 0
-                    ? `${latestProgressCheckIn.photoTypes.length} photos attached`
-                    : "No photos attached"
-                  : progressCheckInsError ?? "Capture quick progress snapshots over time."
+                    ? t("clients.detail.photosAttached", { count: latestProgressCheckIn.photoTypes.length })
+                    : t("clients.detail.noPhotosAttached")
+                  : progressCheckInsError ?? t("clients.detail.progressCheckinsHelper")
               }
               meta={
                 latestProgressCheckIn
                   ? latestProgressCheckIn.weightKg
                     ? `${latestProgressCheckIn.weightKg} kg`
-                    : "Weight not recorded"
-                  : "Progress tracking"
+                    : t("clients.detail.weightNotRecorded")
+                  : t("common.progressTracking")
               }
               actionHref={
                 latestProgressCheckIn
                   ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
                   : `/dashboard/clients/${client.id}/progress-checkins/new`
               }
-              actionLabel={latestProgressCheckIn ? "Open latest check-in" : "Create first check-in"}
+              actionLabel={latestProgressCheckIn ? t("clients.detail.openLatestCheckin") : t("clients.detail.createFirstCheckin")}
             />
           </div>
         </section>
@@ -256,20 +258,20 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       {activeTab === "coaching" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 16 }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <h2 style={{ margin: "0 0 8px" }}>Coaching workspace</h2>
+            <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.coachingWorkspace")}</h2>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              Current coaching work, routine planning, and progress tracking for this client.
+              {t("clients.detail.coachingWorkspaceDescription")}
             </p>
           </div>
 
           <section style={workspacePanelStyles}>
             <div style={workspaceHeaderStyles}>
               <div style={{ display: "grid", gap: 8 }}>
-                <span style={workspaceEyebrowStyles}>Coaching workspace</span>
+                <span style={workspaceEyebrowStyles}>{t("clients.detail.coachingWorkspace")}</span>
                 <div style={{ display: "grid", gap: 4 }}>
-                  <h3 style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>Training and progress</h3>
+                  <h3 style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>{t("clients.detail.trainingAndProgress")}</h3>
                   <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                    Stay inside one work zone to manage routines, review progress, and move the client forward.
+                    {t("clients.detail.trainingAndProgressDescription")}
                   </p>
                 </div>
               </div>
@@ -278,14 +280,14 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
             <section style={{ display: "grid", gap: 14 }}>
               <div className="responsive-inline-header">
                 <div>
-                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Routines</h4>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.routinesTitle")}</h4>
                   <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                    Create, reuse, and adjust training plans without leaving the client view.
+                    {t("clients.detail.routinesHelper")}
                   </p>
                 </div>
 
                 <Link href={`/dashboard/coaching/routines/new?clientId=${client.id}`} className={buttonPrimary}>
-                  Create routine
+                  {t("clients.detail.createRoutine")}
                 </Link>
               </div>
 
@@ -300,9 +302,9 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
             <section style={{ display: "grid", gap: 14 }}>
               <div>
-                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Progress check-ins</h4>
+                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.progressCheckinsTitle")}</h4>
                 <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                  Review the latest coaching notes and body progress in the same workspace.
+                  {t("clients.detail.progressCheckinsHelper")}
                 </p>
               </div>
 
@@ -319,9 +321,9 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       {activeTab === "history" && canAccessHistory ? (
       <section style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <h2 style={{ margin: "0 0 8px" }}>History</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.historyTitle")}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Review the client timeline without mixing it with day-to-day operational actions.
+            {t("clients.detail.historyDescription")}
           </p>
         </div>
 
@@ -332,20 +334,18 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               gap: 6,
             }}
           >
-            <span style={sectionEyebrowStyles}>Timeline</span>
-            <h3 style={{ margin: 0, fontSize: 22 }}>Client activity history</h3>
+            <span style={sectionEyebrowStyles}>{t("clients.detail.timeline")}</span>
+            <h3 style={{ margin: 0, fontSize: 22 }}>{t("clients.detail.clientActivityHistory")}</h3>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              Membership lifecycle, payments, and front-desk check-ins in one reading flow.
+              {t("clients.detail.clientActivityHistoryDescription")}
             </p>
           </div>
 
           {canAccessMemberships ? (
             <section style={{ display: "grid", gap: 14 }}>
               <div>
-                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Membership history</h4>
-                <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Current and past memberships assigned to this client.
-                </p>
+                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.membershipHistory")}</h4>
+                <p style={{ margin: 0, color: "var(--muted)" }}>{t("clients.detail.membershipHistoryDescription")}</p>
               </div>
 
               {membershipHistoryError ? (
@@ -359,11 +359,9 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
           {canAccessPayments ? (
             <section style={{ display: "grid", gap: 14 }}>
               <div>
-                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Payment history</h4>
-                <p style={{ margin: 0, color: "var(--muted)" }}>
-                  Manual payments registered for this client.
-                </p>
-              </div>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.paymentHistory")}</h4>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>{t("clients.detail.paymentHistoryDescription")}</p>
+                </div>
 
               {paymentsError ? (
                 <p style={errorBoxStyles}>{paymentsError}</p>
@@ -385,10 +383,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                 }}
               >
                 <div>
-                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Check-in history</h4>
-                  <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Reception log for this client.
-                  </p>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.checkinHistory")}</h4>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>{t("clients.detail.checkinHistoryDescription")}</p>
                 </div>
                 {membershipHistory[0] ? (
                   <CheckInStatusBadge status={membershipHistory[0].status} />
@@ -409,25 +405,25 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       {activeTab === "operations" && canAccessOperations ? (
       <section style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <h2 style={{ margin: "0 0 8px" }}>Operations</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.operationsTitle")}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Quick front-desk actions only. Keep forms lightweight and separate from longer reading contexts.
+            {t("clients.detail.operationsDescription")}
           </p>
         </div>
 
           <section style={{ ...contentPanelStyles, gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
-              <span style={sectionEyebrowStyles}>Actions</span>
-              <h3 style={{ margin: 0, fontSize: 22 }}>Quick operations</h3>
+              <span style={sectionEyebrowStyles}>{t("clients.detail.actions")}</span>
+              <h3 style={{ margin: 0, fontSize: 22 }}>{t("clients.detail.quickOperations")}</h3>
               <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                Lightweight forms for front-desk tasks and client account updates.
+                {t("clients.detail.quickOperationsDescription")}
               </p>
             </div>
 
             {canAccessMemberships ? (
               <UtilityFormPanel
-                title="Assign membership"
-                description="Choose an active plan and assign it to this client."
+                title={t("clients.detail.assignMembership")}
+                description={t("clients.detail.assignMembershipDescription")}
               >
                 {activePlansError ? (
                   <p style={errorBoxStyles}>{activePlansError}</p>
@@ -442,8 +438,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
             {canAccessPayments ? (
               <UtilityFormPanel
-                title="Register payment"
-                description="Record a manual payment and optionally link it to a client membership."
+                title={t("clients.detail.registerPayment")}
+                description={t("clients.detail.registerPaymentDescription")}
               >
                 <PaymentForm
                   action={createPayment.bind(null, client.id)}
@@ -456,12 +452,12 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   memberships={membershipHistory.map((membership) => ({
                     id: membership.id,
                     clientId: membership.clientId,
-                    label: `${membership.planName} · ${membership.startDate} to ${membership.endDate} · $${membership.remainingBalance.toFixed(2)} remaining`,
+                    label: `${membership.planName} · ${t("common.dateRange", { start: membership.startDate, end: membership.endDate })} · $${membership.remainingBalance.toFixed(2)} ${t("memberships.remainingBalance").toLowerCase()}`,
                     planPrice: membership.planPrice,
                     totalPaid: membership.totalPaid,
                     remainingBalance: membership.remainingBalance,
                   }))}
-                  submitLabel="Register payment"
+                  submitLabel={t("clients.detail.registerPayment")}
                   defaultValues={{
                     clientId: client.id,
                     paymentMethod: "cash",
@@ -473,8 +469,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
             {canAccessCheckIns ? (
               <UtilityFormPanel
-                title="Manual check-in"
-                description="A client can only enter if they currently have an active membership."
+                title={t("clients.detail.manualCheckin")}
+                description={t("clients.detail.manualCheckinDescription")}
               >
                 {membershipHistory.some((membership) => membership.status === "active") ? (
                   <CheckInForm action={createCheckIn.bind(null, client.id)} />
@@ -487,7 +483,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                       color: "var(--danger-fg)",
                     }}
                   >
-                    This client does not currently have an active membership, so check-in is blocked.
+                    {t("clients.detail.checkinBlocked")}
                   </div>
                 )}
               </UtilityFormPanel>

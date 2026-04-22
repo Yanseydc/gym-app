@@ -1,27 +1,29 @@
 import Link from "next/link";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import type { ProgressCheckInSummary } from "@/modules/coaching/types";
 
-export function ProgressCheckInSection({
+export async function ProgressCheckInSection({
   checkIns,
   clientId,
 }: {
   checkIns: ProgressCheckInSummary[];
   clientId: string;
 }) {
+  const { t } = await getAdminText();
   return (
     <section style={{ display: "grid", gap: 16 }}>
       <div className="responsive-inline-header">
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Progress check-ins</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.progress.title")}</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Capture progress snapshots with notes and front, side, back photos.
+            {t("coaching.progress.description")}
           </p>
         </div>
 
         <Link href={`/dashboard/clients/${clientId}/progress-checkins/new`} className={buttonSecondary}>
-          New check-in
+          {t("coaching.progress.newCheckin")}
         </Link>
       </div>
 
@@ -37,11 +39,11 @@ export function ProgressCheckInSection({
           }}
         >
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            No progress check-ins recorded yet.
+            {t("coaching.progress.empty")}
           </p>
           <div>
             <Link href={`/dashboard/clients/${clientId}/progress-checkins/new`} className={buttonPrimary}>
-              Create first check-in
+              {t("coaching.progress.createFirst")}
             </Link>
           </div>
         </article>
@@ -62,7 +64,7 @@ export function ProgressCheckInSection({
               <div className="responsive-inline-header">
                 <div style={{ display: "grid", gap: 4 }}>
                   <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    Check-in
+                    {t("coaching.progress.checkin")}
                   </span>
                   <strong style={{ fontSize: 18 }}>{checkIn.checkinDate}</strong>
                 </div>
@@ -70,26 +72,26 @@ export function ProgressCheckInSection({
                   href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
                   className={buttonSecondary}
                 >
-                  Edit
+                  {t("coaching.progress.edit")}
                 </Link>
               </div>
 
               <div className="responsive-meta-grid">
-                <MetaPill label="Weight" value={checkIn.weightKg ? `${checkIn.weightKg} kg` : "N/A"} />
+                <MetaPill label={t("coaching.progress.weight")} value={checkIn.weightKg ? `${checkIn.weightKg} kg` : t("common.notAvailable")} />
                 <MetaPill
-                  label="Photos"
-                  value={checkIn.photoTypes.length > 0 ? checkIn.photoTypes.join(", ") : "None"}
+                  label={t("coaching.progress.photos")}
+                  value={checkIn.photoTypes.length > 0 ? checkIn.photoTypes.join(", ") : t("coaching.progress.none")}
                 />
               </div>
 
               {checkIn.clientNotes ? (
                 <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                  Client: {checkIn.clientNotes}
+                  {t("coaching.progress.client")}: {checkIn.clientNotes}
                 </p>
               ) : null}
               {checkIn.coachNotes ? (
                 <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                  Coach: {checkIn.coachNotes}
+                  {t("coaching.progress.coach")}: {checkIn.coachNotes}
                 </p>
               ) : null}
             </article>

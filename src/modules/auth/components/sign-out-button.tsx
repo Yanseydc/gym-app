@@ -1,6 +1,6 @@
 import { signOut } from "@/modules/auth/services/sign-out";
 
-export function SignOutButton() {
+export function SignOutButton({ label = "Cerrar sesión" }: { label?: string }) {
   return (
     <form action={signOut}>
       <button
@@ -15,7 +15,7 @@ export function SignOutButton() {
           cursor: "pointer",
         }}
       >
-        Cerrar sesión
+        {label}
       </button>
     </form>
   );

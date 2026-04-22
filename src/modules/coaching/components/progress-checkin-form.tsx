@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, fileInput, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useProgressCheckInForm } from "@/modules/coaching/hooks/use-progress-checkin-form";
 import type {
   ProgressCheckIn,
@@ -36,6 +37,7 @@ export function ProgressCheckInForm({
   existingCheckIn,
   submitLabel,
 }: ProgressCheckInFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useProgressCheckInForm(action);
 
   return (
@@ -48,7 +50,7 @@ export function ProgressCheckInForm({
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <strong style={{ fontSize: 18 }}>Check-in details</strong>
+        <strong style={{ fontSize: 18 }}>{t("coaching.progress.checkin")}</strong>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Save body metrics, coaching notes and a clean three-angle photo snapshot in one place.
         </p>
@@ -56,14 +58,14 @@ export function ProgressCheckInForm({
 
       <div style={gridStyles}>
         <Field
-          label="Check-in date"
+          label={t("coaching.progress.checkin")}
           name="checkinDate"
           type="date"
           defaultValue={defaultValues.checkinDate}
           error={state.fieldErrors?.checkinDate}
         />
         <Field
-          label="Weight (kg)"
+          label={t("coaching.progress.weight")}
           name="weightKg"
           type="number"
           step="0.01"
@@ -73,14 +75,14 @@ export function ProgressCheckInForm({
       </div>
 
       <TextAreaField
-        label="Client notes"
+        label={t("coaching.progress.client")}
         name="clientNotes"
         rows={4}
         defaultValue={defaultValues.clientNotes}
         error={state.fieldErrors?.clientNotes}
       />
       <TextAreaField
-        label="Coach notes"
+        label={t("coaching.progress.coach")}
         name="coachNotes"
         rows={4}
         defaultValue={defaultValues.coachNotes}
@@ -89,7 +91,7 @@ export function ProgressCheckInForm({
 
       <section style={{ display: "grid", gap: 16 }}>
         <div>
-          <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Photos</h2>
+          <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>{t("coaching.progress.photos")}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
             Upload or replace front, side and back photos. Replacements create a new storage path.
           </p>
@@ -154,7 +156,7 @@ export function ProgressCheckInForm({
                         color: "var(--muted)",
                       }}
                     >
-                      <strong style={{ color: "var(--foreground)" }}>No photo uploaded</strong>
+                      <strong style={{ color: "var(--foreground)" }}>{t("coaching.progress.none")}</strong>
                       <span style={{ maxWidth: 220, lineHeight: 1.5 }}>
                         Use a vertical image with the subject centered for a clean comparison later.
                       </span>
@@ -173,7 +175,7 @@ export function ProgressCheckInForm({
                   }}
                 >
                   <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    Upload file
+                    {t("common.save")}
                   </span>
                   <input name={`${photoType}Photo`} type="file" accept="image/*" className={fileInput} />
                 </label>
@@ -203,7 +205,7 @@ export function ProgressCheckInForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("common.saving") : submitLabel}
       </button>
     </form>
   );

@@ -2,16 +2,18 @@ import { KpiCard } from "@/modules/dashboard/components/kpi-card";
 import { RecentClientsPanel } from "@/modules/dashboard/components/recent-clients-panel";
 import { RecentPaymentsPanel } from "@/modules/dashboard/components/recent-payments-panel";
 import { getDashboardSnapshot } from "@/modules/dashboard/services/dashboard-service";
+import { getAdminText } from "@/lib/i18n/admin";
 
 export default async function DashboardPage() {
+  const { t } = await getAdminText();
   const { metrics, recentPayments, recentClients, errors } = await getDashboardSnapshot();
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <header style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: "0 0 8px" }}>Dashboard</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t("dashboard.title")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Operational view for staff and administration.
+          {t("dashboard.description")}
         </p>
       </header>
 
@@ -39,17 +41,17 @@ export default async function DashboardPage() {
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        <KpiCard label="Active clients" value={String(metrics.activeClients)} tone="success" />
-        <KpiCard label="Active memberships" value={String(metrics.activeMemberships)} tone="success" />
-        <KpiCard label="Expired memberships" value={String(metrics.expiredMemberships)} tone="warning" />
+        <KpiCard label={t("dashboard.activeClients")} value={String(metrics.activeClients)} tone="success" />
+        <KpiCard label={t("dashboard.activeMemberships")} value={String(metrics.activeMemberships)} tone="success" />
+        <KpiCard label={t("dashboard.expiredMemberships")} value={String(metrics.expiredMemberships)} tone="warning" />
         <KpiCard
-          label="Expiring in 7 days"
+          label={t("dashboard.expiringSoon")}
           value={String(metrics.membershipsExpiringSoon)}
           tone="warning"
         />
-        <KpiCard label="Income today" value={`$${metrics.incomeToday.toFixed(2)}`} />
+        <KpiCard label={t("dashboard.incomeToday")} value={`$${metrics.incomeToday.toFixed(2)}`} />
         <KpiCard
-          label="Income this month"
+          label={t("dashboard.incomeThisMonth")}
           value={`$${metrics.incomeThisMonth.toFixed(2)}`}
         />
       </div>
