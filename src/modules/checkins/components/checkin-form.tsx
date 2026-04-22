@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useCheckInForm } from "@/modules/checkins/hooks/use-checkin-form";
 import type { CheckInMutationState } from "@/modules/checkins/types";
 
@@ -23,7 +24,8 @@ export function CheckInForm({ action }: CheckInFormProps) {
           name="notes"
           rows={3}
           placeholder="Optional reception notes"
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? (
           <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{state.fieldErrors.notes}</span>
@@ -47,28 +49,11 @@ export function CheckInForm({ action }: CheckInFormProps) {
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#121513",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Registering..." : "Register check-in"}
       </button>
     </form>
   );
 }
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "var(--input)",
-  font: "inherit",
-};

@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { usePaymentEditForm } from "@/modules/payments/hooks/use-payment-edit-form";
 import type {
   Payment,
@@ -39,7 +40,7 @@ export function PaymentEditForm({
         <input
           name="concept"
           defaultValue={defaultValues?.concept ?? payment.concept}
-          style={inputStyles}
+          className={input}
         />
         {state.fieldErrors?.concept ? <FieldError message={state.fieldErrors.concept} /> : null}
       </label>
@@ -50,7 +51,8 @@ export function PaymentEditForm({
           name="notes"
           rows={5}
           defaultValue={defaultValues?.notes ?? payment.notes ?? ""}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -71,8 +73,8 @@ export function PaymentEditForm({
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fbe4e4",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {state.error}
@@ -82,16 +84,8 @@ export function PaymentEditForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : "Save changes"}
       </button>
@@ -100,20 +94,11 @@ export function PaymentEditForm({
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "#fff",
-  font: "inherit",
 };
 
 const summaryStyles: CSSProperties = {
@@ -122,5 +107,6 @@ const summaryStyles: CSSProperties = {
   padding: "14px 16px",
   borderRadius: 14,
   background: "var(--surface-alt)",
+  border: "1px solid var(--border)",
   color: "var(--muted)",
 };

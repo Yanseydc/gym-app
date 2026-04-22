@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonSecondary } from "@/lib/ui";
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
 import type { ClientRoutine, ClientRoutineSummary } from "@/modules/coaching/types";
@@ -103,13 +104,13 @@ export function RoutineSummaryList({
           >
             <Link
               href={`/dashboard/coaching/routines/${routine.id}`}
-              style={actionLinkStyles}
+              className={actionLinkStyles}
             >
               View routine
             </Link>
             <Link
               href={`/dashboard/coaching/routines/${routine.id}/edit`}
-              style={actionLinkStyles}
+              className={actionLinkStyles}
             >
               Edit routine
             </Link>
@@ -166,7 +167,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {showEditLink ? (
-            <Link href={`/dashboard/coaching/routines/${routine.id}/edit`} style={actionLinkStyles}>
+            <Link href={`/dashboard/coaching/routines/${routine.id}/edit`} className={actionLinkStyles}>
               Edit routine
             </Link>
           ) : null}
@@ -381,11 +382,4 @@ function DetailItem({
   );
 }
 
-const actionLinkStyles = {
-  padding: "8px 12px",
-  borderRadius: 999,
-  background: "var(--surface-alt)",
-  border: "1px solid var(--border)",
-  fontWeight: 700,
-  fontSize: 13,
-} as const;
+const actionLinkStyles = buttonSecondary;

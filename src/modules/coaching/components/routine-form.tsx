@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineForm } from "@/modules/coaching/hooks/use-routine-form";
 import type {
   RoutineClientOption,
@@ -44,7 +45,7 @@ export function RoutineForm({
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>
             <span style={labelStyles}>Client</span>
-            <select name="clientId" defaultValue={defaultValues.clientId} style={inputStyles}>
+            <select name="clientId" defaultValue={defaultValues.clientId} className={input}>
               <option value="">Select a client</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -67,7 +68,7 @@ export function RoutineForm({
 
         <label style={{ display: "grid", gap: 8 }}>
           <span style={labelStyles}>Status</span>
-          <select name="status" defaultValue={defaultValues.status} style={inputStyles}>
+          <select name="status" defaultValue={defaultValues.status} className={input}>
             <option value="draft">Draft</option>
             <option value="active">Active</option>
             <option value="archived">Archived</option>
@@ -98,7 +99,8 @@ export function RoutineForm({
           name="notes"
           rows={5}
           defaultValue={defaultValues.notes}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -109,8 +111,8 @@ export function RoutineForm({
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fbe4e4",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {state.error}
@@ -120,16 +122,8 @@ export function RoutineForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -153,14 +147,14 @@ function Field({
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} defaultValue={defaultValue} style={inputStyles} />
+      <input name={name} type={type} defaultValue={defaultValue} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
 
 const gridStyles: CSSProperties = {
@@ -171,13 +165,4 @@ const gridStyles: CSSProperties = {
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "#fff",
-  font: "inherit",
 };

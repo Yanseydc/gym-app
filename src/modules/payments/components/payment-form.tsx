@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { usePaymentForm } from "@/modules/payments/hooks/use-payment-form";
 import type {
   PaymentClientOption,
@@ -57,7 +58,7 @@ export function PaymentForm({
                 setSelectedClientId(event.target.value);
                 setSelectedMembershipId("");
               }}
-              style={inputStyles}
+              className={input}
             >
               <option value="">
                 Select a client
@@ -81,7 +82,7 @@ export function PaymentForm({
             onChange={(event) => {
               setSelectedMembershipId(event.target.value);
             }}
-            style={inputStyles}
+            className={input}
           >
             <option value="">Select a membership</option>
             {visibleMemberships.map((membership) => (
@@ -126,7 +127,7 @@ export function PaymentForm({
           <select
             name="paymentMethod"
             defaultValue={defaultValues?.paymentMethod ?? "cash"}
-            style={inputStyles}
+            className={input}
           >
             <option value="cash">Cash</option>
             <option value="transfer">Transfer</option>
@@ -159,7 +160,8 @@ export function PaymentForm({
           name="notes"
           rows={4}
           defaultValue={defaultValues?.notes ?? ""}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -181,16 +183,8 @@ export function PaymentForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#121513",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -216,7 +210,7 @@ function Field({ defaultValue, error, label, name, step, type = "text" }: FieldP
         type={type}
         step={step}
         defaultValue={defaultValue}
-        style={inputStyles}
+        className={input}
       />
       {error ? <FieldError message={error} /> : null}
     </label>
@@ -235,13 +229,4 @@ const gridStyles: CSSProperties = {
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "var(--input)",
-  font: "inherit",
 };

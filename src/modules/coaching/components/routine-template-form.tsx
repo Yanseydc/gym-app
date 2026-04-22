@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineTemplateForm } from "@/modules/coaching/hooks/use-routine-template-form";
 import type { RoutineTemplateFormValues, RoutineTemplateMutationState } from "@/modules/coaching/types";
 
@@ -23,7 +24,7 @@ export function RoutineTemplateForm({
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <label style={{ display: "grid", gap: 8 }}>
         <span style={labelStyles}>Title</span>
-        <input name="title" defaultValue={defaultValues.title} style={inputStyles} />
+        <input name="title" defaultValue={defaultValues.title} className={input} />
         {state.fieldErrors?.title ? <FieldError message={state.fieldErrors.title} /> : null}
       </label>
 
@@ -33,7 +34,8 @@ export function RoutineTemplateForm({
           name="notes"
           rows={6}
           defaultValue={defaultValues.notes}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -44,8 +46,8 @@ export function RoutineTemplateForm({
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fbe4e4",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {state.error}
@@ -55,16 +57,8 @@ export function RoutineTemplateForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -73,18 +67,9 @@ export function RoutineTemplateForm({
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
 
 const labelStyles = {
   fontWeight: 600,
-} as const;
-
-const inputStyles = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "#fff",
-  font: "inherit",
 } as const;

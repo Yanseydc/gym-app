@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
 import { hasModuleAccess } from "@/lib/auth/permissions";
+import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { getClientForPage } from "@/modules/clients/services/client-service";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
@@ -244,7 +245,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                   </p>
                 </div>
 
-                <Link href={`/dashboard/coaching/routines/new?clientId=${client.id}`} style={primaryActionStyles}>
+                <Link href={`/dashboard/coaching/routines/new?clientId=${client.id}`} className={buttonPrimary}>
                   Create routine
                 </Link>
               </div>
@@ -339,7 +340,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
                     </p>
                   </div>
 
-                  <Link href={`/dashboard/payments/new?clientId=${client.id}`} style={secondaryActionStyles}>
+                  <Link href={`/dashboard/payments/new?clientId=${client.id}`} className={buttonSecondary}>
                     Open payment page
                   </Link>
                 </div>
@@ -533,14 +534,7 @@ function SummaryCard({
         <div>
           <Link
             href={actionHref}
-            style={{
-              display: "inline-block",
-              padding: "9px 12px",
-              borderRadius: 12,
-              background: "var(--surface-alt)",
-              border: "1px solid var(--border)",
-              fontWeight: 700,
-            }}
+            className={buttonSecondary}
           >
             {actionLabel}
           </Link>
@@ -631,22 +625,6 @@ const errorBoxStyles: CSSProperties = {
   color: "var(--danger-fg)",
 };
 
-const secondaryActionStyles: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 12,
-  background: "var(--surface-alt)",
-  border: "1px solid var(--border)",
-  fontWeight: 700,
-};
-
-const primaryActionStyles: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: 14,
-  background: "var(--accent)",
-  color: "#121513",
-  fontWeight: 700,
-  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.16)",
-};
 
 function StatusChip({
   label,

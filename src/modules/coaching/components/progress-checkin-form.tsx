@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useProgressCheckInForm } from "@/modules/coaching/hooks/use-progress-checkin-form";
 import type {
   ProgressCheckIn,
@@ -153,16 +154,8 @@ export function ProgressCheckInForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#121513",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -193,7 +186,7 @@ function Field({
         type={type}
         step={step}
         defaultValue={defaultValue}
-        style={inputStyles}
+        className={input}
       />
       {error ? <FieldError message={error} /> : null}
     </label>
@@ -220,7 +213,8 @@ function TextAreaField({
         name={name}
         rows={rows}
         defaultValue={defaultValue}
-        style={{ ...inputStyles, resize: "vertical" }}
+        className={input}
+        style={{ resize: "vertical" }}
       />
       {error ? <FieldError message={error} /> : null}
     </label>
@@ -239,13 +233,4 @@ const gridStyles: CSSProperties = {
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "var(--input)",
-  font: "inherit",
 };

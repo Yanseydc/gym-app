@@ -1,3 +1,5 @@
+import { buttonPrimary, input } from "@/lib/ui";
+
 type ClientSearchFormProps = {
   defaultValue: string;
 };
@@ -18,28 +20,13 @@ export function ClientSearchForm({ defaultValue }: ClientSearchFormProps) {
         name="search"
         defaultValue={defaultValue}
         placeholder="Search by first or last name"
+        className={input}
         style={{
           minWidth: 280,
           flex: 1,
-          padding: "14px 16px",
-          borderRadius: 14,
-          border: "1px solid var(--border)",
-          background: "#fff",
-          font: "inherit",
         }}
       />
-      <button
-        type="submit"
-        style={{
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
+      <button type="submit" className={buttonPrimary}>
         Search
       </button>
     </form>

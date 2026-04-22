@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineTemplateApplyForm } from "@/modules/coaching/hooks/use-routine-template-apply-form";
 import type {
   RoutineClientOption,
@@ -24,7 +25,7 @@ export function RoutineTemplateApplyForm({
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
       <label style={{ display: "grid", gap: 8 }}>
         <span style={{ fontWeight: 600 }}>Client</span>
-        <select name="clientId" defaultValue="" style={inputStyles}>
+        <select name="clientId" defaultValue="" className={input}>
           <option value="">Select a client</option>
           {clients.map((client) => (
             <option key={client.id} value={client.id}>
@@ -41,8 +42,8 @@ export function RoutineTemplateApplyForm({
             margin: 0,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "#fbe4e4",
-            color: "#8a1c1c",
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
           }}
         >
           {state.error}
@@ -52,16 +53,8 @@ export function RoutineTemplateApplyForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Applying..." : "Apply template"}
       </button>
@@ -70,14 +63,5 @@ export function RoutineTemplateApplyForm({
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
-
-const inputStyles = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "#fff",
-  font: "inherit",
-} as const;

@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useClientMembershipForm } from "@/modules/memberships/hooks/use-client-membership-form";
 import type {
   ClientMembershipMutationState,
@@ -39,7 +40,7 @@ export function MembershipAssignmentForm({
           <select
             name="membershipPlanId"
             defaultValue={defaultValues.membershipPlanId}
-            style={inputStyles}
+            className={input}
           >
             <option value="" disabled>
               Select a plan
@@ -61,7 +62,7 @@ export function MembershipAssignmentForm({
             type="date"
             name="startDate"
             defaultValue={defaultValues.startDate}
-            style={inputStyles}
+            className={input}
           />
           {state.fieldErrors?.startDate ? <FieldError message={state.fieldErrors.startDate} /> : null}
         </label>
@@ -73,7 +74,8 @@ export function MembershipAssignmentForm({
           name="notes"
           defaultValue={defaultValues.notes}
           rows={4}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -95,16 +97,8 @@ export function MembershipAssignmentForm({
       <button
         type="submit"
         disabled={pending || plans.length === 0}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#121513",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Assigning..." : "Assign membership"}
       </button>
@@ -124,13 +118,4 @@ const gridStyles: CSSProperties = {
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "var(--input)",
-  font: "inherit",
 };

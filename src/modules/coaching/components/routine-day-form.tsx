@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineDayForm } from "@/modules/coaching/hooks/use-routine-day-form";
 import type { RoutineDayMutationState } from "@/modules/coaching/types";
 
@@ -32,7 +33,8 @@ export function RoutineDayForm({ action }: RoutineDayFormProps) {
         <textarea
           name="notes"
           rows={3}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -41,7 +43,7 @@ export function RoutineDayForm({ action }: RoutineDayFormProps) {
         <p style={errorStyles}>{state.error}</p>
       ) : null}
 
-      <button type="submit" disabled={pending} style={buttonStyles}>
+      <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
         {pending ? "Adding..." : "Add day"}
       </button>
     </form>
@@ -62,14 +64,14 @@ function Field({
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} style={inputStyles} />
+      <input name={name} type={type} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "#8a1c1c", fontSize: 14 }}>{message}</span>;
+  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
 }
 
 const gridStyles: CSSProperties = {
@@ -82,30 +84,10 @@ const labelStyles: CSSProperties = {
   fontWeight: 600,
 };
 
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "#fff",
-  font: "inherit",
-};
-
-const buttonStyles: CSSProperties = {
-  width: "fit-content",
-  border: 0,
-  padding: "12px 16px",
-  borderRadius: 14,
-  background: "var(--accent)",
-  color: "#fff",
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
 const errorStyles: CSSProperties = {
   margin: 0,
   padding: "12px 14px",
   borderRadius: 12,
-  background: "#fbe4e4",
-  color: "#8a1c1c",
+  background: "var(--danger-bg)",
+  color: "var(--danger-fg)",
 };

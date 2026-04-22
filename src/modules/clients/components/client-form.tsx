@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { buttonPrimary, input } from "@/lib/ui";
 import { useClientForm } from "@/modules/clients/hooks/use-client-form";
 import type { ClientFormValues, ClientMutationState } from "@/modules/clients/types";
 
@@ -64,7 +65,7 @@ export function ClientForm({
           <select
             name="status"
             defaultValue={defaultValues.status}
-            style={inputStyles}
+            className={input}
           >
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -79,7 +80,8 @@ export function ClientForm({
           name="notes"
           defaultValue={defaultValues.notes}
           rows={5}
-          style={{ ...inputStyles, resize: "vertical" }}
+          className={input}
+          style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
@@ -101,16 +103,8 @@ export function ClientForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "14px 18px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#121513",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        className={buttonPrimary}
+        style={{ width: "fit-content" }}
       >
         {pending ? "Saving..." : submitLabel}
       </button>
@@ -130,7 +124,7 @@ function Field({ defaultValue, error, label, name, type = "text" }: FieldProps) 
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} defaultValue={defaultValue} style={inputStyles} />
+      <input name={name} type={type} defaultValue={defaultValue} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );
@@ -148,13 +142,4 @@ const gridStyles: CSSProperties = {
 
 const labelStyles: CSSProperties = {
   fontWeight: 600,
-};
-
-const inputStyles: CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 14,
-  border: "1px solid var(--border)",
-  background: "var(--input)",
-  font: "inherit",
 };
