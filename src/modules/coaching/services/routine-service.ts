@@ -98,6 +98,10 @@ function normalizeRoutineExercisePayload(values: RoutineExerciseFormValues) {
   };
 }
 
+function buildDuplicatedRoutineTitle(title: string) {
+  return `${title.trim()} (Copy)`;
+}
+
 export async function listRoutineClientOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: RoutineClientOption[]; error: string | null }> {
@@ -396,6 +400,107 @@ export async function createRoutineExerciseRecord(
     })
     .select("id")
     .single();
+}
+
+export async function duplicateRoutineRecord(
+  supabase: AppSupabaseClient,
+  coachProfileId: string,
+  sourceRoutine: ClientRoutine,
+): Promise<{ data: { id: string } | null; error: string | null }> {
+  const createdAt = new Date().toISOString();
+
+  const { data: duplicatedRoutine, error: routineError } = await supabase
+    .from("client_routines")
+    .insert({
+      client_id: sourceRoutine.clientId,
+      coach_profile_id: coachProfileId,
+      title: buildDuplicatedRoutineTitle(sourceRoutine.title),
+      notes: sourceRoutine.notes,
+      status: "draft",
+      starts_on: null,
+      ends_on: null,
+      created_at: createdAt,
+      updated_at: createdAt,
+    })
+    .select("id")
+    .single();
+
+  if (routineError || !duplicatedRoutine) {
+    return {
+      data: null,
+      error: routineError?.message ?? "Unable to duplicate routine.",
+    };
+  }
+
+  const duplicatedRoutineId = String(duplicatedRoutine.id);
+  const duplicatedDayIds = new Map<string, string>();
+
+  for (const day of sourceRoutine.days) {
+    const { data: duplicatedDay, error: dayError } = await supabase
+      .from("client_routine_days")
+      .insert({
+        client_routine_id: duplicatedRoutineId,
+        day_index: day.dayIndex,
+        title: day.title,
+        notes: day.notes,
+        created_at: createdAt,
+      })
+      .select("id")
+      .single();
+
+    if (dayError || !duplicatedDay) {
+      await supabase.from("client_routines").delete().eq("id", duplicatedRoutineId);
+
+      return {
+        data: null,
+        error: dayError?.message ?? "Unable to duplicate routine days.",
+      };
+    }
+
+    duplicatedDayIds.set(day.id, String(duplicatedDay.id));
+  }
+
+  const duplicatedExercises = sourceRoutine.days.flatMap((day) => {
+    const duplicatedDayId = duplicatedDayIds.get(day.id);
+
+    if (!duplicatedDayId) {
+      return [];
+    }
+
+    return day.exercises.map((exercise) => ({
+      client_routine_day_id: duplicatedDayId,
+      exercise_id: exercise.exerciseId,
+      sort_order: exercise.sortOrder,
+      sets_text: exercise.setsText,
+      reps_text: exercise.repsText,
+      target_weight_text: exercise.targetWeightText,
+      rest_seconds: exercise.restSeconds,
+      notes: exercise.notes,
+      created_at: createdAt,
+    }));
+  });
+
+  if (duplicatedExercises.length > 0) {
+    const { error: exercisesError } = await supabase
+      .from("client_routine_exercises")
+      .insert(duplicatedExercises);
+
+    if (exercisesError) {
+      await supabase.from("client_routines").delete().eq("id", duplicatedRoutineId);
+
+      return {
+        data: null,
+        error: exercisesError.message,
+      };
+    }
+  }
+
+  return {
+    data: {
+      id: duplicatedRoutineId,
+    },
+    error: null,
+  };
 }
 
 export const getRoutineClientOptionsForPage = cache(async () => {
