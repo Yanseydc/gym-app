@@ -18,15 +18,43 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
   return (
     <main style={{ padding: "40px 0 64px" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "280px 1fr",
-          gap: 24,
-          alignItems: "start",
-        }}
-      >
+      <div className="dashboard-shell-grid">
+        <details className="dashboard-mobile-nav">
+          <summary className="dashboard-mobile-nav-toggle">
+            <div style={{ display: "grid", gap: 4 }}>
+              <strong>GymOS</strong>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>Operación central</span>
+            </div>
+            <span style={{ color: "var(--accent-strong)", fontWeight: 700 }}>Menu</span>
+          </summary>
+
+          <div className="dashboard-mobile-nav-panel">
+            <AuthUserCard user={user} />
+
+            <nav className="dashboard-sidebar-nav">
+              {visibleNavigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 14,
+                    background: "var(--surface-alt)",
+                    border: "1px solid transparent",
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <SignOutButton />
+          </div>
+        </details>
+
         <aside
+          className="dashboard-sidebar"
           style={{
             position: "sticky",
             top: 24,
@@ -44,7 +72,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
           <AuthUserCard user={user} />
 
-          <nav style={{ display: "grid", gap: 12 }}>
+          <nav className="dashboard-sidebar-nav">
             {visibleNavigation.map((item) => (
               <Link
                 key={item.href}
@@ -67,15 +95,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           </div>
         </aside>
 
-        <section
-          style={{
-            padding: 24,
-            borderRadius: 24,
-            background:
-              "linear-gradient(180deg, rgba(22, 27, 23, 0.96), rgba(18, 22, 19, 0.94))",
-            border: "1px solid var(--border)",
-          }}
-        >
+        <section className="dashboard-content">
           {children}
         </section>
       </div>

@@ -41,15 +41,7 @@ export function CheckInHistoryList({
           background: "rgba(255, 255, 255, 0.03)",
         }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="responsive-inline-header">
             <strong>
               {showClient ? (
                 <Link href={`/dashboard/clients/${checkIn.clientId}`}>{checkIn.clientName}</Link>

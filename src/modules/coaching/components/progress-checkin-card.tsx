@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import type { ProgressCheckInSummary } from "@/modules/coaching/types";
 
 export function ProgressCheckInSection({
@@ -11,15 +12,7 @@ export function ProgressCheckInSection({
 }) {
   return (
     <section style={{ display: "grid", gap: 16 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="responsive-inline-header">
         <div>
           <h2 style={{ margin: "0 0 8px" }}>Progress check-ins</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -27,16 +20,7 @@ export function ProgressCheckInSection({
           </p>
         </div>
 
-        <Link
-          href={`/dashboard/clients/${clientId}/progress-checkins/new`}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "var(--surface-alt)",
-            border: "1px solid var(--border)",
-            fontWeight: 700,
-          }}
-        >
+        <Link href={`/dashboard/clients/${clientId}/progress-checkins/new`} className={buttonSecondary}>
           New check-in
         </Link>
       </div>
@@ -56,17 +40,7 @@ export function ProgressCheckInSection({
             No progress check-ins recorded yet.
           </p>
           <div>
-            <Link
-              href={`/dashboard/clients/${clientId}/progress-checkins/new`}
-              style={{
-                display: "inline-block",
-                padding: "12px 16px",
-                borderRadius: 14,
-                background: "var(--accent)",
-                color: "#121513",
-                fontWeight: 700,
-              }}
-            >
+            <Link href={`/dashboard/clients/${clientId}/progress-checkins/new`} className={buttonPrimary}>
               Create first check-in
             </Link>
           </div>
@@ -85,15 +59,7 @@ export function ProgressCheckInSection({
                 background: "rgba(255, 255, 255, 0.03)",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
+              <div className="responsive-inline-header">
                 <div style={{ display: "grid", gap: 4 }}>
                   <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
                     Check-in
@@ -102,25 +68,13 @@ export function ProgressCheckInSection({
                 </div>
                 <Link
                   href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    background: "var(--surface-alt)",
-                    border: "1px solid var(--border)",
-                    fontWeight: 700,
-                  }}
+                  className={buttonSecondary}
                 >
                   Edit
                 </Link>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gap: 10,
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                }}
-              >
+              <div className="responsive-meta-grid">
                 <MetaPill label="Weight" value={checkIn.weightKg ? `${checkIn.weightKg} kg` : "N/A"} />
                 <MetaPill
                   label="Photos"

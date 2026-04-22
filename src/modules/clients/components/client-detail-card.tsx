@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonSecondary } from "@/lib/ui";
 import type { Client } from "@/modules/clients/types";
 import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
 
@@ -9,22 +10,14 @@ export function ClientDetailCard({ client }: { client: Client }) {
       style={{
         display: "grid",
         gap: 22,
-        padding: 28,
+        padding: 20,
         borderRadius: 28,
         border: "1px solid var(--border-strong)",
         background: "linear-gradient(180deg, rgba(36, 42, 37, 0.98), rgba(24, 29, 25, 0.95))",
         boxShadow: "0 20px 44px rgba(0, 0, 0, 0.22)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="responsive-inline-header">
         <div>
           <span
             style={{
@@ -47,13 +40,7 @@ export function ClientDetailCard({ client }: { client: Client }) {
 
         <Link
           href={`/dashboard/clients/${client.id}/edit`}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "var(--surface-alt)",
-            border: "1px solid var(--border)",
-            fontWeight: 700,
-          }}
+          className={buttonSecondary}
         >
           Edit client
         </Link>
@@ -66,13 +53,7 @@ export function ClientDetailCard({ client }: { client: Client }) {
 
 function DetailGrid({ client }: { client: Client }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: 14,
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      }}
-    >
+    <div className="responsive-meta-grid">
       <DetailItem label="Phone" value={client.phone} />
       <DetailItem label="Email" value={client.email || "Not provided"} />
       <DetailItem label="Created" value={new Date(client.createdAt).toLocaleString()} />

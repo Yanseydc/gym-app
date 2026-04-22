@@ -38,15 +38,7 @@ export function PaymentList({ payments, showClient = true }: PaymentListProps) {
           background: "rgba(255, 255, 255, 0.03)",
         }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="responsive-inline-header">
             <strong>${payment.amount.toFixed(2)}</strong>
             <span
               style={{

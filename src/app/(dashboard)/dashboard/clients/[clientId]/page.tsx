@@ -131,24 +131,12 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   ].filter((tab) => tab.visible);
 
   return (
-    <div style={{ display: "grid", gap: 32 }}>
+    <div className="client-detail-page">
       <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
         Back to clients
       </Link>
 
-      <nav
-        aria-label="Client detail sections"
-        style={{
-          display: "flex",
-          gap: 10,
-          flexWrap: "wrap",
-          padding: 8,
-          borderRadius: 18,
-          border: "1px solid var(--border)",
-          background: "rgba(255, 255, 255, 0.025)",
-          width: "fit-content",
-        }}
-      >
+      <nav aria-label="Client detail sections" className="client-tabs-nav">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -156,16 +144,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
             <Link
               key={tab.id}
               href={tab.href}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 12,
-                fontWeight: 700,
-                fontSize: 14,
-                background: isActive ? "var(--accent)" : "transparent",
-                color: isActive ? "#121513" : "var(--foreground)",
-                border: isActive ? "1px solid transparent" : "1px solid var(--border)",
-                transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
-              }}
+              className={`client-tab-link${isActive ? " is-active" : ""}`}
             >
               {tab.label}
             </Link>
@@ -184,13 +163,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
             </p>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: 14,
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            }}
-          >
+          <div className="client-summary-grid">
             <SummaryCard
               eyebrow="Portal access"
               title={
@@ -303,15 +276,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
             </div>
 
             <section style={{ display: "grid", gap: 14 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "flex-end",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="responsive-inline-header">
                 <div>
                   <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>Routines</h4>
                   <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>

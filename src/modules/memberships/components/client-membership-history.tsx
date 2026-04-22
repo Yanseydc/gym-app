@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonGhost } from "@/lib/ui";
 import { cancelClientMembership } from "@/modules/memberships/services/cancel-client-membership";
 import type { ClientMembership } from "@/modules/memberships/types";
 import { MembershipStatusBadge } from "@/modules/memberships/components/membership-status-badge";
@@ -43,15 +44,7 @@ export function ClientMembershipHistory({
           background: "rgba(255, 255, 255, 0.03)",
         }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="responsive-inline-header">
             <div>
               <Link
                 href={`/dashboard/memberships/${membership.membershipPlanId}`}
@@ -66,13 +59,7 @@ export function ClientMembershipHistory({
             <MembershipStatusBadge status={membership.status} />
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: 12,
-              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            }}
-          >
+          <div className="responsive-meta-grid">
             <DetailItem label="Plan price" value={`$${membership.planPrice.toFixed(2)}`} />
             <DetailItem label="Total paid" value={`$${membership.totalPaid.toFixed(2)}`} />
             <DetailItem
@@ -91,15 +78,7 @@ export function ClientMembershipHistory({
             <form action={cancelClientMembership.bind(null, clientId, membership.id)}>
               <button
                 type="submit"
-                style={{
-                  width: "fit-content",
-                  border: "1px solid var(--border)",
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  background: "rgba(255, 255, 255, 0.02)",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className={buttonGhost}
               >
                 Cancel membership
               </button>
