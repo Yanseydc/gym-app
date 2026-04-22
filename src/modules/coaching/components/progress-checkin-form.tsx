@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, input } from "@/lib/ui";
+import { buttonPrimary, fileInput, input } from "@/lib/ui";
 import { useProgressCheckInForm } from "@/modules/coaching/hooks/use-progress-checkin-form";
 import type {
   ProgressCheckIn,
@@ -40,6 +40,20 @@ export function ProgressCheckInForm({
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
+      <div
+        style={{
+          display: "grid",
+          gap: 6,
+          paddingBottom: 6,
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <strong style={{ fontSize: 18 }}>Check-in details</strong>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+          Save body metrics, coaching notes and a clean three-angle photo snapshot in one place.
+        </p>
+      </div>
+
       <div style={gridStyles}>
         <Field
           label="Check-in date"
@@ -81,57 +95,89 @@ export function ProgressCheckInForm({
           </p>
         </div>
 
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        <div className="coaching-photo-grid">
           {photoTypes.map((photoType) => {
             const existingPhoto = existingCheckIn?.photos.find((photo) => photo.photoType === photoType) ?? null;
 
             return (
-              <label
+              <section
                 key={photoType}
                 style={{
                   display: "grid",
-                  gap: 10,
+                  gap: 12,
                   padding: 16,
-                  borderRadius: 16,
+                  borderRadius: 18,
                   border: "1px solid var(--border)",
                   background: "rgba(255, 255, 255, 0.03)",
                 }}
               >
-                <span style={labelStyles}>
-                  {photoType[0].toUpperCase() + photoType.slice(1)} photo
-                </span>
+                <div style={{ display: "grid", gap: 4 }}>
+                  <span style={labelStyles}>
+                    {photoType[0].toUpperCase() + photoType.slice(1)} photo
+                  </span>
+                  <span style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+                    {existingPhoto ? "Upload a new file to replace the current image." : "Add a clear image for this angle."}
+                  </span>
+                </div>
 
-                {existingPhoto?.signedUrl ? (
-                  <img
-                    src={existingPhoto.signedUrl}
-                    alt={`${photoType} progress photo`}
-                    style={{
-                      width: "100%",
-                      aspectRatio: "3 / 4",
-                      objectFit: "cover",
-                      borderRadius: 14,
-                      border: "1px solid var(--border)",
-                      background: "var(--surface-soft)",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      placeItems: "center",
-                      minHeight: 180,
-                      borderRadius: 14,
-                      border: "1px dashed var(--border)",
-                      color: "var(--muted)",
-                      background: "var(--surface-soft)",
-                    }}
-                  >
-                    No photo uploaded
-                  </div>
-                )}
+                <div
+                  style={{
+                    display: "grid",
+                    placeItems: "center",
+                    minHeight: 260,
+                    borderRadius: 16,
+                    border: existingPhoto ? "1px solid var(--border)" : "1px dashed var(--border)",
+                    background: "linear-gradient(180deg, rgba(20, 24, 21, 0.96), rgba(15, 18, 16, 0.92))",
+                    overflow: "hidden",
+                  }}
+                >
+                  {existingPhoto?.signedUrl ? (
+                    <img
+                      src={existingPhoto.signedUrl}
+                      alt={`${photoType} progress photo`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        aspectRatio: "3 / 4",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 8,
+                        placeItems: "center",
+                        padding: 18,
+                        textAlign: "center",
+                        color: "var(--muted)",
+                      }}
+                    >
+                      <strong style={{ color: "var(--foreground)" }}>No photo uploaded</strong>
+                      <span style={{ maxWidth: 220, lineHeight: 1.5 }}>
+                        Use a vertical image with the subject centered for a clean comparison later.
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                <input name={`${photoType}Photo`} type="file" accept="image/*" />
-              </label>
+                <label
+                  style={{
+                    display: "grid",
+                    gap: 8,
+                    padding: 12,
+                    borderRadius: 14,
+                    border: "1px solid var(--border)",
+                    background: "rgba(255, 255, 255, 0.02)",
+                  }}
+                >
+                  <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    Upload file
+                  </span>
+                  <input name={`${photoType}Photo`} type="file" accept="image/*" className={fileInput} />
+                </label>
+              </section>
             );
           })}
         </div>

@@ -41,6 +41,20 @@ export function RoutineForm({
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
+      <div
+        style={{
+          display: "grid",
+          gap: 6,
+          paddingBottom: 6,
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <strong style={{ fontSize: 18 }}>Routine setup</strong>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+          Define the routine basics first. You can add days and exercises right after saving.
+        </p>
+      </div>
+
       <div style={gridStyles}>
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>

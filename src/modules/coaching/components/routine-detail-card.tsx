@@ -143,35 +143,37 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
     <article
       style={{
         display: "grid",
-        gap: 22,
-        padding: 28,
+        gap: 20,
+        padding: 22,
         borderRadius: 28,
-        border: "1px solid rgba(0, 0, 0, 0.06)",
-        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
-        boxShadow: "var(--shadow)",
+        border: "1px solid var(--border)",
+        background: "linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96))",
+        boxShadow: "0 18px 38px rgba(0, 0, 0, 0.16)",
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
+          display: "grid",
+          gap: 18,
         }}
       >
-        <div>
-          <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-            Routine overview
-          </span>
-          <h1 style={{ margin: "0 0 8px" }}>{routine.title}</h1>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-            <StatusPill status={routine.status} />
-            <span style={{ color: "var(--muted)" }}>{routine.clientName}</span>
+        <div className="responsive-inline-header">
+          <div style={{ minWidth: 0, display: "grid", gap: 10 }}>
+            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              Routine overview
+            </span>
+            <div style={{ display: "grid", gap: 8 }}>
+              <h1 style={{ margin: 0, fontSize: "clamp(1.9rem, 3vw, 2.35rem)", lineHeight: 1.05 }}>
+                {routine.title}
+              </h1>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <StatusPill status={routine.status} />
+                <span style={{ color: "var(--muted)" }}>{routine.clientName}</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div className="responsive-actions-wrap" style={{ alignItems: "stretch" }}>
           {showEditLink ? (
             <Link href={`/dashboard/coaching/routines/${routine.id}/edit`} className={actionLinkStyles}>
               Edit routine
@@ -190,20 +192,33 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
             routineId={routine.id}
             returnPath={`/dashboard/coaching/routines/${routine.id}`}
           />
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: 16,
+            borderRadius: 20,
+            border: "1px solid var(--border)",
+            background: "rgba(255, 255, 255, 0.025)",
+          }}
+        >
+          <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+            Planning notes
+          </span>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.65 }}>
+            {routine.notes || "No coaching notes yet for this routine."}
+          </p>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        }}
-      >
+      <div className="coaching-detail-meta-grid">
         <DetailItem label="Starts on" value={routine.startsOn || "Not set"} />
         <DetailItem label="Ends on" value={routine.endsOn || "Not set"} />
         <DetailItem label="Updated" value={new Date(routine.updatedAt).toLocaleString()} />
-        <DetailItem label="Notes" value={routine.notes || "No notes"} fullWidth />
+        <DetailItem label="Days" value={`${routine.days.length}`} />
       </div>
 
       <section style={{ display: "grid", gap: 16 }}>
@@ -217,10 +232,10 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
         {routine.days.length === 0 ? (
           <article
             style={{
-              padding: 24,
+              padding: 20,
               borderRadius: 20,
               border: "1px dashed var(--border)",
-              background: "rgba(255, 250, 243, 0.92)",
+              background: "rgba(255, 255, 255, 0.02)",
               color: "var(--muted)",
             }}
           >
@@ -233,11 +248,11 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                 key={day.id}
                 style={{
                   display: "grid",
-                  gap: 16,
-                  padding: 22,
+                  gap: 14,
+                  padding: 18,
                   borderRadius: 22,
-                  border: "1px solid rgba(0, 0, 0, 0.06)",
-                  background: "rgba(255, 250, 243, 0.92)",
+                  border: "1px solid var(--border)",
+                  background: "rgba(255, 255, 255, 0.03)",
                 }}
               >
                 <div>
@@ -247,7 +262,7 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                       alignItems: "center",
                       padding: "6px 10px",
                       borderRadius: 999,
-                      background: "#fff",
+                      background: "rgba(209, 108, 67, 0.12)",
                       color: "var(--accent-strong)",
                       fontSize: 12,
                       fontWeight: 700,
@@ -260,11 +275,15 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                   <strong style={{ display: "block", fontSize: 20, marginTop: 10 }}>
                     {day.title}
                   </strong>
-                  {day.notes ? (
+                    {day.notes ? (
                     <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
                       {day.notes}
                     </p>
-                  ) : null}
+                  ) : (
+                    <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
+                      No notes for this day.
+                    </p>
+                  )}
                 </div>
 
                 {day.exercises.length === 0 ? (
@@ -277,25 +296,22 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                         style={{
                           display: "grid",
                           gap: 12,
-                          padding: 18,
+                          padding: 16,
                           borderRadius: 18,
-                          background: "#fff",
-                          border: "1px solid rgba(0, 0, 0, 0.06)",
+                          background: "linear-gradient(180deg, rgba(35, 41, 36, 0.98), rgba(27, 31, 28, 0.96))",
+                          border: "1px solid var(--border)",
                         }}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 12,
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong>
-                            #{exercise.sortOrder} {exercise.exerciseName}
-                          </strong>
-                          <span style={{ color: "var(--muted)" }}>{exercise.exerciseSlug}</span>
+                        <div className="responsive-inline-header">
+                          <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
+                            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                              Exercise {exercise.sortOrder}
+                            </span>
+                            <strong style={{ lineHeight: 1.35 }}>
+                              {exercise.exerciseName}
+                            </strong>
+                          </div>
+                          <span style={{ color: "var(--muted)", fontSize: 13 }}>{exercise.exerciseSlug}</span>
                         </div>
                         <div
                           style={{
@@ -310,9 +326,23 @@ export function RoutineDetailCard({ routine, showEditLink = false }: {
                           <DetailChip label="Rest" value={`${exercise.restSeconds ?? "N/A"} sec`} />
                         </div>
                         {exercise.notes ? (
-                          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                            {exercise.notes}
-                          </p>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: 6,
+                              padding: 12,
+                              borderRadius: 14,
+                              border: "1px solid var(--border)",
+                              background: "rgba(255, 255, 255, 0.025)",
+                            }}
+                          >
+                            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                              Exercise notes
+                            </span>
+                            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+                              {exercise.notes}
+                            </p>
+                          </div>
                         ) : null}
                       </div>
                     ))}
@@ -335,7 +365,8 @@ function DetailChip({ label, value }: { label: string; value: string }) {
         gap: 4,
         padding: "12px 14px",
         borderRadius: 14,
-        background: "rgba(239, 229, 212, 0.42)",
+        background: "rgba(255, 255, 255, 0.035)",
+        border: "1px solid var(--border)",
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
@@ -381,9 +412,10 @@ function DetailItem({
   return (
     <div
       style={{
-        padding: 18,
+        padding: 16,
         borderRadius: 18,
-        background: "rgba(239, 229, 212, 0.5)",
+        background: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid var(--border)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >

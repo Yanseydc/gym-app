@@ -59,21 +59,26 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
         Back to client
       </Link>
 
-      <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit progress check-in</h1>
+      <header
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 20,
+          borderRadius: 24,
+          border: "1px solid var(--border)",
+          background: "linear-gradient(180deg, rgba(30, 36, 31, 0.98), rgba(22, 27, 24, 0.95))",
+        }}
+      >
+        <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          Coaching progress
+        </span>
+        <h1 style={{ margin: 0 }}>Edit progress check-in</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Update notes, weight and photos for {client.firstName} {client.lastName}.
         </p>
       </header>
 
-      <section
-        style={{
-          padding: 24,
-          borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
-        }}
-      >
+      <section className="coaching-form-shell">
         <ProgressCheckInForm
           action={updateProgressCheckIn.bind(null, clientId, checkinId)}
           defaultValues={defaultValues}

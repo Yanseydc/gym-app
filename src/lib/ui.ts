@@ -1,5 +1,7 @@
 export const input = "ui-input";
 
+export const fileInput = "ui-file-input";
+
 export const buttonPrimary = "ui-button ui-button-primary";
 
 export const buttonSecondary = "ui-button ui-button-secondary";

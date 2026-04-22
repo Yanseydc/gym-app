@@ -82,6 +82,32 @@ button {
   box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
 }
 
+.ui-file-input {
+  width: 100%;
+  color: var(--foreground);
+}
+
+.ui-file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--foreground);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+
+.ui-file-input::file-selector-button:hover {
+  background: color-mix(in srgb, var(--surface-alt) 82%, white 18%);
+  border-color: var(--border-strong);
+}
+
+.ui-file-input::file-selector-button:active {
+  transform: scale(0.985);
+}
+
 .ui-button {
   display: inline-flex;
   align-items: center;
@@ -418,6 +444,41 @@ main {
   background: var(--surface);
 }
 
+.coaching-form-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.coaching-form-shell {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96));
+}
+
+.coaching-support-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.coaching-photo-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.coaching-detail-meta-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (min-width: 640px) {
   main {
     width: min(1120px, calc(100% - 32px));
@@ -472,6 +533,18 @@ main {
   .clients-form-shell {
     padding: 22px;
   }
+
+  .coaching-form-shell {
+    padding: 22px;
+  }
+
+  .coaching-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coaching-detail-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 900px) {
@@ -518,6 +591,19 @@ main {
   .portal-two-column {
     grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
   }
+
+  .coaching-form-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+    align-items: start;
+  }
+
+  .coaching-form-shell {
+    padding: 24px;
+  }
+
+  .coaching-photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1100px) {
@@ -538,6 +624,10 @@ main {
   }
 
   .portal-routine-meta-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .coaching-detail-meta-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
