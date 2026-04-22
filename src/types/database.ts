@@ -312,6 +312,102 @@ export type Database = {
         };
         Relationships: [];
       };
+      routine_template_days: {
+        Row: {
+          created_at: string;
+          day_index: number;
+          id: string;
+          notes: string | null;
+          routine_template_id: string;
+          title: string;
+        };
+        Insert: {
+          created_at?: string;
+          day_index: number;
+          id?: string;
+          notes?: string | null;
+          routine_template_id: string;
+          title: string;
+        };
+        Update: {
+          created_at?: string;
+          day_index?: number;
+          id?: string;
+          notes?: string | null;
+          routine_template_id?: string;
+          title?: string;
+        };
+        Relationships: [];
+      };
+      routine_template_exercises: {
+        Row: {
+          created_at: string;
+          exercise_id: string;
+          id: string;
+          notes: string | null;
+          reps_text: string;
+          rest_seconds: number | null;
+          routine_template_day_id: string;
+          sets_text: string;
+          sort_order: number;
+          target_weight_text: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          exercise_id: string;
+          id?: string;
+          notes?: string | null;
+          reps_text: string;
+          rest_seconds?: number | null;
+          routine_template_day_id: string;
+          sets_text: string;
+          sort_order?: number;
+          target_weight_text?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          exercise_id?: string;
+          id?: string;
+          notes?: string | null;
+          reps_text?: string;
+          rest_seconds?: number | null;
+          routine_template_day_id?: string;
+          sets_text?: string;
+          sort_order?: number;
+          target_weight_text?: string | null;
+        };
+        Relationships: [];
+      };
+      routine_templates: {
+        Row: {
+          created_at: string;
+          created_by_profile_id: string | null;
+          id: string;
+          notes: string | null;
+          source_routine_id: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by_profile_id?: string | null;
+          id?: string;
+          notes?: string | null;
+          source_routine_id?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by_profile_id?: string | null;
+          id?: string;
+          notes?: string | null;
+          source_routine_id?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       check_ins: {
         Row: {
           checked_in_at: string;

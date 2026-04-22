@@ -46,3 +46,16 @@ export type {
   RoutineFormValues,
   RoutineMutationState,
 } from "@/modules/coaching/types/routine";
+export type {
+  RoutineTemplate,
+  RoutineTemplateApplyFormValues,
+  RoutineTemplateApplyMutationState,
+  RoutineTemplateDay,
+  RoutineTemplateDayRecord,
+  RoutineTemplateExercise,
+  RoutineTemplateExerciseRecord,
+  RoutineTemplateFormValues,
+  RoutineTemplateMutationState,
+  RoutineTemplateRecord,
+  RoutineTemplateSummary,
+} from "@/modules/coaching/types/routine-template";

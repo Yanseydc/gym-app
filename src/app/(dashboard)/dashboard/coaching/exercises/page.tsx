@@ -24,18 +24,31 @@ export default async function ExercisesPage() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard/coaching/exercises/new"
-          style={{
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "var(--accent)",
-            color: "#fff",
-            fontWeight: 700,
-          }}
-        >
-          New exercise
-        </Link>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link
+            href="/dashboard/coaching/templates"
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              background: "var(--surface-alt)",
+              fontWeight: 700,
+            }}
+          >
+            View templates
+          </Link>
+          <Link
+            href="/dashboard/coaching/exercises/new"
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              background: "var(--accent)",
+              color: "#fff",
+              fontWeight: 700,
+            }}
+          >
+            New exercise
+          </Link>
+        </div>
       </header>
 
       {error ? (
