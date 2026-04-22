@@ -33,7 +33,7 @@ export default async function PortalHomePage() {
         style={{
           display: "grid",
           gap: 10,
-          padding: 24,
+          padding: 20,
           borderRadius: 24,
           background:
             "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
@@ -51,13 +51,7 @@ export default async function PortalHomePage() {
         </p>
       </header>
 
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        }}
-      >
+      <div className="portal-summary-grid">
         <SummaryCard
           title={t.home.routineTitle}
           value={activeRoutine ? activeRoutine.title : t.home.routineEmptyValue}
@@ -95,16 +89,17 @@ function SummaryCard({
   return (
     <Link
       href={href}
-        style={{
-          display: "grid",
-          gap: 10,
-          padding: 22,
-          borderRadius: 22,
-          border: "1px solid var(--border)",
-          background: "linear-gradient(180deg, rgba(29, 35, 30, 0.98), rgba(21, 26, 23, 0.94))",
-          boxShadow: "0 12px 28px rgba(0, 0, 0, 0.14)",
-          color: "inherit",
-        }}
+      style={{
+        display: "grid",
+        gap: 10,
+        padding: 20,
+        borderRadius: 22,
+        border: "1px solid var(--border)",
+        background: "linear-gradient(180deg, rgba(29, 35, 30, 0.98), rgba(21, 26, 23, 0.94))",
+        boxShadow: "0 12px 28px rgba(0, 0, 0, 0.14)",
+        color: "inherit",
+        minWidth: 0,
+      }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
         {title}

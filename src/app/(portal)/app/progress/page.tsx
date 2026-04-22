@@ -21,7 +21,7 @@ export default async function PortalProgressPage() {
         style={{
           display: "grid",
           gap: 10,
-          padding: 22,
+          padding: 20,
           borderRadius: 24,
           background:
             "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
@@ -37,7 +37,7 @@ export default async function PortalProgressPage() {
       {detailedCheckIns.length === 0 ? (
         <article
           style={{
-            padding: 28,
+            padding: 22,
             borderRadius: 24,
             border: "1px dashed var(--border)",
             background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
@@ -56,22 +56,14 @@ export default async function PortalProgressPage() {
                     style={{
                       display: "grid",
                       gap: 18,
-                      padding: 22,
+                      padding: 18,
                       borderRadius: 22,
                       border: "1px solid var(--border)",
                       background: "linear-gradient(180deg, rgba(28, 33, 29, 0.98), rgba(21, 26, 23, 0.95))",
                       boxShadow: "0 14px 28px rgba(0, 0, 0, 0.12)",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                      }}
-                    >
+                    <div className="responsive-inline-header">
                       <div style={{ display: "grid", gap: 6 }}>
                         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
                           Check-in
@@ -99,13 +91,7 @@ export default async function PortalProgressPage() {
                       <NoteBlock label={t.progress.coachNotes} value={result.data.coachNotes} />
                     ) : null}
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 16,
-                        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                      }}
-                    >
+                    <div className="portal-photo-grid">
                       {(["front", "side", "back"] as const).map((photoType) => {
                         const photo =
                           result.data?.photos.find((item) => item.photoType === photoType) ?? null;

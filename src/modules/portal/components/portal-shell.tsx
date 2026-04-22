@@ -29,20 +29,75 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
   return (
     <main
       style={{
-        padding: "32px 0 64px",
+        padding: "24px 0 64px",
         background:
-          "radial-gradient(circle at top left, rgba(209, 108, 67, 0.12), transparent 32%), linear-gradient(180deg, rgba(21, 26, 22, 0.3), rgba(18, 22, 19, 0))",
+          "radial-gradient(circle at top left, rgba(209, 108, 67, 0.08), transparent 28%), linear-gradient(180deg, rgba(21, 26, 22, 0.24), rgba(18, 22, 19, 0))",
       }}
     >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr)",
-          gap: 28,
-          alignItems: "start",
-        }}
-      >
+      <div className="portal-shell-grid">
+        <details className="portal-mobile-nav">
+          <summary className="portal-mobile-nav-toggle">
+            <div style={{ display: "grid", gap: 4 }}>
+              <strong>GymOS</strong>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>{t.shell.brandSubtitle}</span>
+            </div>
+            <span style={{ color: "var(--accent-strong)", fontWeight: 700 }}>Menu</span>
+          </summary>
+
+          <div className="portal-mobile-nav-panel">
+            <div
+              style={{
+                display: "grid",
+                gap: 8,
+                padding: 16,
+                borderRadius: 18,
+                background:
+                  "linear-gradient(180deg, rgba(34, 42, 36, 0.98), rgba(24, 30, 26, 0.96))",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {t.shell.linkedAccount}
+              </span>
+              <strong>
+                {client.firstName} {client.lastName}
+              </strong>
+              <span style={{ color: "var(--muted)" }}>{user.email}</span>
+            </div>
+
+            <nav style={{ display: "grid", gap: 10 }}>
+              {navigation.map((item) => {
+                const isActive = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      padding: "13px 14px",
+                      borderRadius: 14,
+                      background: isActive
+                        ? "linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 74%, black 26%))"
+                        : "linear-gradient(180deg, var(--surface-alt), rgba(30, 36, 31, 0.94))",
+                      border: isActive
+                        ? "1px solid color-mix(in srgb, var(--accent) 70%, black 30%)"
+                        : "1px solid var(--border)",
+                      fontWeight: isActive ? 700 : 600,
+                      color: isActive ? "#121513" : "inherit",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <SignOutButton />
+          </div>
+        </details>
+
         <aside
+          className="portal-sidebar"
           style={{
             position: "sticky",
             top: 24,
@@ -133,12 +188,8 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
         </aside>
 
         <section
+          className="portal-content"
           style={{
-            padding: 28,
-            borderRadius: 28,
-            background:
-              "linear-gradient(180deg, rgba(22, 27, 23, 0.98), rgba(18, 22, 19, 0.96))",
-            border: "1px solid var(--border)",
             boxShadow: "0 18px 42px rgba(0, 0, 0, 0.18)",
           }}
         >

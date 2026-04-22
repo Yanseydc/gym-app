@@ -23,7 +23,7 @@ export default async function PortalRoutinePage() {
         style={{
           display: "grid",
           gap: 14,
-          padding: 26,
+          padding: 20,
           borderRadius: 26,
           background:
             "linear-gradient(180deg, rgba(36, 44, 38, 0.98), rgba(24, 30, 26, 0.96))",
@@ -31,9 +31,11 @@ export default async function PortalRoutinePage() {
           boxShadow: "0 18px 42px rgba(0, 0, 0, 0.2)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="responsive-inline-header">
           <div style={{ display: "grid", gap: 8 }}>
-            <h1 style={{ margin: 0, fontSize: 36, lineHeight: 1.1 }}>{t.routine.title}</h1>
+            <h1 style={{ margin: 0, fontSize: "clamp(1.9rem, 4vw, 2.25rem)", lineHeight: 1.1 }}>
+              {t.routine.title}
+            </h1>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6, fontSize: 16 }}>
               {t.routine.description}
             </p>
@@ -56,7 +58,7 @@ export default async function PortalRoutinePage() {
       {!routine ? (
         <article
           style={{
-            padding: 28,
+            padding: 22,
             borderRadius: 24,
             border: "1px dashed var(--border)",
             background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
@@ -73,7 +75,7 @@ export default async function PortalRoutinePage() {
               style={{
                 display: "grid",
                 gap: 16,
-                padding: 22,
+                padding: 18,
                 borderRadius: 22,
                 border: "1px solid var(--border)",
                 background: "linear-gradient(180deg, rgba(27, 32, 28, 0.98), rgba(21, 26, 23, 0.95))",
@@ -121,22 +123,15 @@ export default async function PortalRoutinePage() {
                       style={{
                         display: "grid",
                         gap: 12,
-                        padding: 18,
+                        padding: 16,
                         borderRadius: 18,
                         border: "1px solid var(--border)",
                         background: "linear-gradient(180deg, rgba(33, 39, 34, 0.96), rgba(24, 29, 25, 0.94))",
+                        minWidth: 0,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 12,
-                          flexWrap: "wrap",
-                          alignItems: "center",
-                        }}
-                      >
-                        <strong style={{ fontSize: 18, lineHeight: 1.3 }}>{exercise.exerciseName}</strong>
+                      <div className="responsive-inline-header">
+                        <strong style={{ fontSize: 18, lineHeight: 1.3, minWidth: 0 }}>{exercise.exerciseName}</strong>
                         {exercise.videoUrl ? (
                           <a
                             href={exercise.videoUrl}
@@ -149,19 +144,14 @@ export default async function PortalRoutinePage() {
                               border: "1px solid rgba(209, 108, 67, 0.22)",
                               fontWeight: 700,
                               color: "var(--accent-strong)",
+                              width: "fit-content",
                             }}
                           >
                             {t.routine.viewVideo}
                           </a>
                         ) : null}
                       </div>
-                      <div
-                        style={{
-                          display: "grid",
-                          gap: 10,
-                          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                        }}
-                      >
+                      <div className="portal-routine-meta-grid">
                         <ExerciseMeta label={t.routine.sets} value={exercise.setsText} />
                         <ExerciseMeta label={t.routine.reps} value={exercise.repsText} />
                         <ExerciseMeta
@@ -222,6 +212,7 @@ function ExerciseMeta({ label, value }: { label: string; value: string }) {
         borderRadius: 16,
         background: "linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02))",
         border: "1px solid var(--border)",
+        minWidth: 0,
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>

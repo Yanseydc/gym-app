@@ -18,7 +18,7 @@ export default async function PortalProfilePage() {
         style={{
           display: "grid",
           gap: 12,
-          padding: 24,
+          padding: 20,
           borderRadius: 26,
           background:
             "linear-gradient(180deg, rgba(34, 41, 36, 0.98), rgba(24, 30, 26, 0.94))",
@@ -46,7 +46,7 @@ export default async function PortalProfilePage() {
       {!onboarding ? (
         <article
           style={{
-            padding: 28,
+            padding: 22,
             borderRadius: 24,
             border: "1px dashed var(--border)",
             background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
@@ -57,13 +57,7 @@ export default async function PortalProfilePage() {
         </article>
       ) : (
         <div style={{ display: "grid", gap: 18 }}>
-          <section
-            style={{
-              display: "grid",
-              gap: 14,
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            }}
-          >
+          <section className="portal-summary-grid">
             <MetricCard label={t.profile.labels.weight} value={`${onboarding.weightKg} kg`} />
             <MetricCard label={t.profile.labels.height} value={`${onboarding.heightCm} cm`} />
             <MetricCard
@@ -76,13 +70,7 @@ export default async function PortalProfilePage() {
             />
           </section>
 
-          <section
-            style={{
-              display: "grid",
-              gap: 18,
-              gridTemplateColumns: "minmax(0, 1.05fr) minmax(280px, 0.95fr)",
-            }}
-          >
+          <section className="portal-two-column">
             <EditorialBlock
               eyebrow="Objetivo principal"
               title={onboarding.goal}
@@ -125,7 +113,7 @@ export default async function PortalProfilePage() {
             style={{
               display: "grid",
               gap: 16,
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "minmax(0, 1fr)",
             }}
           >
             <DetailItem
