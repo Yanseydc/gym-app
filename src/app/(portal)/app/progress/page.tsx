@@ -17,8 +17,17 @@ export default async function PortalProgressPage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <header>
-        <h1 style={{ margin: "0 0 8px" }}>{t.progress.title}</h1>
+      <header
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 22,
+          borderRadius: 24,
+          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        <h1 style={{ margin: 0 }}>{t.progress.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {t.progress.description}
         </p>
@@ -27,10 +36,10 @@ export default async function PortalProgressPage() {
       {detailedCheckIns.length === 0 ? (
         <article
           style={{
-            padding: 24,
+            padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
             color: "var(--muted)",
           }}
         >
@@ -45,11 +54,12 @@ export default async function PortalProgressPage() {
                     key={result.data.id}
                     style={{
                       display: "grid",
-                      gap: 16,
-                      padding: 20,
-                      borderRadius: 20,
-                      border: "1px solid var(--border)",
-                      background: "var(--surface)",
+                      gap: 18,
+                      padding: 22,
+                      borderRadius: 22,
+                      border: "1px solid rgba(0, 0, 0, 0.06)",
+                      background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
+                      boxShadow: "var(--shadow)",
                     }}
                   >
                     <div
@@ -61,22 +71,31 @@ export default async function PortalProgressPage() {
                         alignItems: "center",
                       }}
                     >
-                      <strong>{result.data.checkinDate}</strong>
-                      <span style={{ color: "var(--muted)" }}>
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                          Check-in
+                        </span>
+                        <strong style={{ fontSize: 20 }}>{result.data.checkinDate}</strong>
+                      </div>
+                      <span
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 999,
+                          background: "rgba(239, 229, 212, 0.75)",
+                          color: "var(--accent-strong)",
+                          fontWeight: 700,
+                        }}
+                      >
                         {t.progress.weight}: {result.data.weightKg ? `${result.data.weightKg} kg` : t.progress.notAvailable}
                       </span>
                     </div>
 
                     {result.data.clientNotes ? (
-                      <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                        {t.progress.clientNotes}: {result.data.clientNotes}
-                      </p>
+                      <NoteBlock label={t.progress.clientNotes} value={result.data.clientNotes} />
                     ) : null}
 
                     {result.data.coachNotes ? (
-                      <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                        {t.progress.coachNotes}: {result.data.coachNotes}
-                      </p>
+                      <NoteBlock label={t.progress.coachNotes} value={result.data.coachNotes} />
                     ) : null}
 
                     <div
@@ -133,6 +152,27 @@ export default async function PortalProgressPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function NoteBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: 6,
+        padding: 14,
+        borderRadius: 16,
+        background: "rgba(255, 250, 243, 0.88)",
+      }}
+    >
+      <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        {label}
+      </span>
+      <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+        {value}
+      </p>
     </div>
   );
 }

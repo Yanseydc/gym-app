@@ -45,10 +45,10 @@ export function ProgressCheckInSection({
           style={{
             display: "grid",
             gap: 16,
-            padding: 24,
+            padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
           }}
         >
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -77,11 +77,12 @@ export function ProgressCheckInSection({
               key={checkIn.id}
               style={{
                 display: "grid",
-                gap: 10,
-                padding: 18,
-                borderRadius: "var(--radius)",
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
+                gap: 14,
+                padding: 20,
+                borderRadius: 20,
+                border: "1px solid rgba(0, 0, 0, 0.06)",
+                background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
+                boxShadow: "var(--shadow)",
               }}
             >
               <div
@@ -93,7 +94,12 @@ export function ProgressCheckInSection({
                   alignItems: "center",
                 }}
               >
-                <strong>{checkIn.checkinDate}</strong>
+                <div style={{ display: "grid", gap: 4 }}>
+                  <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    Check-in
+                  </span>
+                  <strong style={{ fontSize: 20 }}>{checkIn.checkinDate}</strong>
+                </div>
                 <Link
                   href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
                   style={{
@@ -107,9 +113,18 @@ export function ProgressCheckInSection({
                 </Link>
               </div>
 
-              <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
-                <span>Weight: {checkIn.weightKg ? `${checkIn.weightKg} kg` : "N/A"}</span>
-                <span>Photos: {checkIn.photoTypes.length > 0 ? checkIn.photoTypes.join(", ") : "None"}</span>
+              <div
+                style={{
+                  display: "grid",
+                  gap: 10,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                }}
+              >
+                <MetaPill label="Weight" value={checkIn.weightKg ? `${checkIn.weightKg} kg` : "N/A"} />
+                <MetaPill
+                  label="Photos"
+                  value={checkIn.photoTypes.length > 0 ? checkIn.photoTypes.join(", ") : "None"}
+                />
               </div>
 
               {checkIn.clientNotes ? (
@@ -127,5 +142,24 @@ export function ProgressCheckInSection({
         </div>
       )}
     </section>
+  );
+}
+
+function MetaPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: 4,
+        padding: "12px 14px",
+        borderRadius: 16,
+        background: "rgba(255, 250, 243, 0.9)",
+      }}
+    >
+      <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        {label}
+      </span>
+      <strong>{value}</strong>
+    </div>
   );
 }

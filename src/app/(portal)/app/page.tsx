@@ -29,8 +29,20 @@ export default async function PortalHomePage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <header>
-        <h1 style={{ margin: "0 0 8px" }}>
+      <header
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 24,
+          borderRadius: 24,
+          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.48), rgba(255, 255, 255, 0.92))",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          Portal de coaching
+        </span>
+        <h1 style={{ margin: 0, fontSize: 32 }}>
           {t.home.welcome(linkedClient.firstName)}
         </h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
@@ -84,16 +96,23 @@ function SummaryCard({
       href={href}
       style={{
         display: "grid",
-        gap: 8,
-        padding: 20,
-        borderRadius: 20,
-        border: "1px solid var(--border)",
-        background: "var(--surface)",
+        gap: 10,
+        padding: 22,
+        borderRadius: 22,
+        border: "1px solid rgba(0, 0, 0, 0.06)",
+        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
+        boxShadow: "var(--shadow)",
+        color: "inherit",
       }}
     >
-      <span style={{ color: "var(--muted)", fontWeight: 600 }}>{title}</span>
-      <strong style={{ fontSize: 20 }}>{value}</strong>
+      <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        {title}
+      </span>
+      <strong style={{ fontSize: 22, lineHeight: 1.2 }}>{value}</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>{helper}</span>
+      <span style={{ marginTop: 6, fontWeight: 700, color: "var(--accent-strong)" }}>
+        Ver seccion
+      </span>
     </Link>
   );
 }

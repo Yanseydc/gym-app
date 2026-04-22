@@ -21,12 +21,18 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
   ] as const;
 
   return (
-    <main style={{ padding: "40px 0 64px" }}>
+    <main
+      style={{
+        padding: "32px 0 64px",
+        background:
+          "radial-gradient(circle at top left, rgba(239, 229, 212, 0.45), transparent 30%), linear-gradient(180deg, rgba(255, 250, 243, 0.7), rgba(255, 255, 255, 0))",
+      }}
+    >
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "280px 1fr",
-          gap: 24,
+          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr)",
+          gap: 28,
           alignItems: "start",
         }}
       >
@@ -35,27 +41,37 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
             position: "sticky",
             top: 24,
             padding: 24,
-            borderRadius: 24,
+            borderRadius: 28,
             background: "var(--surface)",
             border: "1px solid var(--border)",
             boxShadow: "var(--shadow)",
           }}
         >
-          <div style={{ marginBottom: 20 }}>
-            <strong style={{ display: "block", marginBottom: 4 }}>GymOS</strong>
-            <span style={{ color: "var(--muted)" }}>{t.shell.brandSubtitle}</span>
+          <div
+            style={{
+              marginBottom: 22,
+              paddingBottom: 18,
+              borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+            }}
+          >
+            <strong style={{ display: "block", marginBottom: 4, fontSize: 20 }}>GymOS</strong>
+            <span style={{ color: "var(--muted)", fontWeight: 600 }}>{t.shell.brandSubtitle}</span>
           </div>
 
           <div
             style={{
               display: "grid",
-              gap: 6,
-              padding: 16,
-              borderRadius: 16,
-              background: "rgba(239, 229, 212, 0.45)",
+              gap: 8,
+              padding: 18,
+              borderRadius: 20,
+              background: "linear-gradient(180deg, rgba(239, 229, 212, 0.52), rgba(255, 250, 243, 0.9))",
+              border: "1px solid rgba(0, 0, 0, 0.05)",
               marginBottom: 20,
             }}
           >
+            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              Cuenta vinculada
+            </span>
             <strong>
               {client.firstName} {client.lastName}
             </strong>
@@ -68,10 +84,12 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
                 key={item.href}
                 href={item.href}
                 style={{
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  background: "var(--surface-alt)",
+                  padding: "13px 14px",
+                  borderRadius: 16,
+                  background: "linear-gradient(180deg, var(--surface-alt), rgba(255, 250, 243, 0.9))",
+                  border: "1px solid rgba(0, 0, 0, 0.05)",
                   fontWeight: 600,
+                  color: "inherit",
                 }}
               >
                 {item.label}
@@ -86,10 +104,11 @@ export function PortalShell({ children, client, user }: PortalShellProps) {
 
         <section
           style={{
-            padding: 24,
-            borderRadius: 24,
-            background: "rgba(255, 250, 243, 0.85)",
+            padding: 28,
+            borderRadius: 28,
+            background: "linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(255, 255, 255, 0.92))",
             border: "1px solid var(--border)",
+            boxShadow: "var(--shadow)",
           }}
         >
           {children}

@@ -15,10 +15,10 @@ export function ClientOnboardingCard({
         style={{
           display: "grid",
           gap: 16,
-          padding: 24,
+          padding: 28,
           borderRadius: 24,
           border: "1px dashed var(--border)",
-          background: "var(--surface)",
+          background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
         }}
       >
         <div>
@@ -52,10 +52,11 @@ export function ClientOnboardingCard({
       style={{
         display: "grid",
         gap: 20,
-        padding: 24,
+        padding: 26,
         borderRadius: 24,
         border: "1px solid var(--border)",
-        background: "var(--surface)",
+        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.7))",
+        boxShadow: "var(--shadow)",
       }}
     >
       <div
@@ -68,6 +69,9 @@ export function ClientOnboardingCard({
         }}
       >
         <div>
+          <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            Cliente preparado para coaching
+          </span>
           <h2 style={{ margin: "0 0 8px" }}>Coaching onboarding</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
             Latest onboarding snapshot used for coaching planning.
@@ -122,14 +126,14 @@ function DetailItem({
   return (
     <div
       style={{
-        padding: 16,
-        borderRadius: 16,
-        background: "rgba(239, 229, 212, 0.5)",
+        padding: 18,
+        borderRadius: 18,
+        background: "rgba(239, 229, 212, 0.55)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >
-      <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>
-      <strong style={{ whiteSpace: "pre-wrap" }}>{value}</strong>
+      <span style={{ display: "block", marginBottom: 8, color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
+      <strong style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{value}</strong>
     </div>
   );
 }

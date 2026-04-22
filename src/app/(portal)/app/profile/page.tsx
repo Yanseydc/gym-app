@@ -14,8 +14,17 @@ export default async function PortalProfilePage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <header>
-        <h1 style={{ margin: "0 0 8px" }}>{t.profile.title}</h1>
+      <header
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 22,
+          borderRadius: 24,
+          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        <h1 style={{ margin: 0 }}>{t.profile.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {t.profile.description}
         </p>
@@ -24,10 +33,10 @@ export default async function PortalProfilePage() {
       {!onboarding ? (
         <article
           style={{
-            padding: 24,
+            padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
             color: "var(--muted)",
           }}
         >
@@ -70,15 +79,17 @@ function DetailItem({
   return (
     <div
       style={{
-        padding: 16,
-        borderRadius: 16,
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
+        padding: 18,
+        borderRadius: 18,
+        background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.82))",
+        border: "1px solid rgba(0, 0, 0, 0.06)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >
-      <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>
-      <strong style={{ whiteSpace: "pre-wrap" }}>{value}</strong>
+      <span style={{ display: "block", marginBottom: 8, color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        {label}
+      </span>
+      <strong style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{value}</strong>
     </div>
   );
 }

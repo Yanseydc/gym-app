@@ -19,8 +19,17 @@ export default async function PortalRoutinePage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <header>
-        <h1 style={{ margin: "0 0 8px" }}>{t.routine.title}</h1>
+      <header
+        style={{
+          display: "grid",
+          gap: 10,
+          padding: 22,
+          borderRadius: 24,
+          background: "linear-gradient(180deg, rgba(239, 229, 212, 0.42), rgba(255, 255, 255, 0.94))",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        <h1 style={{ margin: 0 }}>{t.routine.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {t.routine.description}
         </p>
@@ -29,10 +38,10 @@ export default async function PortalRoutinePage() {
       {!routine ? (
         <article
           style={{
-            padding: 24,
+            padding: 28,
             borderRadius: 24,
             border: "1px dashed var(--border)",
-            background: "var(--surface)",
+            background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.88))",
             color: "var(--muted)",
           }}
         >
@@ -45,16 +54,33 @@ export default async function PortalRoutinePage() {
               key={day.id}
               style={{
                 display: "grid",
-                gap: 14,
-                padding: 20,
-                borderRadius: 20,
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
+                gap: 16,
+                padding: 22,
+                borderRadius: 22,
+                border: "1px solid rgba(0, 0, 0, 0.06)",
+                background: "linear-gradient(180deg, var(--surface), rgba(255, 250, 243, 0.78))",
+                boxShadow: "var(--shadow)",
               }}
             >
               <div>
-                <strong style={{ fontSize: 18 }}>
-                  {t.routine.dayTitle(day.dayIndex, day.title)}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "6px 10px",
+                    borderRadius: 999,
+                    background: "rgba(239, 229, 212, 0.75)",
+                    color: "var(--accent-strong)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Dia {day.dayIndex}
+                </span>
+                <strong style={{ display: "block", fontSize: 20, marginTop: 10 }}>
+                  {day.title}
                 </strong>
                 {day.notes ? (
                   <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -72,19 +98,31 @@ export default async function PortalRoutinePage() {
                       key={exercise.id}
                       style={{
                         display: "grid",
-                        gap: 10,
-                        padding: 16,
-                        borderRadius: 16,
-                        border: "1px solid var(--border)",
-                        background: "rgba(255, 250, 243, 0.85)",
+                        gap: 12,
+                        padding: 18,
+                        borderRadius: 18,
+                        border: "1px solid rgba(0, 0, 0, 0.06)",
+                        background: "#fff",
                       }}
                     >
                       <strong>{exercise.exerciseName}</strong>
-                      <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
-                        <span>{t.routine.sets}: {exercise.setsText}</span>
-                        <span>{t.routine.reps}: {exercise.repsText}</span>
-                        <span>{t.routine.weight}: {exercise.targetWeightText || t.routine.notAvailable}</span>
-                        <span>{t.routine.rest}: {exercise.restSeconds ?? t.routine.notAvailable} {t.routine.secondsShort}</span>
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 10,
+                          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                        }}
+                      >
+                        <ExerciseMeta label={t.routine.sets} value={exercise.setsText} />
+                        <ExerciseMeta label={t.routine.reps} value={exercise.repsText} />
+                        <ExerciseMeta
+                          label={t.routine.weight}
+                          value={exercise.targetWeightText || t.routine.notAvailable}
+                        />
+                        <ExerciseMeta
+                          label={t.routine.rest}
+                          value={`${exercise.restSeconds ?? t.routine.notAvailable} ${t.routine.secondsShort}`}
+                        />
                       </div>
                       {exercise.notes ? (
                         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
@@ -99,6 +137,25 @@ export default async function PortalRoutinePage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function ExerciseMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: 4,
+        padding: "10px 12px",
+        borderRadius: 14,
+        background: "rgba(255, 250, 243, 0.9)",
+      }}
+    >
+      <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        {label}
+      </span>
+      <strong>{value}</strong>
     </div>
   );
 }
