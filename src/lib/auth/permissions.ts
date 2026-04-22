@@ -1,4 +1,5 @@
 import type { Role } from "@/lib/auth/roles";
+import { isPortalRoute, memberAppHomeRoute } from "@/config/routes";
 
 export const appModules = [
   "dashboard",
@@ -38,6 +39,10 @@ export function hasModuleAccess(role: Role, module: AppModule): boolean {
 }
 
 export function getAuthorizedHomePath(role: Role): string {
+  if (role === "member") {
+    return memberAppHomeRoute;
+  }
+
   const [firstModule] = getAllowedModules(role);
 
   if (!firstModule) {
@@ -58,6 +63,10 @@ export function getModuleByPath(pathname: string): AppModule | null {
 }
 
 export function canAccessPath(role: Role, pathname: string): boolean {
+  if (role === "member") {
+    return isPortalRoute(pathname);
+  }
+
   const module = getModuleByPath(pathname);
 
   if (!module) {
