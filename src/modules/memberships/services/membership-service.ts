@@ -44,28 +44,6 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
   return endDate < today ? "expired" : "active";
 }
 
-function getEffectiveMembershipStatus(params: {
-  baseStatus: MembershipStatus;
-  endDate: string;
-  totalPaid: number;
-  planPrice: number;
-}): MembershipStatus {
-  if (params.baseStatus === "cancelled") {
-    return "cancelled";
-  }
-
-  if (params.totalPaid <= 0) {
-    return "pending_payment";
-  }
-
-  if (params.totalPaid < params.planPrice) {
-    return "partial";
-  }
-
-  const today = toIsoDate(new Date());
-  return params.endDate < today ? "expired" : "active";
-}
-
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
   return {
     id: record.id,
@@ -97,12 +75,7 @@ function mapClientMembership(
   totalPaid: number,
 ): ClientMembership {
   const remainingBalance = Math.max(0, planPrice - totalPaid);
-  const effectiveStatus = getEffectiveMembershipStatus({
-    baseStatus: record.status,
-    endDate: record.end_date,
-    totalPaid,
-    planPrice,
-  });
+  const effectiveStatus = resolveMembershipStatus(record.end_date, record.status);
 
   return {
     id: record.id,
@@ -337,7 +310,7 @@ export async function assignMembershipToClientRecord(
     .from("client_memberships")
     .select("id, start_date, end_date, status")
     .eq("client_id", clientId)
-    .neq("status", "cancelled")
+    .eq("status", "active")
     .lte("start_date", values.startDate)
     .gte("end_date", values.startDate)
     .limit(1);
@@ -607,12 +580,7 @@ export async function listMembershipAssignmentsByPlanId(
       remainingBalance: Math.max(0, planPrice - (paymentTotals.get(membership.id) ?? 0)),
       startDate: membership.start_date,
       endDate: membership.end_date,
-      status: getEffectiveMembershipStatus({
-        baseStatus: membership.status,
-        endDate: membership.end_date,
-        totalPaid: paymentTotals.get(membership.id) ?? 0,
-        planPrice,
-      }),
+      status: resolveMembershipStatus(membership.end_date, membership.status),
     })),
     error: null,
   };
