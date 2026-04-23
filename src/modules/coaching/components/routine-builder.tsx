@@ -25,6 +25,7 @@ import { createRoutineDay } from "@/modules/coaching/services/create-routine-day
 import { createRoutineExercise } from "@/modules/coaching/services/create-routine-exercise";
 import { deleteRoutineDay } from "@/modules/coaching/services/delete-routine-day";
 import { deleteRoutineExercise } from "@/modules/coaching/services/delete-routine-exercise";
+import { reorderRoutineDays } from "@/modules/coaching/services/reorder-routine-days";
 import { updateRoutineDay } from "@/modules/coaching/services/update-routine-day";
 import { updateRoutineExercise } from "@/modules/coaching/services/update-routine-exercise";
 import type {
@@ -75,19 +76,12 @@ export function RoutineBuilder({
       return;
     }
 
-    const results = await Promise.all(
-      changedDays.map((day) => {
-        const nextIndex = nextDays.findIndex((candidate) => candidate.id === day.id) + 1;
-        const formData = new FormData();
-        formData.set("routineDayId", day.id);
-        formData.set("dayIndex", String(nextIndex));
-        formData.set("title", day.title);
-        formData.set("notes", day.notes ?? "");
-        return updateRoutineDay(routineId, {}, formData);
-      }),
+    const result = await reorderRoutineDays(
+      routineId,
+      nextDays.map((day) => day.id),
     );
 
-    if (results.some((result) => result.error)) {
+    if (result.error) {
       pendingOrderSignatureRef.current = null;
       setOrderedDays(previousDays);
       setReorderError("No se pudo guardar el nuevo orden. Intenta nuevamente.");
@@ -150,6 +144,7 @@ export function RoutineBuilder({
                 <SortableDayItem key={day.id} dayId={day.id}>
                   {({ dragHandleProps }) => (
                     <RoutineDayManager
+                      routineId={routineId}
                       day={day}
                       dragHandleProps={dragHandleProps}
                       exerciseOptions={exerciseOptions}

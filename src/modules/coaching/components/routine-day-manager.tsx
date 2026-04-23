@@ -21,6 +21,7 @@ import { buttonDanger, buttonGhost, buttonSecondary } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
 import { RoutineExerciseForm } from "@/modules/coaching/components/routine-exercise-form";
+import { reorderRoutineExercises } from "@/modules/coaching/services/reorder-routine-exercises";
 import type {
   ClientRoutineDay,
   ClientRoutineExercise,
@@ -37,6 +38,7 @@ type RoutineDayManagerProps = {
     formData: FormData,
   ) => Promise<RoutineExerciseMutationState>;
   day: ClientRoutineDay;
+  routineId: string;
   deleteDayAction: (formData: FormData) => Promise<void>;
   exerciseOptions: RoutineExerciseOption[];
   exerciseRows: ClientRoutineExercise[];
@@ -55,6 +57,7 @@ type RoutineDayManagerProps = {
 export function RoutineDayManager({
   createExerciseAction,
   day,
+  routineId,
   deleteDayAction,
   exerciseOptions,
   deleteExerciseAction,
@@ -108,23 +111,13 @@ export function RoutineDayManager({
       return;
     }
 
-    const results = await Promise.all(
-      changedExercises.map((exercise) => {
-        const nextIndex = nextExercises.findIndex((candidate) => candidate.id === exercise.id) + 1;
-        const formData = new FormData();
-        formData.set("routineExerciseId", exercise.id);
-        formData.set("exerciseId", exercise.exerciseId);
-        formData.set("sortOrder", String(nextIndex));
-        formData.set("setsText", exercise.setsText);
-        formData.set("repsText", exercise.repsText);
-        formData.set("targetWeightText", exercise.targetWeightText ?? "");
-        formData.set("restSeconds", exercise.restSeconds == null ? "" : String(exercise.restSeconds));
-        formData.set("notes", exercise.notes ?? "");
-        return updateExerciseAction({}, formData);
-      }),
+    const result = await reorderRoutineExercises(
+      routineId,
+      day.id,
+      nextExercises.map((exercise) => exercise.id),
     );
 
-    if (results.some((result) => result.error)) {
+    if (result.error) {
       pendingOrderSignatureRef.current = null;
       setOrderedExercises(previousExercises);
       setReorderError("No se pudo guardar el nuevo orden de ejercicios. Intenta nuevamente.");

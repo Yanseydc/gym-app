@@ -668,6 +668,20 @@ export type Database = {
           role: "admin" | "staff" | "coach" | "member";
         }[];
       };
+      reorder_client_routine_days: {
+        Args: {
+          p_day_ids: string[];
+          p_routine_id: string;
+        };
+        Returns: undefined;
+      };
+      reorder_client_routine_exercises: {
+        Args: {
+          p_exercise_ids: string[];
+          p_routine_day_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

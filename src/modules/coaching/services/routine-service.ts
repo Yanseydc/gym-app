@@ -588,6 +588,28 @@ export async function updateRoutineExerciseRecord(
     .single();
 }
 
+export async function reorderRoutineDaysRecord(
+  supabase: AppSupabaseClient,
+  routineId: string,
+  dayIds: string[],
+) {
+  return supabase.rpc("reorder_client_routine_days", {
+    p_routine_id: routineId,
+    p_day_ids: dayIds,
+  });
+}
+
+export async function reorderRoutineExercisesRecord(
+  supabase: AppSupabaseClient,
+  routineDayId: string,
+  exerciseIds: string[],
+) {
+  return supabase.rpc("reorder_client_routine_exercises", {
+    p_routine_day_id: routineDayId,
+    p_exercise_ids: exerciseIds,
+  });
+}
+
 export async function deleteRoutineExerciseRecord(
   supabase: AppSupabaseClient,
   routineExerciseId: string,
