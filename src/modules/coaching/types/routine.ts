@@ -25,6 +25,7 @@ export type ClientRoutineExercise = {
   exerciseName: string;
   exerciseSlug: string;
   videoUrl: string | null;
+  thumbnailUrl: string | null;
   sortOrder: number;
   setsText: string;
   repsText: string;

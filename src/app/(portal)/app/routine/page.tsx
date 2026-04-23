@@ -2,6 +2,8 @@ import { getPortalText } from "@/lib/i18n/portal";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getRoutineForPage, getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function PortalRoutinePage() {
   const t = getPortalText();
   const { data: linkedClient } = await getLinkedClientForCurrentUser();
@@ -130,26 +132,87 @@ export default async function PortalRoutinePage() {
                         minWidth: 0,
                       }}
                     >
-                      <div className="responsive-inline-header">
-                        <strong style={{ fontSize: 18, lineHeight: 1.3, minWidth: 0 }}>{exercise.exerciseName}</strong>
-                        {exercise.videoUrl ? (
-                          <a
-                            href={exercise.videoUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          minWidth: 0,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {exercise.thumbnailUrl ? (
+                          <img
+                            src={exercise.thumbnailUrl}
+                            alt={exercise.exerciseName}
                             style={{
-                              padding: "10px 14px",
-                              borderRadius: 12,
-                              background: "rgba(209, 108, 67, 0.14)",
-                              border: "1px solid rgba(209, 108, 67, 0.22)",
+                              width: 72,
+                              height: 72,
+                              borderRadius: 16,
+                              objectFit: "cover",
+                              border: "1px solid var(--border)",
+                              background: "rgba(255, 255, 255, 0.04)",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              width: 72,
+                              height: 72,
+                              borderRadius: 16,
+                              border: "1px solid var(--border)",
+                              background:
+                                "linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))",
+                              display: "grid",
+                              placeItems: "center",
+                              color: "var(--muted)",
+                              fontSize: 11,
                               fontWeight: 700,
-                              color: "var(--accent-strong)",
-                              width: "fit-content",
+                              letterSpacing: "0.04em",
+                              textTransform: "uppercase",
+                              flexShrink: 0,
                             }}
                           >
-                            {t.routine.viewVideo}
-                          </a>
-                        ) : null}
+                            Foto
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            flex: "1 1 260px",
+                            minWidth: 0,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <strong style={{ fontSize: 18, lineHeight: 1.3, minWidth: 0 }}>
+                            {exercise.exerciseName}
+                          </strong>
+                          {exercise.videoUrl ? (
+                            <a
+                              href={exercise.videoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                padding: "10px 14px",
+                                borderRadius: 12,
+                                background: "rgba(209, 108, 67, 0.14)",
+                                border: "1px solid rgba(209, 108, 67, 0.22)",
+                                fontWeight: 700,
+                                color: "var(--accent-strong)",
+                                width: "fit-content",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {t.routine.viewVideo}
+                            </a>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="portal-routine-meta-grid">
                         <ExerciseMeta label={t.routine.sets} value={exercise.setsText} />

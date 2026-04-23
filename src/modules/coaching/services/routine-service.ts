@@ -19,7 +19,7 @@ import type {
 
 function mapRoutineExercise(
   record: ClientRoutineExerciseRecord,
-  exerciseInfo: { name: string; slug: string; videoUrl: string | null },
+  exerciseInfo: { name: string; slug: string; videoUrl: string | null; thumbnailUrl: string | null },
 ): ClientRoutineExercise {
   return {
     id: record.id,
@@ -27,6 +27,7 @@ function mapRoutineExercise(
     exerciseName: exerciseInfo.name,
     exerciseSlug: exerciseInfo.slug,
     videoUrl: exerciseInfo.videoUrl,
+    thumbnailUrl: exerciseInfo.thumbnailUrl,
     sortOrder: record.sort_order,
     setsText: record.sets_text,
     repsText: record.reps_text,
@@ -285,12 +286,15 @@ export async function getRoutineById(
   }
 
   const exerciseIds = [...new Set(exercises.map((exercise) => exercise.exercise_id))];
-  let exerciseMap = new Map<string, { name: string; slug: string; videoUrl: string | null }>();
+  let exerciseMap = new Map<
+    string,
+    { name: string; slug: string; videoUrl: string | null; thumbnailUrl: string | null }
+  >();
 
   if (exerciseIds.length > 0) {
     const { data: exerciseLibraryRows, error: libraryError } = await supabase
       .from("exercise_library")
-      .select("id, name, slug, video_url")
+      .select("id, name, slug, video_url, thumbnail_url")
       .in("id", exerciseIds);
 
     if (libraryError) {
@@ -307,6 +311,7 @@ export async function getRoutineById(
           name: String(exercise.name),
           slug: String(exercise.slug),
           videoUrl: exercise.video_url ? String(exercise.video_url) : null,
+          thumbnailUrl: exercise.thumbnail_url ? String(exercise.thumbnail_url) : null,
         },
       ]),
     );
@@ -320,6 +325,7 @@ export async function getRoutineById(
         name: "Unknown exercise",
         slug: "unknown-exercise",
         videoUrl: null,
+        thumbnailUrl: null,
       }),
     );
     map.set(dayId, list);
