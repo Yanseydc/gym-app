@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
+import { ExerciseGalleryManager } from "@/modules/coaching/components/exercise-gallery-manager";
+import { createExerciseMedia } from "@/modules/coaching/services/create-exercise-media";
+import { deleteExerciseMedia } from "@/modules/coaching/services/delete-exercise-media";
+import { getExerciseMediaForPage } from "@/modules/coaching/services/exercise-media-service";
 import { getExerciseForPage } from "@/modules/coaching/services/exercise-service";
+import { updateExerciseMedia } from "@/modules/coaching/services/update-exercise-media";
 import { updateExercise } from "@/modules/coaching/services/update-exercise";
 import type { ExerciseFormValues } from "@/modules/coaching/types";
 
@@ -14,7 +19,10 @@ type EditExercisePageProps = {
 
 export default async function EditExercisePage({ params }: EditExercisePageProps) {
   const { exerciseId } = await params;
-  const { data: exercise, error } = await getExerciseForPage(exerciseId);
+  const [{ data: exercise, error }, { data: galleryItems, error: galleryError }] = await Promise.all([
+    getExerciseForPage(exerciseId),
+    getExerciseMediaForPage(exerciseId),
+  ]);
 
   if (error) {
     return (
@@ -89,6 +97,45 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
           defaultValues={defaultValues}
           submitLabel="Save changes"
         />
+      </section>
+
+      <section
+        style={{
+          padding: 24,
+          borderRadius: 24,
+          border: "1px solid var(--border)",
+          background: "var(--surface)",
+        }}
+      >
+        {galleryError ? (
+          <p
+            style={{
+              margin: 0,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "var(--danger-bg)",
+              color: "var(--danger-fg)",
+            }}
+          >
+            {galleryError}
+          </p>
+        ) : (
+          <ExerciseGalleryManager
+            items={galleryItems}
+            createAction={createExerciseMedia.bind(null, exercise.id)}
+            updateActionFactory={(mediaId) => updateExerciseMedia.bind(null, exercise.id, mediaId)}
+            deleteAction={async (formData) => {
+              "use server";
+              const mediaId = formData.get("mediaId");
+
+              if (typeof mediaId !== "string" || !mediaId) {
+                throw new Error("Media id is required.");
+              }
+
+              await deleteExerciseMedia(exercise.id, mediaId);
+            }}
+          />
+        )}
       </section>
     </div>
   );

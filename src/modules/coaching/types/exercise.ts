@@ -1,6 +1,7 @@
 import type { Database } from "@/types/database";
 
 export type ExerciseLibraryRecord = Database["public"]["Tables"]["exercise_library"]["Row"];
+export type ExerciseMediaRecord = Database["public"]["Tables"]["exercise_media"]["Row"];
 export type ExerciseDifficulty = NonNullable<ExerciseLibraryRecord["difficulty"]>;
 
 export type ExerciseLibraryItem = {
@@ -22,6 +23,15 @@ export type ExerciseLibraryItem = {
   updatedAt: string;
 };
 
+export type ExerciseMediaItem = {
+  id: string;
+  exerciseId: string;
+  url: string;
+  sortOrder: number;
+  altText: string | null;
+  createdAt: string;
+};
+
 export type ExerciseFormValues = {
   name: string;
   slug: string;
@@ -38,7 +48,18 @@ export type ExerciseFormValues = {
   isActive: boolean;
 };
 
+export type ExerciseMediaFormValues = {
+  url: string;
+  sortOrder: string;
+  altText: string;
+};
+
 export type ExerciseMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof ExerciseFormValues, string>>;
+};
+
+export type ExerciseMediaMutationState = {
+  error?: string;
+  fieldErrors?: Partial<Record<keyof ExerciseMediaFormValues, string>>;
 };

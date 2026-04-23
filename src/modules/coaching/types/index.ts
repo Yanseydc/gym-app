@@ -3,6 +3,10 @@ export type {
   ExerciseFormValues,
   ExerciseLibraryItem,
   ExerciseLibraryRecord,
+  ExerciseMediaFormValues,
+  ExerciseMediaItem,
+  ExerciseMediaMutationState,
+  ExerciseMediaRecord,
   ExerciseMutationState,
 } from "@/modules/coaching/types/exercise";
 export type {
@@ -37,7 +41,6 @@ export type {
   ClientRoutineExerciseRecord,
   ClientRoutineRecord,
   ClientRoutineStatus,
-  ExerciseMediaRecord,
   ClientRoutineSummary,
   RoutineClientOption,
   RoutineDayFormValues,
