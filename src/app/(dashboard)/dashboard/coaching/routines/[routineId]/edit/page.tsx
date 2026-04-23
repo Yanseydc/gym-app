@@ -2,12 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
+import { RoutineDayManager } from "@/modules/coaching/components/routine-day-manager";
 import { RoutineDetailCard } from "@/modules/coaching/components/routine-detail-card";
-import { RoutineExerciseForm } from "@/modules/coaching/components/routine-exercise-form";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { createRoutineDay } from "@/modules/coaching/services/create-routine-day";
 import { createRoutineExercise } from "@/modules/coaching/services/create-routine-exercise";
+import { deleteRoutineDay } from "@/modules/coaching/services/delete-routine-day";
+import { deleteRoutineExercise } from "@/modules/coaching/services/delete-routine-exercise";
 import { getRoutineClientOptionsForPage, getRoutineExerciseOptionsForPage, getRoutineForPage } from "@/modules/coaching/services/routine-service";
+import { updateRoutineDay } from "@/modules/coaching/services/update-routine-day";
+import { updateRoutineExercise } from "@/modules/coaching/services/update-routine-exercise";
 import { updateRoutine } from "@/modules/coaching/services/update-routine";
 import type { RoutineFormValues } from "@/modules/coaching/types";
 
@@ -149,39 +153,25 @@ export default async function EditRoutinePage({ params }: EditRoutinePageProps) 
       {routine.days.length > 0 ? (
         <section style={{ display: "grid", gap: 16 }}>
           <div>
-            <h2 style={{ margin: "0 0 8px" }}>Add exercises to days</h2>
+            <h2 style={{ margin: "0 0 8px" }}>Manage days and exercises</h2>
             <p style={{ margin: 0, color: "var(--muted)" }}>
-              Use numeric sort order to control the sequence inside each day.
+              Edit or remove day blocks and adjust each exercise prescription inline.
             </p>
           </div>
 
           <div style={{ display: "grid", gap: 16 }}>
             {routine.days.map((day) => (
-              <section
+              <RoutineDayManager
                 key={day.id}
-                style={{
-                  display: "grid",
-                  gap: 16,
-                  padding: 24,
-                  borderRadius: 24,
-                  border: "1px solid var(--border)",
-                  background: "var(--surface)",
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: "0 0 8px" }}>
-                    Day {day.dayIndex}: {day.title}
-                  </h3>
-                  <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Add one exercise at a time with its prescription details.
-                  </p>
-                </div>
-
-                <RoutineExerciseForm
-                  action={createRoutineExercise.bind(null, routine.id, day.id)}
-                  exercises={exercises}
-                />
-              </section>
+                day={day}
+                exerciseOptions={exercises}
+                createExerciseAction={createRoutineExercise.bind(null, routine.id, day.id)}
+                updateDayAction={updateRoutineDay.bind(null, routine.id)}
+                deleteDayAction={deleteRoutineDay.bind(null, routine.id)}
+                exerciseRows={day.exercises}
+                updateExerciseAction={updateRoutineExercise.bind(null, routine.id)}
+                deleteExerciseAction={deleteRoutineExercise.bind(null, routine.id)}
+              />
             ))}
           </div>
         </section>

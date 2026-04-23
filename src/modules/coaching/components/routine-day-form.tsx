@@ -4,28 +4,57 @@ import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineDayForm } from "@/modules/coaching/hooks/use-routine-day-form";
-import type { RoutineDayMutationState } from "@/modules/coaching/types";
+import type { RoutineDayFormValues, RoutineDayMutationState } from "@/modules/coaching/types";
 
 type RoutineDayFormProps = {
   action: (
     state: RoutineDayMutationState,
     formData: FormData,
   ) => Promise<RoutineDayMutationState>;
+  defaultValues?: Partial<RoutineDayFormValues>;
+  hiddenFields?: Record<string, string>;
+  showDayIndex?: boolean;
+  submitLabel?: string;
 };
 
-export function RoutineDayForm({ action }: RoutineDayFormProps) {
+export function RoutineDayForm({
+  action,
+  defaultValues,
+  hiddenFields,
+  showDayIndex = true,
+  submitLabel = "Add day",
+}: RoutineDayFormProps) {
   const { state, formAction, pending } = useRoutineDayForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
+      {hiddenFields
+        ? Object.entries(hiddenFields).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} defaultValue={value} />
+          ))
+        : null}
       <div style={gridStyles}>
+        {showDayIndex ? (
+          <Field
+            label="Day order"
+            name="dayIndex"
+            type="number"
+            defaultValue={defaultValues?.dayIndex ? String(defaultValues.dayIndex) : ""}
+            error={state.fieldErrors?.dayIndex}
+          />
+        ) : (
+          <input
+            type="hidden"
+            name="dayIndex"
+            defaultValue={defaultValues?.dayIndex ? String(defaultValues.dayIndex) : ""}
+          />
+        )}
         <Field
-          label="Day order"
-          name="dayIndex"
-          type="number"
-          error={state.fieldErrors?.dayIndex}
+          label="Title"
+          name="title"
+          defaultValue={defaultValues?.title ?? ""}
+          error={state.fieldErrors?.title}
         />
-        <Field label="Title" name="title" error={state.fieldErrors?.title} />
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
@@ -33,6 +62,7 @@ export function RoutineDayForm({ action }: RoutineDayFormProps) {
         <textarea
           name="notes"
           rows={3}
+          defaultValue={defaultValues?.notes ?? ""}
           className={input}
           style={{ resize: "vertical" }}
         />
@@ -44,18 +74,20 @@ export function RoutineDayForm({ action }: RoutineDayFormProps) {
       ) : null}
 
       <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? "Adding..." : "Add day"}
+        {pending ? "Saving..." : submitLabel}
       </button>
     </form>
   );
 }
 
 function Field({
+  defaultValue,
   error,
   label,
   name,
   type = "text",
 }: {
+  defaultValue?: string;
   error?: string;
   label: string;
   name: string;
@@ -64,7 +96,7 @@ function Field({
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} className={input} />
+      <input name={name} type={type} defaultValue={defaultValue} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );

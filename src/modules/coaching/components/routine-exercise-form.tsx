@@ -4,25 +4,43 @@ import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
 import { useRoutineExerciseForm } from "@/modules/coaching/hooks/use-routine-exercise-form";
-import type { RoutineExerciseMutationState, RoutineExerciseOption } from "@/modules/coaching/types";
+import type {
+  RoutineExerciseFormValues,
+  RoutineExerciseMutationState,
+  RoutineExerciseOption,
+} from "@/modules/coaching/types";
 
 type RoutineExerciseFormProps = {
   action: (
     state: RoutineExerciseMutationState,
     formData: FormData,
   ) => Promise<RoutineExerciseMutationState>;
+  defaultValues?: Partial<RoutineExerciseFormValues>;
   exercises: RoutineExerciseOption[];
+  hiddenFields?: Record<string, string>;
+  submitLabel?: string;
 };
 
-export function RoutineExerciseForm({ action, exercises }: RoutineExerciseFormProps) {
+export function RoutineExerciseForm({
+  action,
+  defaultValues,
+  exercises,
+  hiddenFields,
+  submitLabel = "Add exercise",
+}: RoutineExerciseFormProps) {
   const { state, formAction, pending } = useRoutineExerciseForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
+      {hiddenFields
+        ? Object.entries(hiddenFields).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} defaultValue={value} />
+          ))
+        : null}
       <div style={gridStyles}>
         <label style={{ display: "grid", gap: 8, gridColumn: "1 / -1" }}>
           <span style={labelStyles}>Exercise</span>
-          <select name="exerciseId" defaultValue="" className={input}>
+          <select name="exerciseId" defaultValue={defaultValues?.exerciseId ?? ""} className={input}>
             <option value="">Select an exercise</option>
             {exercises.map((exercise) => (
               <option key={exercise.id} value={exercise.id}>
@@ -39,44 +57,65 @@ export function RoutineExerciseForm({ action, exercises }: RoutineExerciseFormPr
           label="Sort order"
           name="sortOrder"
           type="number"
+          defaultValue={defaultValues?.sortOrder ? String(defaultValues.sortOrder) : ""}
           error={state.fieldErrors?.sortOrder}
         />
-        <Field label="Sets" name="setsText" error={state.fieldErrors?.setsText} />
-        <Field label="Reps" name="repsText" error={state.fieldErrors?.repsText} />
+        <Field
+          label="Sets"
+          name="setsText"
+          defaultValue={defaultValues?.setsText ?? ""}
+          error={state.fieldErrors?.setsText}
+        />
+        <Field
+          label="Reps"
+          name="repsText"
+          defaultValue={defaultValues?.repsText ?? ""}
+          error={state.fieldErrors?.repsText}
+        />
         <Field
           label="Target weight"
           name="targetWeightText"
+          defaultValue={defaultValues?.targetWeightText ?? ""}
           error={state.fieldErrors?.targetWeightText}
         />
         <Field
           label="Rest seconds"
           name="restSeconds"
           type="number"
+          defaultValue={defaultValues?.restSeconds ?? ""}
           error={state.fieldErrors?.restSeconds}
         />
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
         <span style={labelStyles}>Notes</span>
-        <textarea name="notes" rows={3} className={input} style={{ resize: "vertical" }} />
+        <textarea
+          name="notes"
+          rows={3}
+          defaultValue={defaultValues?.notes ?? ""}
+          className={input}
+          style={{ resize: "vertical" }}
+        />
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
 
       {state.error ? <p style={errorStyles}>{state.error}</p> : null}
 
       <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? "Adding..." : "Add exercise"}
+        {pending ? "Saving..." : submitLabel}
       </button>
     </form>
   );
 }
 
 function Field({
+  defaultValue,
   error,
   label,
   name,
   type = "text",
 }: {
+  defaultValue?: string;
   error?: string;
   label: string;
   name: string;
@@ -85,7 +124,7 @@ function Field({
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} className={input} />
+      <input name={name} type={type} defaultValue={defaultValue} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );

@@ -464,6 +464,43 @@ export async function createRoutineDayRecord(
     .single();
 }
 
+export async function updateRoutineDayRecord(
+  supabase: AppSupabaseClient,
+  routineDayId: string,
+  values: RoutineDayFormValues,
+) {
+  return supabase
+    .from("client_routine_days")
+    .update(normalizeRoutineDayPayload(values))
+    .eq("id", routineDayId)
+    .select("id")
+    .single();
+}
+
+export async function deleteRoutineDayRecord(
+  supabase: AppSupabaseClient,
+  routineDayId: string,
+) {
+  const { error: exerciseError } = await supabase
+    .from("client_routine_exercises")
+    .delete()
+    .eq("client_routine_day_id", routineDayId);
+
+  if (exerciseError) {
+    return {
+      data: null,
+      error: exerciseError,
+    };
+  }
+
+  return supabase
+    .from("client_routine_days")
+    .delete()
+    .eq("id", routineDayId)
+    .select("id")
+    .single();
+}
+
 export async function createRoutineExerciseRecord(
   supabase: AppSupabaseClient,
   routineDayId: string,
@@ -476,6 +513,31 @@ export async function createRoutineExerciseRecord(
       client_routine_day_id: routineDayId,
       created_at: new Date().toISOString(),
     })
+    .select("id")
+    .single();
+}
+
+export async function updateRoutineExerciseRecord(
+  supabase: AppSupabaseClient,
+  routineExerciseId: string,
+  values: RoutineExerciseFormValues,
+) {
+  return supabase
+    .from("client_routine_exercises")
+    .update(normalizeRoutineExercisePayload(values))
+    .eq("id", routineExerciseId)
+    .select("id")
+    .single();
+}
+
+export async function deleteRoutineExerciseRecord(
+  supabase: AppSupabaseClient,
+  routineExerciseId: string,
+) {
+  return supabase
+    .from("client_routine_exercises")
+    .delete()
+    .eq("id", routineExerciseId)
     .select("id")
     .single();
 }
