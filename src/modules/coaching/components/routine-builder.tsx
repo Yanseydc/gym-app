@@ -17,7 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { startTransition, useEffect, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
-import { buttonGhost } from "@/lib/ui";
+import { buttonGhost, buttonSecondary } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
 import { RoutineDayManager } from "@/modules/coaching/components/routine-day-manager";
@@ -46,8 +46,12 @@ export function RoutineBuilder({
 }: RoutineBuilderProps) {
   const { t } = useAdminText();
   const [orderedDays, setOrderedDays] = useState(days);
+  const [activeDayEditorId, setActiveDayEditorId] = useState<string | null>(null);
+  const [isAddingDay, setIsAddingDay] = useState(false);
+  const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
   const pendingOrderSignatureRef = useRef<string | null>(null);
+  const previousDayIdsRef = useRef(days.map((day) => day.id));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   useEffect(() => {
@@ -67,7 +71,25 @@ export function RoutineBuilder({
 
       return incomingSignature === currentSignature ? currentDays : days;
     });
-  }, [days]);
+
+    const previousDayIds = previousDayIdsRef.current;
+    const nextDayIds = days.map((day) => day.id);
+    const createdDayId = nextDayIds.find((dayId) => !previousDayIds.includes(dayId)) ?? null;
+
+    if (createdDayId) {
+      setIsAddingDay(false);
+      setHighlightedDayId(createdDayId);
+      window.setTimeout(() => {
+        setHighlightedDayId((current) => (current === createdDayId ? null : current));
+      }, 1800);
+    }
+
+    if (activeDayEditorId && !nextDayIds.includes(activeDayEditorId)) {
+      setActiveDayEditorId(null);
+    }
+
+    previousDayIdsRef.current = nextDayIds;
+  }, [activeDayEditorId, days]);
 
   async function persistDayOrder(nextDays: ClientRoutineDay[], previousDays: ClientRoutineDay[]) {
     const changedDays = nextDays.filter((day, index) => previousDays[index]?.id !== day.id);
@@ -146,6 +168,11 @@ export function RoutineBuilder({
                     <RoutineDayManager
                       routineId={routineId}
                       day={day}
+                      highlighted={highlightedDayId === day.id}
+                      isEditingDay={activeDayEditorId === day.id}
+                      onToggleEdit={() =>
+                        setActiveDayEditorId((current) => (current === day.id ? null : day.id))
+                      }
                       dragHandleProps={dragHandleProps}
                       exerciseOptions={exerciseOptions}
                       createExerciseAction={createRoutineExercise.bind(null, routineId, day.id)}
@@ -171,11 +198,36 @@ export function RoutineBuilder({
           borderTop: "1px solid var(--border)",
         }}
       >
-        <RoutineDayForm
-          action={createRoutineDay.bind(null, routineId)}
-          showDayIndex={false}
-          submitLabel={t("coaching.routines.addDayAction")}
-        />
+        {!isAddingDay ? (
+          <div>
+            <button
+              type="button"
+              className={buttonSecondary}
+              onClick={() => setIsAddingDay(true)}
+            >
+              + {t("coaching.routines.addDayAction")}
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              padding: 16,
+              borderRadius: 18,
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: "rgba(255, 255, 255, 0.02)",
+            }}
+          >
+            <strong style={{ display: "block" }}>{t("coaching.routines.addDayTitle")}</strong>
+            <RoutineDayForm
+              action={createRoutineDay.bind(null, routineId)}
+              onCancel={() => setIsAddingDay(false)}
+              showDayIndex={false}
+              submitLabel={t("coaching.routines.addDayAction")}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

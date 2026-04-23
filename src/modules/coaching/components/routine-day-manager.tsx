@@ -38,6 +38,9 @@ type RoutineDayManagerProps = {
     formData: FormData,
   ) => Promise<RoutineExerciseMutationState>;
   day: ClientRoutineDay;
+  highlighted?: boolean;
+  isEditingDay: boolean;
+  onToggleEdit: () => void;
   routineId: string;
   deleteDayAction: (formData: FormData) => Promise<void>;
   exerciseOptions: RoutineExerciseOption[];
@@ -57,6 +60,9 @@ type RoutineDayManagerProps = {
 export function RoutineDayManager({
   createExerciseAction,
   day,
+  highlighted = false,
+  isEditingDay,
+  onToggleEdit,
   routineId,
   deleteDayAction,
   exerciseOptions,
@@ -67,12 +73,13 @@ export function RoutineDayManager({
   dragHandleProps,
 }: RoutineDayManagerProps) {
   const { t } = useAdminText();
-  const [isEditingDay, setIsEditingDay] = useState(false);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const [orderedExercises, setOrderedExercises] = useState(exerciseRows);
+  const [highlightedExerciseId, setHighlightedExerciseId] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
   const pendingOrderSignatureRef = useRef<string | null>(null);
+  const previousExerciseIdsRef = useRef(exerciseRows.map((exercise) => exercise.id));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const dayDefaults: RoutineDayFormValues = {
     dayIndex: day.dayIndex,
@@ -97,6 +104,21 @@ export function RoutineDayManager({
 
       return incomingSignature === currentSignature ? currentExercises : exerciseRows;
     });
+
+    const previousExerciseIds = previousExerciseIdsRef.current;
+    const nextExerciseIds = exerciseRows.map((exercise) => exercise.id);
+    const createdExerciseId =
+      nextExerciseIds.find((exerciseId) => !previousExerciseIds.includes(exerciseId)) ?? null;
+
+    if (createdExerciseId) {
+      setIsAddingExercise(false);
+      setHighlightedExerciseId(createdExerciseId);
+      window.setTimeout(() => {
+        setHighlightedExerciseId((current) => (current === createdExerciseId ? null : current));
+      }, 1800);
+    }
+
+    previousExerciseIdsRef.current = nextExerciseIds;
   }, [exerciseRows]);
 
   async function persistExerciseOrder(
@@ -165,6 +187,8 @@ export function RoutineDayManager({
         borderRadius: 24,
         border: "1px solid var(--border)",
         background: "linear-gradient(180deg, rgba(27, 31, 28, 0.98), rgba(22, 26, 23, 0.98))",
+        boxShadow: highlighted ? "0 0 0 1px rgba(236, 140, 88, 0.28), 0 18px 34px rgba(0, 0, 0, 0.18)" : "none",
+        transition: "box-shadow 180ms ease",
       }}
     >
       <div
@@ -203,7 +227,7 @@ export function RoutineDayManager({
           <button
             type="button"
             className={buttonSecondary}
-            onClick={() => setIsEditingDay((current) => !current)}
+            onClick={onToggleEdit}
           >
             {isEditingDay ? t("coaching.routines.closeEditor") : t("common.edit")}
           </button>
@@ -241,6 +265,7 @@ export function RoutineDayManager({
             action={updateDayAction}
             defaultValues={dayDefaults}
             hiddenFields={{ routineDayId: day.id }}
+            onCancel={onToggleEdit}
             showDayIndex={false}
             submitLabel={t("coaching.routines.saveDay")}
           />
@@ -297,6 +322,8 @@ export function RoutineDayManager({
                             border: "1px solid rgba(255, 255, 255, 0.06)",
                             background: "rgba(255, 255, 255, 0.025)",
                             boxShadow: isDragging ? "0 14px 28px rgba(0, 0, 0, 0.2)" : "none",
+                            outline: highlightedExerciseId === exercise.id ? "1px solid rgba(236, 140, 88, 0.38)" : "none",
+                            transition: "outline-color 180ms ease",
                           }}
                         >
                           <div
@@ -381,6 +408,7 @@ export function RoutineDayManager({
                                 defaultValues={defaults}
                                 exercises={exerciseOptions}
                                 hiddenFields={{ routineExerciseId: exercise.id }}
+                                onCancel={() => setEditingExerciseId(null)}
                                 showSortOrder={false}
                                 submitLabel={t("coaching.routines.saveExercise")}
                               />
@@ -412,7 +440,7 @@ export function RoutineDayManager({
               className={buttonSecondary}
               onClick={() => setIsAddingExercise(true)}
             >
-              {t("coaching.routines.addExerciseAction")}
+              + {t("coaching.routines.addExerciseAction")}
             </button>
           </div>
         ) : (
@@ -448,6 +476,7 @@ export function RoutineDayManager({
             <RoutineExerciseForm
               action={createExerciseAction}
               exercises={exerciseOptions}
+              onCancel={() => setIsAddingExercise(false)}
               showSortOrder={false}
               submitLabel={t("coaching.routines.addExerciseAction")}
             />

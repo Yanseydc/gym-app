@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, input } from "@/lib/ui";
+import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineDayForm } from "@/modules/coaching/hooks/use-routine-day-form";
 import type { RoutineDayFormValues, RoutineDayMutationState } from "@/modules/coaching/types";
@@ -14,6 +14,7 @@ type RoutineDayFormProps = {
   ) => Promise<RoutineDayMutationState>;
   defaultValues?: Partial<RoutineDayFormValues>;
   hiddenFields?: Record<string, string>;
+  onCancel?: (() => void) | undefined;
   showDayIndex?: boolean;
   submitLabel?: string;
 };
@@ -22,6 +23,7 @@ export function RoutineDayForm({
   action,
   defaultValues,
   hiddenFields,
+  onCancel,
   showDayIndex = true,
   submitLabel = "Add day",
 }: RoutineDayFormProps) {
@@ -76,9 +78,16 @@ export function RoutineDayForm({
         <p style={errorStyles}>{state.error}</p>
       ) : null}
 
-      <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? t("common.saving") : resolvedSubmitLabel}
-      </button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
+          {pending ? t("common.saving") : resolvedSubmitLabel}
+        </button>
+        {onCancel ? (
+          <button type="button" className={buttonGhost} onClick={onCancel}>
+            {t("common.cancel")}
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }

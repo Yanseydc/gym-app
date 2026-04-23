@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, input } from "@/lib/ui";
+import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineExerciseForm } from "@/modules/coaching/hooks/use-routine-exercise-form";
 import type {
@@ -19,6 +19,7 @@ type RoutineExerciseFormProps = {
   defaultValues?: Partial<RoutineExerciseFormValues>;
   exercises: RoutineExerciseOption[];
   hiddenFields?: Record<string, string>;
+  onCancel?: (() => void) | undefined;
   showSortOrder?: boolean;
   submitLabel?: string;
 };
@@ -28,6 +29,7 @@ export function RoutineExerciseForm({
   defaultValues,
   exercises,
   hiddenFields,
+  onCancel,
   showSortOrder = true,
   submitLabel = "Add exercise",
 }: RoutineExerciseFormProps) {
@@ -110,9 +112,16 @@ export function RoutineExerciseForm({
 
       {state.error ? <p style={errorStyles}>{state.error}</p> : null}
 
-      <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? t("common.saving") : resolvedSubmitLabel}
-      </button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
+          {pending ? t("common.saving") : resolvedSubmitLabel}
+        </button>
+        {onCancel ? (
+          <button type="button" className={buttonGhost} onClick={onCancel}>
+            {t("common.cancel")}
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
