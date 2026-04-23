@@ -20,6 +20,7 @@ type RoutineFormProps = {
   defaultValues?: RoutineFormValues;
   submitLabel: string;
   lockClient?: boolean;
+  showHeader?: boolean;
 };
 
 const emptyValues: RoutineFormValues = {
@@ -37,25 +38,28 @@ export function RoutineForm({
   defaultValues = emptyValues,
   submitLabel,
   lockClient = false,
+  showHeader = true,
 }: RoutineFormProps) {
   const { t } = useAdminText();
   const { state, formAction, pending } = useRoutineForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
-      <div
-        style={{
-          display: "grid",
-          gap: 6,
-          paddingBottom: 6,
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <strong style={{ fontSize: 18 }}>{t("coaching.routines.overview")}</strong>
-        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          {t("clients.detail.routinesHelper")}
-        </p>
-      </div>
+      {showHeader ? (
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+            paddingBottom: 6,
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <strong style={{ fontSize: 18 }}>{t("coaching.routines.overview")}</strong>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+            {t("clients.detail.routinesHelper")}
+          </p>
+        </div>
+      ) : null}
 
       <div style={gridStyles}>
         {!lockClient ? (

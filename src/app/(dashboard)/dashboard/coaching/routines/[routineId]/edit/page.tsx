@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
 import { RoutineDayManager } from "@/modules/coaching/components/routine-day-manager";
-import { RoutineDetailCard } from "@/modules/coaching/components/routine-detail-card";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { createRoutineDay } from "@/modules/coaching/services/create-routine-day";
 import { createRoutineExercise } from "@/modules/coaching/services/create-routine-exercise";
@@ -83,10 +82,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>{t("coaching.routines.editTitle")}</h1>
-        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          {t("coaching.routines.editDescription")}
-        </p>
+        <h1 style={{ margin: 0 }}>{t("coaching.routines.editTitle")}</h1>
       </header>
 
       {resolvedSearchParams?.notice === "archived_previous" ? (
@@ -106,12 +102,15 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
 
       <section
         style={{
-          padding: 24,
+          display: "grid",
+          gap: 16,
+          padding: 22,
           borderRadius: 24,
           border: "1px solid var(--border)",
           background: "var(--surface)",
         }}
       >
+        <h2 style={{ margin: 0, fontSize: 18 }}>{t("coaching.routines.infoTitle")}</h2>
         {clientsError ? (
           <p
             style={{
@@ -131,6 +130,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
             defaultValues={defaultValues}
             submitLabel={t("coaching.routines.saveRoutine")}
             lockClient
+            showHeader={false}
           />
         )}
       </section>
@@ -138,52 +138,34 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
       <section
         style={{
           display: "grid",
-          gap: 16,
-          padding: 24,
+          gap: 20,
+          padding: 22,
           borderRadius: 24,
           border: "1px solid var(--border)",
           background: "var(--surface)",
         }}
       >
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.routines.addDayTitle")}</h2>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            {t("coaching.routines.addDayDescription")}
-          </p>
+          <h2 style={{ margin: "0 0 6px" }}>{t("coaching.routines.manageDaysTitle")}</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.manageDaysDescription")}</p>
         </div>
 
-        <RoutineDayForm
-          action={createRoutineDay.bind(null, routine.id)}
-          submitLabel={t("coaching.routines.addDayAction")}
-        />
-      </section>
+        {exercisesError ? (
+          <p
+            style={{
+              margin: 0,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "#fff2f2",
+              color: "#8a1c1c",
+            }}
+          >
+            {exercisesError}
+          </p>
+        ) : null}
 
-      {exercisesError ? (
-        <p
-          style={{
-            margin: 0,
-            padding: "12px 14px",
-            borderRadius: 12,
-            background: "#fff2f2",
-            color: "#8a1c1c",
-          }}
-        >
-          {exercisesError}
-        </p>
-      ) : null}
-
-      <RoutineDetailCard routine={routine} />
-
-      {routine.days.length > 0 ? (
-        <section style={{ display: "grid", gap: 16 }}>
-          <div>
-            <h2 style={{ margin: "0 0 8px" }}>{t("coaching.routines.manageDaysTitle")}</h2>
-            <p style={{ margin: 0, color: "var(--muted)" }}>
-              {t("coaching.routines.manageDaysDescription")}
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gap: 16 }}>
+        {routine.days.length > 0 ? (
+          <div style={{ display: "grid", gap: 20 }}>
             {routine.days.map((day) => (
               <RoutineDayManager
                 key={day.id}
@@ -198,8 +180,39 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
               />
             ))}
           </div>
-        </section>
-      ) : null}
+        ) : (
+          <article
+            style={{
+              padding: 18,
+              borderRadius: 18,
+              border: "1px dashed var(--border)",
+              background: "rgba(255, 255, 255, 0.02)",
+              color: "var(--muted)",
+            }}
+          >
+            {t("coaching.routines.emptyBuilder")}
+          </article>
+        )}
+
+        <div
+          style={{
+            display: "grid",
+            gap: 16,
+            paddingTop: 20,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("coaching.routines.addDayTitle")}</h3>
+            <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.addDayDescription")}</p>
+          </div>
+
+          <RoutineDayForm
+            action={createRoutineDay.bind(null, routine.id)}
+            submitLabel={t("coaching.routines.addDayAction")}
+          />
+        </div>
+      </section>
     </div>
   );
 }

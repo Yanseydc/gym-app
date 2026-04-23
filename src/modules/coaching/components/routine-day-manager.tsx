@@ -59,11 +59,11 @@ export function RoutineDayManager({
     <section
       style={{
         display: "grid",
-        gap: 18,
-        padding: 24,
+        gap: 20,
+        padding: 22,
         borderRadius: 24,
         border: "1px solid var(--border)",
-        background: "var(--surface)",
+        background: "linear-gradient(180deg, rgba(27, 31, 28, 0.98), rgba(22, 26, 23, 0.98))",
       }}
     >
       <div
@@ -76,12 +76,21 @@ export function RoutineDayManager({
         }}
       >
         <div style={{ display: "grid", gap: 8 }}>
-          <h3 style={{ margin: 0 }}>
-            {t("coaching.routines.day", { index: day.dayIndex })}: {day.title}
-          </h3>
-          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            {day.notes || t("coaching.routines.noDayNotes")}
-          </p>
+          <span
+            style={{
+              color: "var(--accent-strong)",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            {t("coaching.routines.day", { index: day.dayIndex })}
+          </span>
+          <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1 }}>{day.title}</h3>
+          {day.notes ? (
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{day.notes}</p>
+          ) : null}
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -116,18 +125,12 @@ export function RoutineDayManager({
           style={{
             display: "grid",
             gap: 14,
-            padding: 18,
+            padding: 16,
             borderRadius: 20,
             border: "1px solid var(--border)",
-            background: "rgba(255, 255, 255, 0.03)",
+            background: "rgba(255, 255, 255, 0.025)",
           }}
         >
-          <div>
-            <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.editDayTitle")}</strong>
-            <p style={{ margin: 0, color: "var(--muted)" }}>
-              {t("coaching.routines.editDayDescription")}
-            </p>
-          </div>
           <RoutineDayForm
             action={updateDayAction}
             defaultValues={dayDefaults}
@@ -139,17 +142,12 @@ export function RoutineDayManager({
       ) : null}
 
       <div style={{ display: "grid", gap: 14 }}>
-        <div>
-          <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.exercisesTitle")}</strong>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            {t("coaching.routines.exercisesDescription")}
-          </p>
-        </div>
+        <strong style={{ display: "block" }}>{t("coaching.routines.exercisesTitle")}</strong>
 
         {exerciseRows.length === 0 ? (
           <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noExercises")}</p>
         ) : (
-          <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gap: 10 }}>
             {exerciseRows.map((exercise) => {
               const defaults: RoutineExerciseFormValues = {
                 exerciseId: exercise.exerciseId,
@@ -167,11 +165,11 @@ export function RoutineDayManager({
                   key={exercise.id}
                   style={{
                     display: "grid",
-                    gap: 12,
-                    padding: 16,
+                    gap: 10,
+                    padding: 14,
                     borderRadius: 18,
-                    border: "1px solid var(--border)",
-                    background: "linear-gradient(180deg, rgba(35, 41, 36, 0.98), rgba(27, 31, 28, 0.96))",
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                    background: "rgba(255, 255, 255, 0.025)",
                   }}
                 >
                   <div
@@ -184,9 +182,9 @@ export function RoutineDayManager({
                     }}
                   >
                     <div style={{ display: "grid", gap: 4 }}>
-                      <strong>{exercise.exerciseName}</strong>
+                      <strong style={{ fontSize: 16 }}>{exercise.exerciseName}</strong>
                       <span style={{ color: "var(--muted)", fontSize: 13 }}>
-                        {exercise.exerciseSlug} · {t("coaching.routines.sortOrder")} {exercise.sortOrder}
+                        {t("coaching.routines.sortOrder")} {exercise.sortOrder}
                       </span>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -218,8 +216,8 @@ export function RoutineDayManager({
                   <div
                     style={{
                       display: "grid",
-                      gap: 10,
-                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                      gap: 8,
+                      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
                     }}
                   >
                     <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
@@ -242,11 +240,11 @@ export function RoutineDayManager({
                     <div
                       style={{
                         display: "grid",
-                        gap: 14,
+                        gap: 12,
                         padding: 16,
                         borderRadius: 18,
-                        border: "1px solid var(--border)",
-                        background: "rgba(255, 255, 255, 0.025)",
+                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                        background: "rgba(255, 255, 255, 0.02)",
                       }}
                     >
                       <RoutineExerciseForm
@@ -269,18 +267,11 @@ export function RoutineDayManager({
         style={{
           display: "grid",
           gap: 14,
-          padding: 18,
-          borderRadius: 20,
-          border: "1px solid var(--border)",
-          background: "rgba(255, 255, 255, 0.025)",
+          paddingTop: 14,
+          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
-        <div>
-          <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.addExerciseTitle")}</strong>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            {t("coaching.routines.addExerciseDescription")}
-          </p>
-        </div>
+        <strong style={{ display: "block" }}>{t("coaching.routines.addExerciseTitle")}</strong>
 
         <RoutineExerciseForm
           action={createExerciseAction}
