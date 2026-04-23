@@ -19,10 +19,14 @@ type EditRoutinePageProps = {
   params: Promise<{
     routineId: string;
   }>;
+  searchParams?: Promise<{
+    notice?: string;
+  }>;
 };
 
-export default async function EditRoutinePage({ params }: EditRoutinePageProps) {
+export default async function EditRoutinePage({ params, searchParams }: EditRoutinePageProps) {
   const { routineId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [
     { data: routine, error },
     { data: clients, error: clientsError },
@@ -82,6 +86,21 @@ export default async function EditRoutinePage({ params }: EditRoutinePageProps) 
           Update the routine and build it day by day with ordered exercises.
         </p>
       </header>
+
+      {resolvedSearchParams?.notice === "archived_previous" ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "rgba(94, 168, 120, 0.12)",
+            color: "#b9efc5",
+            border: "1px solid rgba(94, 168, 120, 0.24)",
+          }}
+        >
+          This client already had an active routine. The previous one was archived automatically.
+        </p>
+      ) : null}
 
       <section
         style={{

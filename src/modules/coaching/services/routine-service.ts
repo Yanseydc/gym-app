@@ -19,6 +19,23 @@ import type {
   RoutineFormValues,
 } from "@/modules/coaching/types";
 
+type ActivateRoutineResult = {
+  archived_previous: boolean;
+  id: string;
+};
+
+type RoutineActivationError = {
+  code?: string | null;
+  message: string;
+};
+
+type RoutineActivationRpcClient = AppSupabaseClient & {
+  rpc: (
+    fn: string,
+    args?: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: RoutineActivationError | null }>;
+};
+
 function mapRoutineExercise(
   record: ClientRoutineExerciseRecord,
   exerciseInfo: {
@@ -446,6 +463,47 @@ export async function updateRoutineRecord(
     .eq("id", routineId)
     .select("id")
     .single();
+}
+
+export async function activateRoutineRecord(
+  supabase: AppSupabaseClient,
+  routineId: string,
+  values: RoutineFormValues,
+): Promise<{ data: { archivedPrevious: boolean; id: string } | null; error: string | null; code?: string | null }> {
+  const rpcClient = supabase as RoutineActivationRpcClient;
+  const { data, error } = await rpcClient.rpc("activate_client_routine", {
+    target_routine_id: routineId,
+    target_client_id: values.clientId,
+    target_title: values.title.trim(),
+    target_notes: values.notes.trim() || null,
+    target_starts_on: values.startsOn || null,
+    target_ends_on: values.endsOn || null,
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error: error.message,
+      code: error.code,
+    };
+  }
+
+  const [result] = ((data ?? []) as unknown[]) as ActivateRoutineResult[];
+
+  if (!result) {
+    return {
+      data: null,
+      error: "Unable to activate routine.",
+    };
+  }
+
+  return {
+    data: {
+      id: result.id,
+      archivedPrevious: result.archived_previous,
+    },
+    error: null,
+  };
 }
 
 export async function createRoutineDayRecord(

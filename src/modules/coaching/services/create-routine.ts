@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
-import { createRoutineRecord } from "@/modules/coaching/services/routine-service";
+import { activateRoutineRecord, createRoutineRecord } from "@/modules/coaching/services/routine-service";
 import type { RoutineFormValues, RoutineMutationState } from "@/modules/coaching/types";
 import { routineFormSchema } from "@/modules/coaching/validators/routine";
 
@@ -57,18 +57,47 @@ export async function createRoutine(
   }
 
   const supabase = await createSupabaseClient();
-  const { data, error } = await createRoutineRecord(
+  const values = toRoutineFormValues(parsed.data);
+  const { data: createdRoutine, error: createError } = await createRoutineRecord(
     supabase,
     user.id,
-    toRoutineFormValues(parsed.data),
+    {
+      ...values,
+      status: values.status === "active" ? "draft" : values.status,
+    },
   );
 
-  if (error || !data) {
+  if (createError || !createdRoutine) {
     return {
-      error: error?.message ?? "Unable to create routine.",
+      error: createError?.message ?? "Unable to create routine.",
     };
   }
 
+  let routineId = createdRoutine.id;
+  let archivedPrevious = false;
+
+  if (values.status === "active") {
+    const { data: activatedRoutine, error: activationError, code } = await activateRoutineRecord(
+      supabase,
+      createdRoutine.id,
+      values,
+    );
+
+    if (activationError || !activatedRoutine) {
+      return {
+        error:
+          code === "23505"
+            ? "This client already has an active routine. Try again or review the current routine."
+            : activationError?.includes("client_routines_one_active_per_client_idx")
+              ? "This client already has an active routine. Try again or review the current routine."
+              : activationError ?? "Unable to activate routine.",
+      };
+    }
+
+    routineId = activatedRoutine.id;
+    archivedPrevious = activatedRoutine.archivedPrevious;
+  }
+
   revalidatePath(`/dashboard/clients/${parsed.data.clientId}`);
-  redirect(`/dashboard/coaching/routines/${data.id}/edit`);
+  redirect(`/dashboard/coaching/routines/${routineId}/edit${archivedPrevious ? "?notice=archived_previous" : ""}`);
 }
