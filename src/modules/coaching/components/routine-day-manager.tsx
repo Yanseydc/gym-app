@@ -100,7 +100,9 @@ export function RoutineDayManager({
     nextExercises: ClientRoutineExercise[],
     previousExercises: ClientRoutineExercise[],
   ) {
-    const changedExercises = nextExercises.filter((exercise, index) => exercise.sortOrder !== index + 1);
+    const changedExercises = nextExercises.filter(
+      (exercise, index) => previousExercises[index]?.id !== exercise.id,
+    );
 
     if (changedExercises.length === 0) {
       return;

@@ -69,7 +69,7 @@ export function RoutineBuilder({
   }, [days]);
 
   async function persistDayOrder(nextDays: ClientRoutineDay[], previousDays: ClientRoutineDay[]) {
-    const changedDays = nextDays.filter((day, index) => day.dayIndex !== index + 1);
+    const changedDays = nextDays.filter((day, index) => previousDays[index]?.id !== day.id);
 
     if (changedDays.length === 0) {
       return;
