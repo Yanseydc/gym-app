@@ -90,14 +90,14 @@ export function RoutineDayManager({
             className={buttonSecondary}
             onClick={() => setIsEditingDay((current) => !current)}
           >
-            {isEditingDay ? "Close editor" : t("common.edit")}
+            {isEditingDay ? t("coaching.routines.closeEditor") : t("common.edit")}
           </button>
           <form
             action={deleteDayAction}
             onSubmit={(event) => {
               const message = day.exercises.length > 0
-                ? `This day has ${day.exercises.length} exercise(s). Delete the day and all its exercises?`
-                : "Delete this day?";
+                ? t("coaching.routines.deleteDayWithExercisesConfirm", { count: day.exercises.length })
+                : t("coaching.routines.deleteDayConfirm");
 
               if (!window.confirm(message)) {
                 event.preventDefault();
@@ -123,9 +123,9 @@ export function RoutineDayManager({
           }}
         >
           <div>
-            <strong style={{ display: "block", marginBottom: 6 }}>Edit day</strong>
+            <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.editDayTitle")}</strong>
             <p style={{ margin: 0, color: "var(--muted)" }}>
-              Update the day title or coaching notes without changing its order.
+              {t("coaching.routines.editDayDescription")}
             </p>
           </div>
           <RoutineDayForm
@@ -133,16 +133,16 @@ export function RoutineDayManager({
             defaultValues={dayDefaults}
             hiddenFields={{ routineDayId: day.id }}
             showDayIndex={false}
-            submitLabel="Save day"
+            submitLabel={t("coaching.routines.saveDay")}
           />
         </div>
       ) : null}
 
       <div style={{ display: "grid", gap: 14 }}>
         <div>
-          <strong style={{ display: "block", marginBottom: 6 }}>Exercises</strong>
+          <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.exercisesTitle")}</strong>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Edit prescriptions inline or remove exercises you no longer want in this day.
+            {t("coaching.routines.exercisesDescription")}
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export function RoutineDayManager({
                     <div style={{ display: "grid", gap: 4 }}>
                       <strong>{exercise.exerciseName}</strong>
                       <span style={{ color: "var(--muted)", fontSize: 13 }}>
-                        {exercise.exerciseSlug} · Sort {exercise.sortOrder}
+                        {exercise.exerciseSlug} · {t("coaching.routines.sortOrder")} {exercise.sortOrder}
                       </span>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -197,12 +197,12 @@ export function RoutineDayManager({
                           setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id))
                         }
                       >
-                        {isEditingExercise ? "Close editor" : t("common.edit")}
+                        {isEditingExercise ? t("coaching.routines.closeEditor") : t("common.edit")}
                       </button>
                       <form
                         action={deleteExerciseAction}
                         onSubmit={(event) => {
-                          if (!window.confirm("Delete this exercise from the day?")) {
+                          if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
                             event.preventDefault();
                           }
                         }}
@@ -230,7 +230,7 @@ export function RoutineDayManager({
                     />
                     <DetailChip
                       label={t("coaching.routines.rest")}
-                      value={exercise.restSeconds == null ? t("common.notAvailable") : `${exercise.restSeconds} sec`}
+                      value={exercise.restSeconds == null ? t("common.notAvailable") : `${exercise.restSeconds} ${t("coaching.routines.secondsShort")}`}
                     />
                   </div>
 
@@ -254,7 +254,7 @@ export function RoutineDayManager({
                         defaultValues={defaults}
                         exercises={exerciseOptions}
                         hiddenFields={{ routineExerciseId: exercise.id }}
-                        submitLabel="Save exercise"
+                        submitLabel={t("coaching.routines.saveExercise")}
                       />
                     </div>
                   ) : null}
@@ -276,13 +276,17 @@ export function RoutineDayManager({
         }}
       >
         <div>
-          <strong style={{ display: "block", marginBottom: 6 }}>Add exercise</strong>
+          <strong style={{ display: "block", marginBottom: 6 }}>{t("coaching.routines.addExerciseTitle")}</strong>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Add one exercise at a time with its prescription details.
+            {t("coaching.routines.addExerciseDescription")}
           </p>
         </div>
 
-        <RoutineExerciseForm action={createExerciseAction} exercises={exerciseOptions} />
+        <RoutineExerciseForm
+          action={createExerciseAction}
+          exercises={exerciseOptions}
+          submitLabel={t("coaching.routines.addExerciseAction")}
+        />
       </div>
     </section>
   );

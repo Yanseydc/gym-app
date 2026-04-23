@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineExerciseForm } from "@/modules/coaching/hooks/use-routine-exercise-form";
 import type {
   RoutineExerciseFormValues,
@@ -28,7 +29,9 @@ export function RoutineExerciseForm({
   hiddenFields,
   submitLabel = "Add exercise",
 }: RoutineExerciseFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useRoutineExerciseForm(action);
+  const resolvedSubmitLabel = submitLabel ?? t("coaching.routines.addExerciseAction");
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
@@ -39,9 +42,9 @@ export function RoutineExerciseForm({
         : null}
       <div style={gridStyles}>
         <label style={{ display: "grid", gap: 8, gridColumn: "1 / -1" }}>
-          <span style={labelStyles}>Exercise</span>
+          <span style={labelStyles}>{t("coaching.routines.exerciseLabel")}</span>
           <select name="exerciseId" defaultValue={defaultValues?.exerciseId ?? ""} className={input}>
-            <option value="">Select an exercise</option>
+            <option value="">{t("coaching.routines.selectExercise")}</option>
             {exercises.map((exercise) => (
               <option key={exercise.id} value={exercise.id}>
                 {exercise.label}
@@ -54,32 +57,32 @@ export function RoutineExerciseForm({
         </label>
 
         <Field
-          label="Sort order"
+          label={t("coaching.routines.sortOrder")}
           name="sortOrder"
           type="number"
           defaultValue={defaultValues?.sortOrder ? String(defaultValues.sortOrder) : ""}
           error={state.fieldErrors?.sortOrder}
         />
         <Field
-          label="Sets"
+          label={t("coaching.routines.sets")}
           name="setsText"
           defaultValue={defaultValues?.setsText ?? ""}
           error={state.fieldErrors?.setsText}
         />
         <Field
-          label="Reps"
+          label={t("coaching.routines.reps")}
           name="repsText"
           defaultValue={defaultValues?.repsText ?? ""}
           error={state.fieldErrors?.repsText}
         />
         <Field
-          label="Target weight"
+          label={t("coaching.routines.targetWeight")}
           name="targetWeightText"
           defaultValue={defaultValues?.targetWeightText ?? ""}
           error={state.fieldErrors?.targetWeightText}
         />
         <Field
-          label="Rest seconds"
+          label={t("coaching.routines.restSeconds")}
           name="restSeconds"
           type="number"
           defaultValue={defaultValues?.restSeconds ?? ""}
@@ -88,7 +91,7 @@ export function RoutineExerciseForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t("common.notes")}</span>
         <textarea
           name="notes"
           rows={3}
@@ -102,7 +105,7 @@ export function RoutineExerciseForm({
       {state.error ? <p style={errorStyles}>{state.error}</p> : null}
 
       <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("common.saving") : resolvedSubmitLabel}
       </button>
     </form>
   );

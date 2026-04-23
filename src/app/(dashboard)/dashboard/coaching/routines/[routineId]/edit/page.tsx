@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
 import { RoutineDayManager } from "@/modules/coaching/components/routine-day-manager";
 import { RoutineDetailCard } from "@/modules/coaching/components/routine-detail-card";
@@ -25,6 +26,7 @@ type EditRoutinePageProps = {
 };
 
 export default async function EditRoutinePage({ params, searchParams }: EditRoutinePageProps) {
+  const { t } = await getAdminText();
   const { routineId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [
@@ -41,7 +43,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href="/dashboard/coaching/exercises" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back
+          {t("common.back")}
         </Link>
         <p
           style={{
@@ -77,13 +79,13 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
         href={`/dashboard/coaching/routines/${routine.id}`}
         style={{ color: "var(--muted)", fontWeight: 600 }}
       >
-        Back to routine
+        {t("coaching.routines.backToRoutine")}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit routine</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t("coaching.routines.editTitle")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update the routine and build it day by day with ordered exercises.
+          {t("coaching.routines.editDescription")}
         </p>
       </header>
 
@@ -98,7 +100,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
             border: "1px solid rgba(94, 168, 120, 0.24)",
           }}
         >
-          This client already had an active routine. The previous one was archived automatically.
+          {t("coaching.routines.activeRoutineArchivedNotice")}
         </p>
       ) : null}
 
@@ -127,7 +129,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
             action={updateRoutine.bind(null, routine.id)}
             clients={clients}
             defaultValues={defaultValues}
-            submitLabel="Save routine"
+            submitLabel={t("coaching.routines.saveRoutine")}
             lockClient
           />
         )}
@@ -144,13 +146,16 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
         }}
       >
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Add day</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.routines.addDayTitle")}</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Create day blocks in the order you want the client to follow them.
+            {t("coaching.routines.addDayDescription")}
           </p>
         </div>
 
-        <RoutineDayForm action={createRoutineDay.bind(null, routine.id)} />
+        <RoutineDayForm
+          action={createRoutineDay.bind(null, routine.id)}
+          submitLabel={t("coaching.routines.addDayAction")}
+        />
       </section>
 
       {exercisesError ? (
@@ -172,9 +177,9 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
       {routine.days.length > 0 ? (
         <section style={{ display: "grid", gap: 16 }}>
           <div>
-            <h2 style={{ margin: "0 0 8px" }}>Manage days and exercises</h2>
+            <h2 style={{ margin: "0 0 8px" }}>{t("coaching.routines.manageDaysTitle")}</h2>
             <p style={{ margin: 0, color: "var(--muted)" }}>
-              Edit or remove day blocks and adjust each exercise prescription inline.
+              {t("coaching.routines.manageDaysDescription")}
             </p>
           </div>
 

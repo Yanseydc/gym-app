@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineDayForm } from "@/modules/coaching/hooks/use-routine-day-form";
 import type { RoutineDayFormValues, RoutineDayMutationState } from "@/modules/coaching/types";
 
@@ -24,7 +25,9 @@ export function RoutineDayForm({
   showDayIndex = true,
   submitLabel = "Add day",
 }: RoutineDayFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = useRoutineDayForm(action);
+  const resolvedSubmitLabel = submitLabel ?? t("coaching.routines.addDayAction");
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
@@ -36,7 +39,7 @@ export function RoutineDayForm({
       <div style={gridStyles}>
         {showDayIndex ? (
           <Field
-            label="Day order"
+            label={t("coaching.routines.dayOrder")}
             name="dayIndex"
             type="number"
             defaultValue={defaultValues?.dayIndex ? String(defaultValues.dayIndex) : ""}
@@ -50,7 +53,7 @@ export function RoutineDayForm({
           />
         )}
         <Field
-          label="Title"
+          label={t("common.title")}
           name="title"
           defaultValue={defaultValues?.title ?? ""}
           error={state.fieldErrors?.title}
@@ -58,7 +61,7 @@ export function RoutineDayForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t("common.notes")}</span>
         <textarea
           name="notes"
           rows={3}
@@ -74,7 +77,7 @@ export function RoutineDayForm({
       ) : null}
 
       <button type="submit" disabled={pending} className={buttonPrimary} style={{ width: "fit-content" }}>
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("common.saving") : resolvedSubmitLabel}
       </button>
     </form>
   );
