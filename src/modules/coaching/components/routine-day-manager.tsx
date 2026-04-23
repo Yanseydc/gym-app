@@ -48,6 +48,7 @@ export function RoutineDayManager({
 }: RoutineDayManagerProps) {
   const { t } = useAdminText();
   const [isEditingDay, setIsEditingDay] = useState(false);
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const dayDefaults: RoutineDayFormValues = {
     dayIndex: day.dayIndex,
@@ -271,13 +272,53 @@ export function RoutineDayManager({
           borderTop: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
-        <strong style={{ display: "block" }}>{t("coaching.routines.addExerciseTitle")}</strong>
+        {!isAddingExercise ? (
+          <div>
+            <button
+              type="button"
+              className={buttonSecondary}
+              onClick={() => setIsAddingExercise(true)}
+            >
+              {t("coaching.routines.addExerciseAction")}
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              padding: 16,
+              borderRadius: 18,
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: "rgba(255, 255, 255, 0.02)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <strong style={{ display: "block" }}>{t("coaching.routines.addExerciseTitle")}</strong>
+              <button
+                type="button"
+                className={buttonGhost}
+                onClick={() => setIsAddingExercise(false)}
+              >
+                {t("coaching.routines.closeEditor")}
+              </button>
+            </div>
 
-        <RoutineExerciseForm
-          action={createExerciseAction}
-          exercises={exerciseOptions}
-          submitLabel={t("coaching.routines.addExerciseAction")}
-        />
+            <RoutineExerciseForm
+              action={createExerciseAction}
+              exercises={exerciseOptions}
+              submitLabel={t("coaching.routines.addExerciseAction")}
+            />
+          </div>
+        )}
       </div>
     </section>
   );

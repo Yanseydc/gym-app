@@ -25,12 +25,50 @@ function toRoutineDayFormValues(
   };
 }
 
+async function getNextDayIndex(routineId: string) {
+  const supabase = await createSupabaseClient();
+  const { data, error } = await supabase
+    .from("client_routine_days")
+    .select("day_index")
+    .eq("client_routine_id", routineId)
+    .order("day_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      dayIndex: null,
+      error: error.message,
+    };
+  }
+
+  return {
+    dayIndex: (((data as { day_index?: number } | null)?.day_index) ?? 0) + 1,
+    error: null,
+  };
+}
+
 export async function createRoutineDay(
   routineId: string,
   _prevState: RoutineDayMutationState,
   formData: FormData,
 ): Promise<RoutineDayMutationState> {
-  const parsed = routineDayFormSchema.safeParse(getFieldValues(formData));
+  const rawValues = getFieldValues(formData);
+
+  if (!rawValues.dayIndex) {
+    const { dayIndex, error } = await getNextDayIndex(routineId);
+
+    if (error || dayIndex == null) {
+      return {
+        error: error ?? "Unable to determine the next day order.",
+        fieldErrors: {},
+      };
+    }
+
+    rawValues.dayIndex = String(dayIndex);
+  }
+
+  const parsed = routineDayFormSchema.safeParse(rawValues);
 
   if (!parsed.success) {
     return {

@@ -209,6 +209,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
 
           <RoutineDayForm
             action={createRoutineDay.bind(null, routine.id)}
+            showDayIndex={false}
             submitLabel={t("coaching.routines.addDayAction")}
           />
         </div>

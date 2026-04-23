@@ -45,13 +45,13 @@ export function RoutineDayForm({
             defaultValue={defaultValues?.dayIndex ? String(defaultValues.dayIndex) : ""}
             error={state.fieldErrors?.dayIndex}
           />
-        ) : (
+        ) : defaultValues?.dayIndex ? (
           <input
             type="hidden"
             name="dayIndex"
-            defaultValue={defaultValues?.dayIndex ? String(defaultValues.dayIndex) : ""}
+            defaultValue={String(defaultValues.dayIndex)}
           />
-        )}
+        ) : null}
         <Field
           label={t("common.title")}
           name="title"
