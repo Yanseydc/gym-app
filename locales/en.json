@@ -162,6 +162,7 @@
       "quickOperationsDescription": "Lightweight forms for front-desk tasks and client account updates.",
       "assignMembership": "Assign membership",
       "assignMembershipDescription": "Choose an active plan and assign it to this client.",
+      "membershipDebtWarning": "This client has previous memberships with pending balance. You can still assign a new membership, but those balances remain open.",
       "registerPayment": "Register payment",
       "registerPaymentDescription": "Record a manual payment and optionally link it to a client membership.",
       "manualCheckin": "Manual check-in",
@@ -251,6 +252,7 @@
     "planPrice": "Plan price",
     "totalPaid": "Total paid",
     "remainingBalance": "Remaining balance",
+    "paidInFull": "Paid in full",
     "cancel": "Cancel membership",
     "form": {
       "plan": "Membership plan",

@@ -36,6 +36,10 @@ export type PaymentMembershipOption = {
   id: string;
   clientId: string;
   label: string;
+  planName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
   planPrice: number;
   totalPaid: number;
   remainingBalance: number;

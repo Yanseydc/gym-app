@@ -162,6 +162,7 @@
       "quickOperationsDescription": "Formularios ligeros para tareas de front desk y actualizaciones de cuenta del cliente.",
       "assignMembership": "Asignar membresía",
       "assignMembershipDescription": "Elige un plan activo y asígnalo a este cliente.",
+      "membershipDebtWarning": "Este cliente tiene membresías anteriores con saldo pendiente. Aun así puedes asignar una nueva membresía, pero esos saldos seguirán abiertos.",
       "registerPayment": "Registrar pago",
       "registerPaymentDescription": "Registra un pago manual y opcionalmente vincúlalo a una membresía del cliente.",
       "manualCheckin": "Check-in manual",
@@ -251,6 +252,7 @@
     "planPrice": "Precio del plan",
     "totalPaid": "Total pagado",
     "remainingBalance": "Saldo restante",
+    "paidInFull": "Pagada por completo",
     "cancel": "Cancelar membresía",
     "form": {
       "plan": "Plan de membresía",

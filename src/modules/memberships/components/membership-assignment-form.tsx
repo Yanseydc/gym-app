@@ -17,6 +17,7 @@ type MembershipAssignmentFormProps = {
     formData: FormData,
   ) => Promise<ClientMembershipMutationState>;
   plans: MembershipPlan[];
+  warningMessage?: string;
 };
 
 const today = new Date().toISOString().slice(0, 10);
@@ -30,12 +31,28 @@ const defaultValues: ClientMembershipFormValues = {
 export function MembershipAssignmentForm({
   action,
   plans,
+  warningMessage,
 }: MembershipAssignmentFormProps) {
   const { t } = useAdminText();
   const { state, formAction, pending } = useClientMembershipForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
+      {warningMessage ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--warning-bg)",
+            color: "var(--warning-fg)",
+            border: "1px solid color-mix(in srgb, var(--warning-fg) 18%, transparent)",
+          }}
+        >
+          {warningMessage}
+        </p>
+      ) : null}
+
       <div style={gridStyles}>
         <label style={{ display: "grid", gap: 8 }}>
           <span style={labelStyles}>{t("memberships.form.plan")}</span>

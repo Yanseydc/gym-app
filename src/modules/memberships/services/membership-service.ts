@@ -21,8 +21,6 @@ type MembershipAccessSummary = {
   remainingBalance: number;
 };
 
-const openMembershipStatuses: MembershipStatus[] = ["pending_payment", "partial", "active"];
-
 function toIsoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -335,25 +333,29 @@ export async function assignMembershipToClientRecord(
   clientId: string,
   values: ClientMembershipFormValues,
 ) {
-  const { data: membershipHistory, error: membershipHistoryError } =
-    await listClientMembershipHistory(supabase, clientId);
+  const { data: overlappingMemberships, error: overlappingMembershipsError } = await supabase
+    .from("client_memberships")
+    .select("id, start_date, end_date, status")
+    .eq("client_id", clientId)
+    .neq("status", "cancelled")
+    .lte("start_date", values.startDate)
+    .gte("end_date", values.startDate)
+    .limit(1);
 
-  if (membershipHistoryError) {
+  if (overlappingMembershipsError) {
     return {
       data: null,
-      error: membershipHistoryError,
+      error: overlappingMembershipsError.message,
     };
   }
 
-  const openMembership = membershipHistory.find((membership) =>
-    openMembershipStatuses.includes(membership.status),
-  );
+  const openMembership = (overlappingMemberships ?? [])[0];
 
   if (openMembership) {
     return {
       data: null,
       error:
-        "This client already has an open membership. Cancel, expire, or complete payment before assigning a new one.",
+        "This client already has an active membership for that date. Choose a different start date or review the current membership.",
     };
   }
 

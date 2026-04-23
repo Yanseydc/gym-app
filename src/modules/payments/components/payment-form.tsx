@@ -111,6 +111,15 @@ export function PaymentForm({
                 fontSize: 14,
               }}
             >
+              <span>
+                {selectedMembership.planName}
+              </span>
+              <span>
+                {t("form.dateRange")}: {selectedMembership.startDate} to {selectedMembership.endDate}
+              </span>
+              <span>
+                {t("form.status")}: {selectedMembership.status}
+              </span>
               <span>{t("form.planPrice")}: ${selectedMembership.planPrice.toFixed(2)}</span>
               <span>{t("form.totalPaid")}: ${selectedMembership.totalPaid.toFixed(2)}</span>
               <span>{t("form.remainingBalance")}: ${selectedMembership.remainingBalance.toFixed(2)}</span>

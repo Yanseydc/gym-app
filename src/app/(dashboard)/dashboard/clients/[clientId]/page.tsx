@@ -131,6 +131,14 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       visible: canAccessOperations,
     },
   ].filter((tab) => tab.visible);
+  const getMembershipLifecycleStatus = (membership: (typeof membershipHistory)[number]) => {
+    if (membership.status === "cancelled") {
+      return "cancelled";
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    return membership.endDate < today ? "expired" : "active";
+  };
 
   return (
     <div className="client-detail-page">
@@ -431,6 +439,11 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   <MembershipAssignmentForm
                     action={assignMembershipToClient.bind(null, client.id)}
                     plans={activePlans}
+                    warningMessage={
+                      membershipHistory.some((membership) => membership.remainingBalance > 0)
+                        ? t("clients.detail.membershipDebtWarning")
+                        : undefined
+                    }
                   />
                 )}
               </UtilityFormPanel>
@@ -452,11 +465,15 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   memberships={membershipHistory.map((membership) => ({
                     id: membership.id,
                     clientId: membership.clientId,
-                    label: `${membership.planName} · ${t("common.dateRange", { start: membership.startDate, end: membership.endDate })} · $${membership.remainingBalance.toFixed(2)} ${t("memberships.remainingBalance").toLowerCase()}`,
+                    label: `${membership.planName} · ${t("common.dateRange", { start: membership.startDate, end: membership.endDate })} · $${membership.remainingBalance.toFixed(2)} ${t("memberships.remainingBalance").toLowerCase()} · ${t(`common.status.${getMembershipLifecycleStatus(membership)}`)}`,
+                    planName: membership.planName,
+                    startDate: membership.startDate,
+                    endDate: membership.endDate,
+                    status: t(`common.status.${getMembershipLifecycleStatus(membership)}`),
                     planPrice: membership.planPrice,
                     totalPaid: membership.totalPaid,
                     remainingBalance: membership.remainingBalance,
-                  }))}
+                  })).filter((membership) => membership.remainingBalance > 0)}
                   submitLabel={t("clients.detail.registerPayment")}
                   defaultValues={{
                     clientId: client.id,

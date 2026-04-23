@@ -31,6 +31,21 @@ function mapPayment(
   };
 }
 
+function formatMembershipStatusLabel(status: string) {
+  return status
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getLifecycleStatus(baseStatus: string, endDate: string) {
+  if (baseStatus === "cancelled") {
+    return "cancelled";
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  return endDate < today ? "expired" : "active";
+}
+
 async function getClientMap(supabase: AppSupabaseClient, clientIds: string[]) {
   if (clientIds.length === 0) {
     return new Map<string, string>();
@@ -62,8 +77,12 @@ async function getMembershipLabelMap(
       string,
       {
         clientId: string;
+        endDate: string;
         label: string;
+        planName: string;
         planPrice: number;
+        startDate: string;
+        status: string;
         totalPaid: number;
         remainingBalance: number;
       }
@@ -124,22 +143,34 @@ async function getMembershipLabelMap(
   }
 
   return new Map(
-    memberships.map((membership) => [
-      String(membership.id),
-      {
-        clientId: String(membership.client_id),
-        label: `${planNameMap.get(String(membership.membership_plan_id))?.name ?? "Plan"} · ${
-          String(membership.start_date)
-        } to ${String(membership.end_date)} · ${String(membership.status)}`,
-        planPrice: planNameMap.get(String(membership.membership_plan_id))?.price ?? 0,
-        totalPaid: paymentTotals.get(String(membership.id)) ?? 0,
-        remainingBalance: Math.max(
-          0,
-          (planNameMap.get(String(membership.membership_plan_id))?.price ?? 0) -
-            (paymentTotals.get(String(membership.id)) ?? 0),
-        ),
-      },
-    ]),
+    memberships.map((membership) => {
+      const startDate = String(membership.start_date);
+      const endDate = String(membership.end_date);
+      const lifecycleStatus = getLifecycleStatus(String(membership.status), endDate);
+      const remainingBalance = Math.max(
+        0,
+        (planNameMap.get(String(membership.membership_plan_id))?.price ?? 0) -
+          (paymentTotals.get(String(membership.id)) ?? 0),
+      );
+
+      return [
+        String(membership.id),
+        {
+          clientId: String(membership.client_id),
+          planName: planNameMap.get(String(membership.membership_plan_id))?.name ?? "Plan",
+          startDate,
+          endDate,
+          status: lifecycleStatus,
+          label:
+            `${planNameMap.get(String(membership.membership_plan_id))?.name ?? "Plan"} · ` +
+            `${startDate} to ${endDate} · ` +
+            `$${remainingBalance.toFixed(2)} remaining · ${formatMembershipStatusLabel(lifecycleStatus)}`,
+          planPrice: planNameMap.get(String(membership.membership_plan_id))?.price ?? 0,
+          totalPaid: paymentTotals.get(String(membership.id)) ?? 0,
+          remainingBalance,
+        },
+      ];
+    }),
   );
 }
 
@@ -268,7 +299,7 @@ export async function listPaymentMembershipOptions(
     const { data: membershipRows, error: membershipsError } = await supabase
       .from("client_memberships")
       .select("id")
-      .neq("status", "cancelled");
+      .order("start_date", { ascending: false });
 
     if (membershipsError) {
       return {
@@ -287,14 +318,20 @@ export async function listPaymentMembershipOptions(
     );
 
     return {
-      data: Array.from(membershipMap.entries()).map(([id, value]) => ({
-        id,
-        clientId: value.clientId,
-        label: `${clientMap.get(value.clientId) ?? "Unknown client"} · ${value.label}`,
-        planPrice: value.planPrice,
-        totalPaid: value.totalPaid,
-        remainingBalance: value.remainingBalance,
-      })),
+      data: Array.from(membershipMap.entries())
+        .filter(([, value]) => value.remainingBalance > 0)
+        .map(([id, value]) => ({
+          id,
+          clientId: value.clientId,
+          label: `${clientMap.get(value.clientId) ?? "Unknown client"} · ${value.label}`,
+          planName: value.planName,
+          startDate: value.startDate,
+          endDate: value.endDate,
+          status: formatMembershipStatusLabel(value.status),
+          planPrice: value.planPrice,
+          totalPaid: value.totalPaid,
+          remainingBalance: value.remainingBalance,
+        })),
       error: null,
     };
   } catch (error) {

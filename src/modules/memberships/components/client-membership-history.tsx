@@ -58,7 +58,14 @@ export async function ClientMembershipHistory({
                 {t("common.dateRange", { start: membership.startDate, end: membership.endDate })}
               </p>
             </div>
-            <MembershipStatusBadge status={membership.status} />
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <MembershipStatusBadge status={getLifecycleStatus(membership)} />
+              <BalanceBadge
+                dueLabel={t("memberships.remainingBalance")}
+                paidLabel={t("memberships.paidInFull")}
+                remainingBalance={membership.remainingBalance}
+              />
+            </div>
           </div>
 
           <div className="responsive-meta-grid">
@@ -89,6 +96,44 @@ export async function ClientMembershipHistory({
         </article>
       ))}
     </div>
+  );
+}
+
+function getLifecycleStatus(membership: ClientMembership) {
+  if (membership.status === "cancelled") {
+    return "cancelled";
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  return membership.endDate < today ? "expired" : "active";
+}
+
+function BalanceBadge({
+  dueLabel,
+  paidLabel,
+  remainingBalance,
+}: {
+  dueLabel: string;
+  paidLabel: string;
+  remainingBalance: number;
+}) {
+  const isPending = remainingBalance > 0;
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        width: "fit-content",
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 13,
+        fontWeight: 700,
+        background: isPending ? "var(--warning-bg)" : "var(--success-bg)",
+        color: isPending ? "var(--warning-fg)" : "var(--success)",
+      }}
+    >
+      {isPending ? `${dueLabel}: $${remainingBalance.toFixed(2)}` : paidLabel}
+    </span>
   );
 }
 
