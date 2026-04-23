@@ -10,6 +10,7 @@ import { exerciseMediaFormSchema } from "@/modules/coaching/validators/exercise-
 
 function getFieldValues(formData: FormData): Record<string, FormDataEntryValue | null> {
   return {
+    mediaId: formData.get("mediaId"),
     url: formData.get("url"),
     sortOrder: formData.get("sortOrder"),
     altText: formData.get("altText"),
@@ -28,7 +29,6 @@ function toExerciseMediaFormValues(
 
 export async function updateExerciseMedia(
   exerciseId: string,
-  mediaId: string,
   _prevState: ExerciseMediaMutationState,
   formData: FormData,
 ): Promise<ExerciseMediaMutationState> {
@@ -40,6 +40,14 @@ export async function updateExerciseMedia(
       fieldErrors: Object.fromEntries(
         parsed.error.issues.map((issue) => [String(issue.path[0]), issue.message]),
       ),
+    };
+  }
+
+  const mediaId = formData.get("mediaId");
+
+  if (typeof mediaId !== "string" || !mediaId) {
+    return {
+      error: "Media id is required.",
     };
   }
 

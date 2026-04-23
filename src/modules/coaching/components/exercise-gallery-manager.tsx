@@ -15,9 +15,7 @@ type ExerciseGalleryManagerProps = {
   ) => Promise<ExerciseMediaMutationState>;
   deleteAction: (formData: FormData) => void | Promise<void>;
   items: ExerciseMediaItem[];
-  updateActionFactory: (
-    mediaId: string,
-  ) => (
+  updateAction: (
     state: ExerciseMediaMutationState,
     formData: FormData,
   ) => Promise<ExerciseMediaMutationState>;
@@ -32,7 +30,7 @@ export function ExerciseGalleryManager({
   createAction,
   deleteAction,
   items,
-  updateActionFactory,
+  updateAction,
 }: ExerciseGalleryManagerProps) {
   const [createState, createFormAction, createPending] = useActionState(createAction, initialState);
   const nextSortOrder = useMemo(
@@ -120,7 +118,7 @@ export function ExerciseGalleryManager({
             <ExerciseGalleryRow
               key={item.id}
               item={item}
-              updateAction={updateActionFactory(item.id)}
+              updateAction={updateAction}
               deleteAction={deleteAction}
             />
           ))}
@@ -167,6 +165,7 @@ function ExerciseGalleryRow({
 
         <div style={{ display: "grid", gap: 16 }}>
           <form action={formAction} style={{ display: "grid", gap: 16 }}>
+            <input type="hidden" name="mediaId" value={item.id} />
             <div style={gridStyles}>
               <Field
                 label="Image URL"

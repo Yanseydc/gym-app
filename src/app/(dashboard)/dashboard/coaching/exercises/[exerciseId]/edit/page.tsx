@@ -123,17 +123,8 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
           <ExerciseGalleryManager
             items={galleryItems}
             createAction={createExerciseMedia.bind(null, exercise.id)}
-            updateActionFactory={(mediaId) => updateExerciseMedia.bind(null, exercise.id, mediaId)}
-            deleteAction={async (formData) => {
-              "use server";
-              const mediaId = formData.get("mediaId");
-
-              if (typeof mediaId !== "string" || !mediaId) {
-                throw new Error("Media id is required.");
-              }
-
-              await deleteExerciseMedia(exercise.id, mediaId);
-            }}
+            updateAction={updateExerciseMedia.bind(null, exercise.id)}
+            deleteAction={deleteExerciseMedia.bind(null, exercise.id)}
           />
         )}
       </section>
