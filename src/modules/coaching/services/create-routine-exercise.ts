@@ -36,13 +36,51 @@ function toRoutineExerciseFormValues(
   };
 }
 
+async function getNextSortOrder(routineDayId: string) {
+  const supabase = await createSupabaseClient();
+  const { data, error } = await supabase
+    .from("client_routine_exercises")
+    .select("sort_order")
+    .eq("client_routine_day_id", routineDayId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      sortOrder: null,
+      error: error.message,
+    };
+  }
+
+  return {
+    sortOrder: (((data as { sort_order?: number } | null)?.sort_order) ?? 0) + 1,
+    error: null,
+  };
+}
+
 export async function createRoutineExercise(
   routineId: string,
   routineDayId: string,
   _prevState: RoutineExerciseMutationState,
   formData: FormData,
 ): Promise<RoutineExerciseMutationState> {
-  const parsed = routineExerciseFormSchema.safeParse(getFieldValues(formData));
+  const rawValues = getFieldValues(formData);
+
+  if (!rawValues.sortOrder) {
+    const { error, sortOrder } = await getNextSortOrder(routineDayId);
+
+    if (error || sortOrder == null) {
+      return {
+        error: error ?? "Unable to determine the next exercise order.",
+        fieldErrors: {},
+      };
+    }
+
+    rawValues.sortOrder = String(sortOrder);
+  }
+
+  const parsed = routineExerciseFormSchema.safeParse(rawValues);
 
   if (!parsed.success) {
     return {

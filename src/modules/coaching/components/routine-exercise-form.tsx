@@ -19,6 +19,7 @@ type RoutineExerciseFormProps = {
   defaultValues?: Partial<RoutineExerciseFormValues>;
   exercises: RoutineExerciseOption[];
   hiddenFields?: Record<string, string>;
+  showSortOrder?: boolean;
   submitLabel?: string;
 };
 
@@ -27,6 +28,7 @@ export function RoutineExerciseForm({
   defaultValues,
   exercises,
   hiddenFields,
+  showSortOrder = true,
   submitLabel = "Add exercise",
 }: RoutineExerciseFormProps) {
   const { t } = useAdminText();
@@ -56,13 +58,17 @@ export function RoutineExerciseForm({
           ) : null}
         </label>
 
-        <Field
-          label={t("coaching.routines.sortOrder")}
-          name="sortOrder"
-          type="number"
-          defaultValue={defaultValues?.sortOrder ? String(defaultValues.sortOrder) : ""}
-          error={state.fieldErrors?.sortOrder}
-        />
+        {showSortOrder ? (
+          <Field
+            label={t("coaching.routines.sortOrder")}
+            name="sortOrder"
+            type="number"
+            defaultValue={defaultValues?.sortOrder ? String(defaultValues.sortOrder) : ""}
+            error={state.fieldErrors?.sortOrder}
+          />
+        ) : defaultValues?.sortOrder ? (
+          <input type="hidden" name="sortOrder" defaultValue={String(defaultValues.sortOrder)} />
+        ) : null}
         <Field
           label={t("coaching.routines.sets")}
           name="setsText"

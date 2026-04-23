@@ -1,6 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { startTransition, useEffect, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { buttonDanger, buttonGhost, buttonSecondary } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -34,6 +49,7 @@ type RoutineDayManagerProps = {
     state: RoutineExerciseMutationState,
     formData: FormData,
   ) => Promise<RoutineExerciseMutationState>;
+  dragHandleProps?: DragHandleProps;
 };
 
 export function RoutineDayManager({
@@ -45,16 +61,81 @@ export function RoutineDayManager({
   exerciseRows,
   updateDayAction,
   updateExerciseAction,
+  dragHandleProps,
 }: RoutineDayManagerProps) {
   const { t } = useAdminText();
   const [isEditingDay, setIsEditingDay] = useState(false);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
+  const [orderedExercises, setOrderedExercises] = useState(exerciseRows);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const dayDefaults: RoutineDayFormValues = {
     dayIndex: day.dayIndex,
     title: day.title,
     notes: day.notes ?? "",
   };
+
+  useEffect(() => {
+    setOrderedExercises(exerciseRows);
+  }, [exerciseRows]);
+
+  async function persistExerciseOrder(
+    nextExercises: ClientRoutineExercise[],
+    previousExercises: ClientRoutineExercise[],
+  ) {
+    const changedExercises = nextExercises.filter((exercise, index) => exercise.sortOrder !== index + 1);
+
+    if (changedExercises.length === 0) {
+      return;
+    }
+
+    const results = await Promise.all(
+      changedExercises.map((exercise, index) => {
+        const nextIndex = nextExercises.findIndex((candidate) => candidate.id === exercise.id) + 1;
+        const formData = new FormData();
+        formData.set("routineExerciseId", exercise.id);
+        formData.set("exerciseId", exercise.exerciseId);
+        formData.set("sortOrder", String(nextIndex));
+        formData.set("setsText", exercise.setsText);
+        formData.set("repsText", exercise.repsText);
+        formData.set("targetWeightText", exercise.targetWeightText ?? "");
+        formData.set("restSeconds", exercise.restSeconds == null ? "" : String(exercise.restSeconds));
+        formData.set("notes", exercise.notes ?? "");
+        return updateExerciseAction({}, formData);
+      }),
+    );
+
+    if (results.some((result) => result.error)) {
+      setOrderedExercises(previousExercises);
+    }
+  }
+
+  function handleExerciseDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = orderedExercises.findIndex((exercise) => exercise.id === active.id);
+    const newIndex = orderedExercises.findIndex((exercise) => exercise.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const previousExercises = orderedExercises;
+    const nextExercises = arrayMove(orderedExercises, oldIndex, newIndex).map((exercise, index) => ({
+      ...exercise,
+      sortOrder: index + 1,
+    }));
+
+    setOrderedExercises(nextExercises);
+
+    startTransition(() => {
+      void persistExerciseOrder(nextExercises, previousExercises);
+    });
+  }
 
   return (
     <section
@@ -95,6 +176,11 @@ export function RoutineDayManager({
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {dragHandleProps ? (
+            <button type="button" {...dragHandleProps} aria-label={t("common.actions")}>
+              ⋮⋮
+            </button>
+          ) : null}
           <button
             type="button"
             className={buttonSecondary}
@@ -145,122 +231,136 @@ export function RoutineDayManager({
       <div style={{ display: "grid", gap: 14 }}>
         <strong style={{ display: "block" }}>{t("coaching.routines.exercisesTitle")}</strong>
 
-        {exerciseRows.length === 0 ? (
+        {orderedExercises.length === 0 ? (
           <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noExercises")}</p>
         ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            {exerciseRows.map((exercise) => {
-              const defaults: RoutineExerciseFormValues = {
-                exerciseId: exercise.exerciseId,
-                sortOrder: exercise.sortOrder,
-                setsText: exercise.setsText,
-                repsText: exercise.repsText,
-                targetWeightText: exercise.targetWeightText ?? "",
-                restSeconds: exercise.restSeconds == null ? "" : String(exercise.restSeconds),
-                notes: exercise.notes ?? "",
-              };
-              const isEditingExercise = editingExerciseId === exercise.id;
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
+            <SortableContext
+              items={orderedExercises.map((exercise) => exercise.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div style={{ display: "grid", gap: 10 }}>
+                {orderedExercises.map((exercise) => {
+                  const defaults: RoutineExerciseFormValues = {
+                    exerciseId: exercise.exerciseId,
+                    sortOrder: exercise.sortOrder,
+                    setsText: exercise.setsText,
+                    repsText: exercise.repsText,
+                    targetWeightText: exercise.targetWeightText ?? "",
+                    restSeconds: exercise.restSeconds == null ? "" : String(exercise.restSeconds),
+                    notes: exercise.notes ?? "",
+                  };
+                  const isEditingExercise = editingExerciseId === exercise.id;
 
-              return (
-                <article
-                  key={exercise.id}
-                  style={{
-                    display: "grid",
-                    gap: 10,
-                    padding: 14,
-                    borderRadius: 18,
-                    border: "1px solid rgba(255, 255, 255, 0.06)",
-                    background: "rgba(255, 255, 255, 0.025)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 12,
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ display: "grid", gap: 4 }}>
-                      <strong style={{ fontSize: 16 }}>{exercise.exerciseName}</strong>
-                      <span style={{ color: "var(--muted)", fontSize: 13 }}>
-                        {t("coaching.routines.sortOrder")} {exercise.sortOrder}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button
-                        type="button"
-                        className={buttonGhost}
-                        onClick={() =>
-                          setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id))
-                        }
-                      >
-                        {isEditingExercise ? t("coaching.routines.closeEditor") : t("common.edit")}
-                      </button>
-                      <form
-                        action={deleteExerciseAction}
-                        onSubmit={(event) => {
-                          if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
-                            event.preventDefault();
-                          }
-                        }}
-                      >
-                        <input type="hidden" name="routineExerciseId" defaultValue={exercise.id} />
-                        <button type="submit" className={buttonDanger}>
-                          {t("common.delete")}
-                        </button>
-                      </form>
-                    </div>
-                  </div>
+                  return (
+                    <SortableExerciseItem key={exercise.id} exerciseId={exercise.id}>
+                      {({ dragHandleProps: exerciseDragHandleProps, isDragging }) => (
+                        <article
+                          style={{
+                            display: "grid",
+                            gap: 10,
+                            padding: 14,
+                            borderRadius: 18,
+                            border: "1px solid rgba(255, 255, 255, 0.06)",
+                            background: "rgba(255, 255, 255, 0.025)",
+                            boxShadow: isDragging ? "0 14px 28px rgba(0, 0, 0, 0.2)" : "none",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 12,
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                              <button type="button" {...exerciseDragHandleProps} aria-label={t("common.actions")}>
+                                ⋮⋮
+                              </button>
+                              <div style={{ display: "grid", gap: 4 }}>
+                                <strong style={{ fontSize: 16 }}>{exercise.exerciseName}</strong>
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              <button
+                                type="button"
+                                className={buttonGhost}
+                                onClick={() =>
+                                  setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id))
+                                }
+                              >
+                                {isEditingExercise ? t("coaching.routines.closeEditor") : t("common.edit")}
+                              </button>
+                              <form
+                                action={deleteExerciseAction}
+                                onSubmit={(event) => {
+                                  if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
+                                    event.preventDefault();
+                                  }
+                                }}
+                              >
+                                <input type="hidden" name="routineExerciseId" defaultValue={exercise.id} />
+                                <button type="submit" className={buttonDanger}>
+                                  {t("common.delete")}
+                                </button>
+                              </form>
+                            </div>
+                          </div>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 8,
-                      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                    }}
-                  >
-                    <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
-                    <DetailChip label={t("coaching.routines.reps")} value={exercise.repsText} />
-                    <DetailChip
-                      label={t("coaching.routines.weight")}
-                      value={exercise.targetWeightText || t("common.notAvailable")}
-                    />
-                    <DetailChip
-                      label={t("coaching.routines.rest")}
-                      value={exercise.restSeconds == null ? t("common.notAvailable") : `${exercise.restSeconds} ${t("coaching.routines.secondsShort")}`}
-                    />
-                  </div>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: 8,
+                              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                            }}
+                          >
+                            <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
+                            <DetailChip label={t("coaching.routines.reps")} value={exercise.repsText} />
+                            <DetailChip
+                              label={t("coaching.routines.weight")}
+                              value={exercise.targetWeightText || t("common.notAvailable")}
+                            />
+                            <DetailChip
+                              label={t("coaching.routines.rest")}
+                              value={exercise.restSeconds == null ? t("common.notAvailable") : `${exercise.restSeconds} ${t("coaching.routines.secondsShort")}`}
+                            />
+                          </div>
 
-                  {exercise.notes ? (
-                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{exercise.notes}</p>
-                  ) : null}
+                          {exercise.notes ? (
+                            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{exercise.notes}</p>
+                          ) : null}
 
-                  {isEditingExercise ? (
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 12,
-                        padding: 16,
-                        borderRadius: 18,
-                        border: "1px solid rgba(255, 255, 255, 0.06)",
-                        background: "rgba(255, 255, 255, 0.02)",
-                      }}
-                    >
-                      <RoutineExerciseForm
-                        action={updateExerciseAction}
-                        defaultValues={defaults}
-                        exercises={exerciseOptions}
-                        hiddenFields={{ routineExerciseId: exercise.id }}
-                        submitLabel={t("coaching.routines.saveExercise")}
-                      />
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
+                          {isEditingExercise ? (
+                            <div
+                              style={{
+                                display: "grid",
+                                gap: 12,
+                                padding: 16,
+                                borderRadius: 18,
+                                border: "1px solid rgba(255, 255, 255, 0.06)",
+                                background: "rgba(255, 255, 255, 0.02)",
+                              }}
+                            >
+                              <RoutineExerciseForm
+                                action={updateExerciseAction}
+                                defaultValues={defaults}
+                                exercises={exerciseOptions}
+                                hiddenFields={{ routineExerciseId: exercise.id }}
+                                showSortOrder={false}
+                                submitLabel={t("coaching.routines.saveExercise")}
+                              />
+                            </div>
+                          ) : null}
+                        </article>
+                      )}
+                    </SortableExerciseItem>
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -315,6 +415,7 @@ export function RoutineDayManager({
             <RoutineExerciseForm
               action={createExerciseAction}
               exercises={exerciseOptions}
+              showSortOrder={false}
               submitLabel={t("coaching.routines.addExerciseAction")}
             />
           </div>
@@ -323,6 +424,41 @@ export function RoutineDayManager({
     </section>
   );
 }
+
+function SortableExerciseItem({
+  children,
+  exerciseId,
+}: {
+  children: (args: { dragHandleProps: DragHandleProps; isDragging: boolean }) => ReactNode;
+  exerciseId: string;
+}) {
+  const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
+    id: exerciseId,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.65 : 1,
+      }}
+    >
+      {children({
+        dragHandleProps: {
+          ...attributes,
+          ...listeners,
+          className: buttonGhost,
+          style: { cursor: isDragging ? "grabbing" : "grab" },
+        },
+        isDragging,
+      })}
+    </div>
+  );
+}
+
+type DragHandleProps = ComponentPropsWithoutRef<"button">;
 
 function DetailChip({ label, value }: { label: string; value: string }) {
   return (

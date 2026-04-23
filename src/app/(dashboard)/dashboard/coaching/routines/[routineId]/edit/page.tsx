@@ -2,16 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getAdminText } from "@/lib/i18n/admin";
-import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
-import { RoutineDayManager } from "@/modules/coaching/components/routine-day-manager";
+import { RoutineBuilder } from "@/modules/coaching/components/routine-builder";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
-import { createRoutineDay } from "@/modules/coaching/services/create-routine-day";
-import { createRoutineExercise } from "@/modules/coaching/services/create-routine-exercise";
-import { deleteRoutineDay } from "@/modules/coaching/services/delete-routine-day";
-import { deleteRoutineExercise } from "@/modules/coaching/services/delete-routine-exercise";
 import { getRoutineClientOptionsForPage, getRoutineExerciseOptionsForPage, getRoutineForPage } from "@/modules/coaching/services/routine-service";
-import { updateRoutineDay } from "@/modules/coaching/services/update-routine-day";
-import { updateRoutineExercise } from "@/modules/coaching/services/update-routine-exercise";
 import { updateRoutine } from "@/modules/coaching/services/update-routine";
 import type { RoutineFormValues } from "@/modules/coaching/types";
 
@@ -164,23 +157,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
           </p>
         ) : null}
 
-        {routine.days.length > 0 ? (
-          <div style={{ display: "grid", gap: 20 }}>
-            {routine.days.map((day) => (
-              <RoutineDayManager
-                key={day.id}
-                day={day}
-                exerciseOptions={exercises}
-                createExerciseAction={createRoutineExercise.bind(null, routine.id, day.id)}
-                updateDayAction={updateRoutineDay.bind(null, routine.id)}
-                deleteDayAction={deleteRoutineDay.bind(null, routine.id)}
-                exerciseRows={day.exercises}
-                updateExerciseAction={updateRoutineExercise.bind(null, routine.id)}
-                deleteExerciseAction={deleteRoutineExercise.bind(null, routine.id)}
-              />
-            ))}
-          </div>
-        ) : (
+        {routine.days.length === 0 ? (
           <article
             style={{
               padding: 18,
@@ -192,27 +169,13 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
           >
             {t("coaching.routines.emptyBuilder")}
           </article>
-        )}
+        ) : null}
 
-        <div
-          style={{
-            display: "grid",
-            gap: 16,
-            paddingTop: 20,
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          <div>
-            <h3 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("coaching.routines.addDayTitle")}</h3>
-            <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.addDayDescription")}</p>
-          </div>
-
-          <RoutineDayForm
-            action={createRoutineDay.bind(null, routine.id)}
-            showDayIndex={false}
-            submitLabel={t("coaching.routines.addDayAction")}
-          />
-        </div>
+        <RoutineBuilder
+          routineId={routine.id}
+          days={routine.days}
+          exerciseOptions={exercises}
+        />
       </section>
     </div>
   );
