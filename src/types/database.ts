@@ -489,6 +489,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      exercise_media: {
+        Row: {
+          alt_text: string | null;
+          created_at: string;
+          exercise_id: string;
+          id: string;
+          sort_order: number;
+          url: string;
+        };
+        Insert: {
+          alt_text?: string | null;
+          created_at?: string;
+          exercise_id: string;
+          id?: string;
+          sort_order?: number;
+          url: string;
+        };
+        Update: {
+          alt_text?: string | null;
+          created_at?: string;
+          exercise_id?: string;
+          id?: string;
+          sort_order?: number;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercise_media_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercise_library";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       membership_plans: {
         Row: {
           created_at: string;

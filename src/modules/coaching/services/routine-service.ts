@@ -7,9 +7,11 @@ import type {
   ClientRoutineDay,
   ClientRoutineDayRecord,
   ClientRoutineExercise,
+  ClientRoutineExerciseMedia,
   ClientRoutineExerciseRecord,
   ClientRoutineRecord,
   ClientRoutineSummary,
+  ExerciseMediaRecord,
   RoutineClientOption,
   RoutineDayFormValues,
   RoutineExerciseFormValues,
@@ -19,7 +21,16 @@ import type {
 
 function mapRoutineExercise(
   record: ClientRoutineExerciseRecord,
-  exerciseInfo: { name: string; slug: string; videoUrl: string | null; thumbnailUrl: string | null },
+  exerciseInfo: {
+    name: string;
+    slug: string;
+    videoUrl: string | null;
+    thumbnailUrl: string | null;
+    instructions: string | null;
+    coachTips: string | null;
+    commonMistakes: string | null;
+    media: ClientRoutineExerciseMedia[];
+  },
 ): ClientRoutineExercise {
   return {
     id: record.id,
@@ -28,6 +39,10 @@ function mapRoutineExercise(
     exerciseSlug: exerciseInfo.slug,
     videoUrl: exerciseInfo.videoUrl,
     thumbnailUrl: exerciseInfo.thumbnailUrl,
+    instructions: exerciseInfo.instructions,
+    coachTips: exerciseInfo.coachTips,
+    commonMistakes: exerciseInfo.commonMistakes,
+    media: exerciseInfo.media,
     sortOrder: record.sort_order,
     setsText: record.sets_text,
     repsText: record.reps_text,
@@ -65,6 +80,16 @@ function mapRoutineSummary(
     endsOn: record.ends_on,
     dayCount,
     updatedAt: record.updated_at,
+  };
+}
+
+function mapExerciseMedia(record: ExerciseMediaRecord): ClientRoutineExerciseMedia {
+  return {
+    id: record.id,
+    url: record.url,
+    sortOrder: record.sort_order,
+    altText: record.alt_text,
+    createdAt: record.created_at,
   };
 }
 
@@ -288,14 +313,32 @@ export async function getRoutineById(
   const exerciseIds = [...new Set(exercises.map((exercise) => exercise.exercise_id))];
   let exerciseMap = new Map<
     string,
-    { name: string; slug: string; videoUrl: string | null; thumbnailUrl: string | null }
+    {
+      name: string;
+      slug: string;
+      videoUrl: string | null;
+      thumbnailUrl: string | null;
+      instructions: string | null;
+      coachTips: string | null;
+      commonMistakes: string | null;
+      media: ClientRoutineExerciseMedia[];
+    }
   >();
 
   if (exerciseIds.length > 0) {
-    const { data: exerciseLibraryRows, error: libraryError } = await supabase
-      .from("exercise_library")
-      .select("id, name, slug, video_url, thumbnail_url")
-      .in("id", exerciseIds);
+    const [{ data: exerciseLibraryRows, error: libraryError }, { data: mediaRows, error: mediaError }] =
+      await Promise.all([
+        supabase
+          .from("exercise_library")
+          .select("id, name, slug, video_url, thumbnail_url, instructions, coach_tips, common_mistakes")
+          .in("id", exerciseIds),
+        supabase
+          .from("exercise_media")
+          .select("id, exercise_id, url, sort_order, alt_text, created_at")
+          .in("exercise_id", exerciseIds)
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
+      ]);
 
     if (libraryError) {
       return {
@@ -303,6 +346,21 @@ export async function getRoutineById(
         error: libraryError.message,
       };
     }
+
+    if (mediaError) {
+      return {
+        data: null,
+        error: mediaError.message,
+      };
+    }
+
+    const mediaByExercise = (mediaRows ?? []).reduce((map, mediaRow) => {
+      const exerciseId = String(mediaRow.exercise_id);
+      const list = map.get(exerciseId) ?? [];
+      list.push(mapExerciseMedia(mediaRow as ExerciseMediaRecord));
+      map.set(exerciseId, list);
+      return map;
+    }, new Map<string, ClientRoutineExerciseMedia[]>());
 
     exerciseMap = new Map(
       (exerciseLibraryRows ?? []).map((exercise) => [
@@ -312,6 +370,10 @@ export async function getRoutineById(
           slug: String(exercise.slug),
           videoUrl: exercise.video_url ? String(exercise.video_url) : null,
           thumbnailUrl: exercise.thumbnail_url ? String(exercise.thumbnail_url) : null,
+          instructions: exercise.instructions ? String(exercise.instructions) : null,
+          coachTips: exercise.coach_tips ? String(exercise.coach_tips) : null,
+          commonMistakes: exercise.common_mistakes ? String(exercise.common_mistakes) : null,
+          media: mediaByExercise.get(String(exercise.id)) ?? [],
         },
       ]),
     );
@@ -326,6 +388,10 @@ export async function getRoutineById(
         slug: "unknown-exercise",
         videoUrl: null,
         thumbnailUrl: null,
+        instructions: null,
+        coachTips: null,
+        commonMistakes: null,
+        media: [],
       }),
     );
     map.set(dayId, list);
