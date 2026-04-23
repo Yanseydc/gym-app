@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { startTransition, useEffect, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { startTransition, useEffect, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { buttonGhost } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -45,10 +45,27 @@ export function RoutineBuilder({
 }: RoutineBuilderProps) {
   const { t } = useAdminText();
   const [orderedDays, setOrderedDays] = useState(days);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const pendingOrderSignatureRef = useRef<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   useEffect(() => {
-    setOrderedDays(days);
+    const incomingSignature = getDayOrderSignature(days);
+
+    setOrderedDays((currentDays) => {
+      const currentSignature = getDayOrderSignature(currentDays);
+
+      if (pendingOrderSignatureRef.current) {
+        if (incomingSignature === pendingOrderSignatureRef.current) {
+          pendingOrderSignatureRef.current = null;
+          return days;
+        }
+
+        return currentDays;
+      }
+
+      return incomingSignature === currentSignature ? currentDays : days;
+    });
   }, [days]);
 
   async function persistDayOrder(nextDays: ClientRoutineDay[], previousDays: ClientRoutineDay[]) {
@@ -59,7 +76,7 @@ export function RoutineBuilder({
     }
 
     const results = await Promise.all(
-      changedDays.map((day, index) => {
+      changedDays.map((day) => {
         const nextIndex = nextDays.findIndex((candidate) => candidate.id === day.id) + 1;
         const formData = new FormData();
         formData.set("routineDayId", day.id);
@@ -71,8 +88,13 @@ export function RoutineBuilder({
     );
 
     if (results.some((result) => result.error)) {
+      pendingOrderSignatureRef.current = null;
       setOrderedDays(previousDays);
+      setReorderError("No se pudo guardar el nuevo orden. Intenta nuevamente.");
+      return;
     }
+
+    setReorderError(null);
   }
 
   function handleDayDragEnd(event: DragEndEvent) {
@@ -95,6 +117,8 @@ export function RoutineBuilder({
       dayIndex: index + 1,
     }));
 
+    pendingOrderSignatureRef.current = getDayOrderSignature(nextDays);
+    setReorderError(null);
     setOrderedDays(nextDays);
 
     startTransition(() => {
@@ -104,6 +128,20 @@ export function RoutineBuilder({
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      {reorderError ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
+          }}
+        >
+          {reorderError}
+        </p>
+      ) : null}
+
       {orderedDays.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDayDragEnd}>
           <SortableContext items={orderedDays.map((day) => day.id)} strategy={verticalListSortingStrategy}>
@@ -146,6 +184,10 @@ export function RoutineBuilder({
       </div>
     </div>
   );
+}
+
+function getDayOrderSignature(days: ClientRoutineDay[]) {
+  return days.map((day) => `${day.id}:${day.dayIndex}`).join("|");
 }
 
 function SortableDayItem({

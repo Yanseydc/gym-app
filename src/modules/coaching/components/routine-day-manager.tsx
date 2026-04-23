@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { startTransition, useEffect, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { startTransition, useEffect, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { buttonDanger, buttonGhost, buttonSecondary } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -68,6 +68,8 @@ export function RoutineDayManager({
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const [orderedExercises, setOrderedExercises] = useState(exerciseRows);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const pendingOrderSignatureRef = useRef<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const dayDefaults: RoutineDayFormValues = {
     dayIndex: day.dayIndex,
@@ -76,7 +78,22 @@ export function RoutineDayManager({
   };
 
   useEffect(() => {
-    setOrderedExercises(exerciseRows);
+    const incomingSignature = getExerciseOrderSignature(exerciseRows);
+
+    setOrderedExercises((currentExercises) => {
+      const currentSignature = getExerciseOrderSignature(currentExercises);
+
+      if (pendingOrderSignatureRef.current) {
+        if (incomingSignature === pendingOrderSignatureRef.current) {
+          pendingOrderSignatureRef.current = null;
+          return exerciseRows;
+        }
+
+        return currentExercises;
+      }
+
+      return incomingSignature === currentSignature ? currentExercises : exerciseRows;
+    });
   }, [exerciseRows]);
 
   async function persistExerciseOrder(
@@ -90,7 +107,7 @@ export function RoutineDayManager({
     }
 
     const results = await Promise.all(
-      changedExercises.map((exercise, index) => {
+      changedExercises.map((exercise) => {
         const nextIndex = nextExercises.findIndex((candidate) => candidate.id === exercise.id) + 1;
         const formData = new FormData();
         formData.set("routineExerciseId", exercise.id);
@@ -106,8 +123,13 @@ export function RoutineDayManager({
     );
 
     if (results.some((result) => result.error)) {
+      pendingOrderSignatureRef.current = null;
       setOrderedExercises(previousExercises);
+      setReorderError("No se pudo guardar el nuevo orden de ejercicios. Intenta nuevamente.");
+      return;
     }
+
+    setReorderError(null);
   }
 
   function handleExerciseDragEnd(event: DragEndEvent) {
@@ -130,6 +152,8 @@ export function RoutineDayManager({
       sortOrder: index + 1,
     }));
 
+    pendingOrderSignatureRef.current = getExerciseOrderSignature(nextExercises);
+    setReorderError(null);
     setOrderedExercises(nextExercises);
 
     startTransition(() => {
@@ -230,6 +254,20 @@ export function RoutineDayManager({
 
       <div style={{ display: "grid", gap: 14 }}>
         <strong style={{ display: "block" }}>{t("coaching.routines.exercisesTitle")}</strong>
+
+        {reorderError ? (
+          <p
+            style={{
+              margin: 0,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "var(--danger-bg)",
+              color: "var(--danger-fg)",
+            }}
+          >
+            {reorderError}
+          </p>
+        ) : null}
 
         {orderedExercises.length === 0 ? (
           <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noExercises")}</p>
@@ -423,6 +461,10 @@ export function RoutineDayManager({
       </div>
     </section>
   );
+}
+
+function getExerciseOrderSignature(exercises: ClientRoutineExercise[]) {
+  return exercises.map((exercise) => `${exercise.id}:${exercise.sortOrder}`).join("|");
 }
 
 function SortableExerciseItem({
