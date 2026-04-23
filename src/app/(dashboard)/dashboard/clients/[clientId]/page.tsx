@@ -134,7 +134,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
   return (
     <div className="client-detail-page">
-      <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
+      <Link href="/dashboard/clients" className={buttonSecondary} style={{ width: "fit-content" }}>
         {t("common.backToClients")}
       </Link>
 

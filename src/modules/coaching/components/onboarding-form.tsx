@@ -2,7 +2,9 @@
 
 import type { CSSProperties } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useOnboardingForm } from "@/modules/coaching/hooks/use-onboarding-form";
 import type {
   ClientOnboardingFormValues,
@@ -34,13 +36,16 @@ export function OnboardingForm({
   defaultValues = emptyValues,
   submitLabel,
 }: OnboardingFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("coaching", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = useOnboardingForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <div style={gridStyles}>
         <Field
-          label="Weight (kg)"
+          label={t.templates.onboarding.weightKg}
           name="weightKg"
           type="number"
           step="0.01"
@@ -48,14 +53,14 @@ export function OnboardingForm({
           error={state.fieldErrors?.weightKg}
         />
         <Field
-          label="Height (cm)"
+          label={t.templates.onboarding.heightCm}
           name="heightCm"
           type="number"
           defaultValue={String(defaultValues.heightCm || "")}
           error={state.fieldErrors?.heightCm}
         />
         <Field
-          label="Available days"
+          label={t.templates.onboarding.availableDays}
           name="availableDays"
           type="number"
           defaultValue={String(defaultValues.availableDays)}
@@ -63,15 +68,15 @@ export function OnboardingForm({
         />
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Experience level</span>
+          <span style={labelStyles}>{t.templates.onboarding.experienceLevel}</span>
           <select
             name="experienceLevel"
             defaultValue={defaultValues.experienceLevel}
             className={input}
           >
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="beginner">{t.templates.onboarding.beginner}</option>
+            <option value="intermediate">{t.templates.onboarding.intermediate}</option>
+            <option value="advanced">{t.templates.onboarding.advanced}</option>
           </select>
           {state.fieldErrors?.experienceLevel ? (
             <FieldError message={state.fieldErrors.experienceLevel} />
@@ -80,28 +85,28 @@ export function OnboardingForm({
       </div>
 
       <TextAreaField
-        label="Goal"
+        label={t.templates.onboarding.goal}
         name="goal"
         rows={3}
         defaultValue={defaultValues.goal}
         error={state.fieldErrors?.goal}
       />
       <TextAreaField
-        label="Available schedule"
+        label={t.templates.onboarding.availableSchedule}
         name="availableSchedule"
         rows={3}
         defaultValue={defaultValues.availableSchedule}
         error={state.fieldErrors?.availableSchedule}
       />
       <TextAreaField
-        label="Injuries notes"
+        label={t.templates.onboarding.injuriesNotes}
         name="injuriesNotes"
         rows={3}
         defaultValue={defaultValues.injuriesNotes}
         error={state.fieldErrors?.injuriesNotes}
       />
       <TextAreaField
-        label="Notes"
+        label={t.templates.onboarding.notes}
         name="notes"
         rows={4}
         defaultValue={defaultValues.notes}
@@ -128,7 +133,7 @@ export function OnboardingForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? common.saving : submitLabel}
       </button>
     </form>
   );

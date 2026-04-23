@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { PaymentForm } from "@/modules/payments/components/payment-form";
 import { createPayment } from "@/modules/payments/services/create-payment";
 import { getPaymentFormOptionsForPage } from "@/modules/payments/services/payment-service";
@@ -20,7 +21,7 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div>
-        <Link href="/dashboard/payments" style={{ color: "var(--muted)", fontWeight: 600 }}>
+        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
           {t.backToPayments}
         </Link>
       </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { RoutineTemplateApplyForm } from "@/modules/coaching/components/routine-template-apply-form";
 import { RoutineTemplateDetailCard } from "@/modules/coaching/components/routine-template-detail-card";
 import { applyRoutineTemplate } from "@/modules/coaching/services/apply-routine-template";
@@ -18,7 +19,6 @@ export default async function RoutineTemplateDetailPage({
   params,
 }: RoutineTemplateDetailPageProps) {
   const t = await getText("coaching");
-  const common = await getText("common");
   const { templateId } = await params;
   const [
     { data: template, error },
@@ -31,8 +31,12 @@ export default async function RoutineTemplateDetailPage({
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/coaching/templates" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {common.back}
+        <Link
+          href="/dashboard/coaching/templates"
+          className={buttonSecondary}
+          style={{ width: "fit-content" }}
+        >
+          {t.templates.backToTemplates}
         </Link>
         <p
           style={{
@@ -55,7 +59,11 @@ export default async function RoutineTemplateDetailPage({
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href="/dashboard/coaching/templates" style={{ color: "var(--muted)", fontWeight: 600 }}>
+      <Link
+        href="/dashboard/coaching/templates"
+        className={buttonSecondary}
+        style={{ width: "fit-content" }}
+      >
         {t.templates.backToTemplates}
       </Link>
 

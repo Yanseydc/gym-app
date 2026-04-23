@@ -44,6 +44,7 @@ export async function ClientDetailCard({ client }: { client: Client }) {
         <Link
           href={`/dashboard/clients/${client.id}/edit`}
           className={buttonSecondary}
+          style={{ boxShadow: "0 10px 24px rgba(0, 0, 0, 0.14)" }}
         >
           {t("clients.detail.editClient")}
         </Link>

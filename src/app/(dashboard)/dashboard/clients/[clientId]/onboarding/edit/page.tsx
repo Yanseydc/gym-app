@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { OnboardingForm } from "@/modules/coaching/components/onboarding-form";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { updateOnboarding } from "@/modules/coaching/services/update-onboarding";
@@ -14,6 +16,8 @@ type EditOnboardingPageProps = {
 };
 
 export default async function EditOnboardingPage({ params }: EditOnboardingPageProps) {
+  const t = await getText("coaching");
+  const common = await getText("common");
   const { clientId } = await params;
   const [{ data: client, error }, { data: onboarding, error: onboardingError }] = await Promise.all([
     getClientForPage(clientId),
@@ -23,8 +27,12 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
   if (error || onboardingError) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to client
+        <Link
+          href={`/dashboard/clients/${clientId}`}
+          className={buttonSecondary}
+          style={{ width: "fit-content" }}
+        >
+          {t.templates.onboarding.backToClient}
         </Link>
         <p
           style={{
@@ -58,14 +66,20 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to client
+      <Link
+        href={`/dashboard/clients/${clientId}`}
+        className={buttonSecondary}
+        style={{ width: "fit-content" }}
+      >
+        {t.templates.onboarding.backToClient}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit coaching onboarding</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.templates.onboarding.editTitle}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update coaching context for {client.firstName} {client.lastName}.
+          {t("templates.onboarding.editDescription", {
+            name: `${client.firstName} ${client.lastName}`,
+          })}
         </p>
       </header>
 
@@ -80,7 +94,7 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
         <OnboardingForm
           action={updateOnboarding.bind(null, clientId)}
           defaultValues={defaultValues}
-          submitLabel="Save changes"
+          submitLabel={common.saveChanges}
         />
       </section>
     </div>

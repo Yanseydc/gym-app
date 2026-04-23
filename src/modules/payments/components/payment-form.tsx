@@ -55,7 +55,7 @@ export function PaymentForm({
       <div style={gridStyles}>
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={labelStyles}>{t("payments.form.client")}</span>
+            <span style={labelStyles}>{t("form.client")}</span>
             <select
               name="clientId"
               value={selectedClientId}
@@ -66,7 +66,7 @@ export function PaymentForm({
               className={input}
             >
               <option value="">
-                {t("payments.form.selectClient")}
+                {t("form.selectClient")}
               </option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -79,7 +79,7 @@ export function PaymentForm({
         ) : null}
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>{t("payments.form.membership")}</span>
+          <span style={labelStyles}>{t("form.membership")}</span>
           <select
             name="clientMembershipId"
             key={selectedClientId || "no-client"}
@@ -89,7 +89,7 @@ export function PaymentForm({
             }}
             className={input}
           >
-            <option value="">{t("payments.form.selectMembership")}</option>
+            <option value="">{t("form.selectMembership")}</option>
             {visibleMemberships.map((membership) => (
               <option key={membership.id} value={membership.id}>
                 {membership.label}
@@ -111,15 +111,15 @@ export function PaymentForm({
                 fontSize: 14,
               }}
             >
-              <span>{t("payments.form.planPrice")}: ${selectedMembership.planPrice.toFixed(2)}</span>
-              <span>{t("payments.form.totalPaid")}: ${selectedMembership.totalPaid.toFixed(2)}</span>
-              <span>{t("payments.form.remainingBalance")}: ${selectedMembership.remainingBalance.toFixed(2)}</span>
+              <span>{t("form.planPrice")}: ${selectedMembership.planPrice.toFixed(2)}</span>
+              <span>{t("form.totalPaid")}: ${selectedMembership.totalPaid.toFixed(2)}</span>
+              <span>{t("form.remainingBalance")}: ${selectedMembership.remainingBalance.toFixed(2)}</span>
             </div>
           ) : null}
         </label>
 
         <Field
-          label={t("payments.form.amount")}
+          label={t("form.amount")}
           name="amount"
           type="number"
           step="0.01"
@@ -128,15 +128,15 @@ export function PaymentForm({
         />
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>{t("payments.form.paymentMethod")}</span>
+          <span style={labelStyles}>{t("form.paymentMethod")}</span>
           <select
             name="paymentMethod"
             defaultValue={defaultValues?.paymentMethod ?? "cash"}
             className={input}
           >
-            <option value="cash">{t("payments.form.cash")}</option>
-            <option value="transfer">{t("payments.form.transfer")}</option>
-            <option value="card">{t("payments.form.card")}</option>
+            <option value="cash">{t("form.cash")}</option>
+            <option value="transfer">{t("form.transfer")}</option>
+            <option value="card">{t("form.card")}</option>
           </select>
           {state.fieldErrors?.paymentMethod ? (
             <FieldError message={state.fieldErrors.paymentMethod} />
@@ -144,7 +144,7 @@ export function PaymentForm({
         </label>
 
         <Field
-          label={t("payments.form.paymentDate")}
+          label={t("form.paymentDate")}
           name="paymentDate"
           type="date"
           defaultValue={defaultValues?.paymentDate ?? today}
@@ -152,7 +152,7 @@ export function PaymentForm({
         />
 
         <Field
-          label={t("payments.form.concept")}
+          label={t("form.concept")}
           name="concept"
           defaultValue={defaultValues?.concept ?? ""}
           error={state.fieldErrors?.concept}
@@ -160,7 +160,7 @@ export function PaymentForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>{t("payments.form.notes")}</span>
+        <span style={labelStyles}>{t("form.notes")}</span>
         <textarea
           name="notes"
           rows={4}

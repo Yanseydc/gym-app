@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
 import { ExerciseGalleryManager } from "@/modules/coaching/components/exercise-gallery-manager";
 import { createExerciseMedia } from "@/modules/coaching/services/create-exercise-media";
@@ -32,7 +33,8 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
       <div style={{ display: "grid", gap: 16 }}>
         <Link
           href="/dashboard/coaching/exercises"
-          style={{ color: "var(--muted)", fontWeight: 600 }}
+          className={buttonSecondary}
+          style={{ width: "fit-content" }}
         >
           {t.backToExerciseLibrary}
         </Link>
@@ -75,7 +77,8 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
     <div style={{ display: "grid", gap: 24 }}>
       <Link
         href="/dashboard/coaching/exercises"
-        style={{ color: "var(--muted)", fontWeight: 600 }}
+        className={buttonSecondary}
+        style={{ width: "fit-content" }}
       >
         {t.backToExerciseLibrary}
       </Link>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
 import { createExercise } from "@/modules/coaching/services/create-exercise";
 
@@ -11,7 +12,8 @@ export default async function NewExercisePage() {
       <div>
         <Link
           href="/dashboard/coaching/exercises"
-          style={{ color: "var(--muted)", fontWeight: 600 }}
+          className={buttonSecondary}
+          style={{ width: "fit-content" }}
         >
           {t.backToExerciseLibrary}
         </Link>

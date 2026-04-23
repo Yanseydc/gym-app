@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary } from "@/lib/ui";
 import { PaymentEditForm } from "@/modules/payments/components/payment-edit-form";
 import { getPaymentForPage } from "@/modules/payments/services/payment-service";
 import { updatePayment } from "@/modules/payments/services/update-payment";
@@ -20,7 +21,7 @@ export default async function EditPaymentPage({ params }: EditPaymentPageProps) 
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/payments" style={{ color: "var(--muted)", fontWeight: 600 }}>
+        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
           {t.backToPayments}
         </Link>
         <p
@@ -45,7 +46,7 @@ export default async function EditPaymentPage({ params }: EditPaymentPageProps) 
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div>
-        <Link href="/dashboard/payments" style={{ color: "var(--muted)", fontWeight: 600 }}>
+        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
           {t.backToPayments}
         </Link>
       </div>
