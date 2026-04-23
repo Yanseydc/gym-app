@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { getAdminText } from "@/lib/i18n/admin";
 import { buttonSecondary } from "@/lib/ui";
@@ -14,7 +15,7 @@ export async function RoutineSummaryList({
   clientId: string;
   routines: ClientRoutineSummary[];
 }) {
-  const { t, locale } = await getAdminText();
+  const { t } = await getAdminText();
   if (routines.length === 0) {
     return (
       <article
@@ -31,18 +32,21 @@ export async function RoutineSummaryList({
     );
   }
 
+  const activeRoutine = routines.find((routine) => routine.status === "active") ?? null;
+  const archivedRoutines = routines.filter((routine) => routine.id !== activeRoutine?.id);
+
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      {routines.map((routine) => (
+      {activeRoutine ? (
         <article
-          key={routine.id}
           style={{
             display: "grid",
-            gap: 8,
-            padding: 14,
-            borderRadius: 18,
-            border: "1px solid var(--border)",
-            background: "rgba(255, 255, 255, 0.035)",
+            gap: 14,
+            padding: 18,
+            borderRadius: 22,
+            border: "1px solid rgba(127, 210, 160, 0.4)",
+            background: "linear-gradient(180deg, rgba(39, 53, 45, 0.96), rgba(24, 30, 27, 0.98))",
+            boxShadow: "0 18px 36px rgba(0, 0, 0, 0.18)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -53,46 +57,21 @@ export async function RoutineSummaryList({
               position: "absolute",
               inset: "0 auto 0 0",
               width: 4,
-              background:
-                routine.status === "active"
-                  ? "linear-gradient(180deg, #3b9f68, #7fd2a0)"
-                  : routine.status === "archived"
-                    ? "linear-gradient(180deg, #966a39, #c79a6d)"
-                    : "linear-gradient(180deg, #34658f, #67a3d7)",
+              background: "linear-gradient(180deg, #3b9f68, #7fd2a0)",
             }}
           />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", fontSize: 18, lineHeight: 1.2 }}>
-                {routine.title}
-              </strong>
-              <div
-                style={{
-                  marginTop: 6,
-                  color: "var(--muted)",
-                  fontSize: 13,
-                  lineHeight: 1.5,
-                }}
-              >
-                <span style={{ fontWeight: 700, color: "var(--accent-strong)" }}>
-                  {t("common.days", { count: routine.dayCount })}
+          <div className="responsive-inline-header" style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ minWidth: 0, display: "grid", gap: 8 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <StatusPill status="active" label={t("coaching.routines.activeBadge")} />
+                <span style={{ color: "var(--muted)", fontSize: 13 }}>
+                  {formatRoutineDuration(t, activeRoutine)}
                 </span>
-                <span> · </span>
-                {routine.startsOn ? t("coaching.routines.starts", { date: routine.startsOn }) : t("coaching.routines.noStartDate")}
-                <span> · </span>
-                {routine.endsOn ? t("coaching.routines.ends", { date: routine.endsOn }) : t("coaching.routines.noEndDate")}
               </div>
+              <strong style={{ display: "block", fontSize: 22, lineHeight: 1.15 }}>
+                {activeRoutine.title}
+              </strong>
             </div>
-
-            <StatusPill status={routine.status} label={t(`common.status.${routine.status}`)} />
           </div>
 
           <div
@@ -101,39 +80,167 @@ export async function RoutineSummaryList({
               gap: 8,
               flexWrap: "wrap",
               alignItems: "center",
-              paddingTop: 8,
-              borderTop: "1px solid var(--border)",
+              paddingTop: 10,
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              position: "relative",
+              zIndex: 1,
             }}
           >
-            <Link
-              href={`/dashboard/coaching/routines/${routine.id}`}
-              className={actionLinkStyles}
-            >
+            <Link href={`/dashboard/coaching/routines/${activeRoutine.id}`} className={actionLinkStyles}>
               {t("coaching.routines.view")}
             </Link>
-            <Link
-              href={`/dashboard/coaching/routines/${routine.id}/edit`}
-              className={actionLinkStyles}
-            >
-              {t("coaching.routines.edit")}
+            <Link href={`/dashboard/coaching/routines/${activeRoutine.id}/edit`} className={actionLinkStyles}>
+              {t("common.edit")}
             </Link>
-            <DuplicateRoutineButton
-              routineId={routine.id}
-              returnPath={`/dashboard/clients/${clientId}`}
-            />
-            <ArchiveRoutineButton
-              routineId={routine.id}
-              returnPath={`/dashboard/clients/${clientId}?tab=coaching`}
-              status={routine.status}
-            />
-            <SaveRoutineTemplateLink
-              routineId={routine.id}
-              returnPath={`/dashboard/clients/${clientId}`}
+            <RoutineActionsMenu
+              label={t("coaching.routines.secondaryActions")}
+              content={
+                <>
+                  <DuplicateRoutineButton
+                    routineId={activeRoutine.id}
+                    returnPath={`/dashboard/clients/${clientId}`}
+                  />
+                  <SaveRoutineTemplateLink
+                    routineId={activeRoutine.id}
+                    returnPath={`/dashboard/clients/${clientId}`}
+                  />
+                  <ArchiveRoutineButton
+                    routineId={activeRoutine.id}
+                    returnPath={`/dashboard/clients/${clientId}?tab=coaching`}
+                    status={activeRoutine.status}
+                  />
+                </>
+              }
             />
           </div>
         </article>
-      ))}
+      ) : (
+        <article
+          style={{
+            display: "grid",
+            gap: 8,
+            padding: 18,
+            borderRadius: 18,
+            border: "1px dashed var(--border)",
+            background: "rgba(255, 255, 255, 0.02)",
+          }}
+        >
+          <strong>{t("coaching.routines.noActive")}</strong>
+          <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noActiveDescription")}</p>
+        </article>
+      )}
+
+      <section style={{ display: "grid", gap: 10 }}>
+        <h4 style={{ margin: 0, fontSize: 15 }}>{t("clients.detail.previousRoutines")}</h4>
+        {archivedRoutines.length === 0 ? (
+          <article
+            style={{
+              padding: 16,
+              borderRadius: 18,
+              border: "1px dashed var(--border)",
+              background: "rgba(255, 255, 255, 0.02)",
+              color: "var(--muted)",
+            }}
+          >
+            {t("coaching.routines.previousEmpty")}
+          </article>
+        ) : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {archivedRoutines.map((routine) => (
+              <article
+                key={routine.id}
+                style={{
+                  display: "grid",
+                  gap: 10,
+                  padding: 14,
+                  borderRadius: 18,
+                  border: "1px solid var(--border)",
+                  background: "rgba(255, 255, 255, 0.03)",
+                }}
+              >
+                <div className="responsive-inline-header">
+                  <div style={{ minWidth: 0, display: "grid", gap: 6 }}>
+                    <strong style={{ display: "block", fontSize: 17, lineHeight: 1.2 }}>{routine.title}</strong>
+                    <span style={{ color: "var(--muted)", fontSize: 13 }}>
+                      {formatRoutineDuration(t, routine)}
+                    </span>
+                  </div>
+                  <StatusPill status={routine.status} label={t(`common.status.${routine.status}`)} />
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <Link href={`/dashboard/coaching/routines/${routine.id}`} className={actionLinkStyles}>
+                    {t("coaching.routines.view")}
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
+  );
+}
+
+function formatRoutineDuration(
+  t: Awaited<ReturnType<typeof getAdminText>>["t"],
+  routine: ClientRoutineSummary,
+) {
+  const days = t(
+    routine.dayCount === 1 ? "coaching.routines.dayCountOne" : "coaching.routines.dayCountOther",
+    { count: routine.dayCount },
+  );
+
+  const range =
+    routine.startsOn && routine.endsOn
+      ? t("common.dateRange", { start: routine.startsOn, end: routine.endsOn })
+      : routine.startsOn
+        ? t("coaching.routines.starts", { date: routine.startsOn })
+        : routine.endsOn
+          ? t("coaching.routines.ends", { date: routine.endsOn })
+          : "";
+
+  if (!range) {
+    return days || t("coaching.routines.durationUnknown");
+  }
+
+  return t("coaching.routines.durationWithRange", { days, range });
+}
+
+function RoutineActionsMenu({
+  label,
+  content,
+}: {
+  label: string;
+  content: ReactNode;
+}) {
+  return (
+    <details style={{ position: "relative" }}>
+      <summary
+        className={actionLinkStyles}
+        style={{ listStyle: "none", cursor: "pointer", minWidth: 44, justifyContent: "center" }}
+        aria-label={label}
+      >
+        ⋯
+      </summary>
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: "calc(100% + 8px)",
+          minWidth: 220,
+          display: "grid",
+          gap: 8,
+          padding: 10,
+          borderRadius: 16,
+          border: "1px solid var(--border)",
+          background: "rgba(17, 22, 19, 0.98)",
+          boxShadow: "0 18px 30px rgba(0, 0, 0, 0.22)",
+          zIndex: 10,
+        }}
+      >
+        {content}
+      </div>
+    </details>
   );
 }
 

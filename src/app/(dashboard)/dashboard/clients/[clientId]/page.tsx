@@ -92,6 +92,9 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     notFound();
   }
 
+  const formatDayCount = (count: number) =>
+    t(count === 1 ? "common.dayCountOne" : "common.dayCountOther", { count });
+
   const activeRoutine = routines.find((routine) => routine.status === "active") ?? null;
   const latestProgressCheckIn = progressCheckIns[0] ?? null;
   const canAccessCoaching = Boolean(user && hasModuleAccess(user.role, "coaching"));
@@ -216,7 +219,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutine")}
               description={
                 activeRoutine
-                  ? t("common.days", { count: activeRoutine.dayCount })
+                  ? formatDayCount(activeRoutine.dayCount)
                   : routinesError ?? t("clients.detail.routinesDescription")
               }
               meta={activeRoutine ? t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }) : t("common.trainingPlan")}
@@ -265,34 +268,12 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
       {activeTab === "coaching" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 16 }}>
-          <div style={{ display: "grid", gap: 6 }}>
-            <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.coachingWorkspace")}</h2>
-            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              {t("clients.detail.coachingWorkspaceDescription")}
-            </p>
-          </div>
+          <h2 style={{ margin: 0 }}>{t("clients.detail.trainingTitle")}</h2>
 
           <section style={workspacePanelStyles}>
-            <div style={workspaceHeaderStyles}>
-              <div style={{ display: "grid", gap: 8 }}>
-                <span style={workspaceEyebrowStyles}>{t("clients.detail.coachingWorkspace")}</span>
-                <div style={{ display: "grid", gap: 4 }}>
-                  <h3 style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>{t("clients.detail.trainingAndProgress")}</h3>
-                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                    {t("clients.detail.trainingAndProgressDescription")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <section style={{ display: "grid", gap: 14 }}>
               <div className="responsive-inline-header">
-                <div>
-                  <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.routinesTitle")}</h4>
-                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                    {t("clients.detail.routinesHelper")}
-                  </p>
-                </div>
+                <h3 style={{ margin: 0, fontSize: 18 }}>{t("clients.detail.routinesTitle")}</h3>
 
                 <Link href={`/dashboard/coaching/routines/new?clientId=${client.id}`} className={buttonPrimary}>
                   {t("clients.detail.createRoutine")}
@@ -309,12 +290,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
             <div style={workspaceDividerStyles} />
 
             <section style={{ display: "grid", gap: 14 }}>
-              <div>
-                <h4 style={{ margin: "0 0 6px", fontSize: 18 }}>{t("clients.detail.progressCheckinsTitle")}</h4>
-                <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
-                  {t("clients.detail.progressCheckinsHelper")}
-                </p>
-              </div>
+              <h3 style={{ margin: 0, fontSize: 18 }}>{t("clients.detail.progressCheckinsTitle")}</h3>
 
               {progressCheckInsError ? (
                 <p style={errorBoxStyles}>{progressCheckInsError}</p>
@@ -641,19 +617,6 @@ const workspacePanelStyles: CSSProperties = {
   borderRadius: 24,
   border: "1px solid var(--border)",
   background: "rgba(255, 255, 255, 0.025)",
-};
-
-const workspaceHeaderStyles: CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
-
-const workspaceEyebrowStyles: CSSProperties = {
-  color: "var(--accent-strong)",
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
 };
 
 const workspaceDividerStyles: CSSProperties = {

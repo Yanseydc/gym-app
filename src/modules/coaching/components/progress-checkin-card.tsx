@@ -12,15 +12,13 @@ export async function ProgressCheckInSection({
   clientId: string;
 }) {
   const { t } = await getAdminText();
+  const formatPhotoCount = (count: number) =>
+    t(count === 1 ? "coaching.progress.photoCountOne" : "coaching.progress.photoCountOther", { count });
+
   return (
     <section style={{ display: "grid", gap: 16 }}>
       <div className="responsive-inline-header">
-        <div>
-          <h2 style={{ margin: "0 0 8px" }}>{t("coaching.progress.title")}</h2>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            {t("coaching.progress.description")}
-          </p>
-        </div>
+        <h2 style={{ margin: 0 }}>{t("coaching.progress.title")}</h2>
 
         <Link href={`/dashboard/clients/${clientId}/progress-checkins/new`} className={buttonSecondary}>
           {t("coaching.progress.newCheckin")}
@@ -53,16 +51,23 @@ export async function ProgressCheckInSection({
             <article
               key={checkIn.id}
               style={{
+                position: "relative",
                 display: "grid",
                 gap: 12,
                 padding: 16,
                 borderRadius: 16,
                 border: "1px solid var(--border)",
                 background: "rgba(255, 255, 255, 0.03)",
+                overflow: "hidden",
               }}
             >
+              <Link
+                href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
+                aria-label={`${t("coaching.progress.checkin")} ${checkIn.checkinDate}`}
+                style={{ position: "absolute", inset: 0, zIndex: 1 }}
+              />
               <div className="responsive-inline-header">
-                <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "grid", gap: 4, position: "relative", zIndex: 2 }}>
                   <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
                     {t("coaching.progress.checkin")}
                   </span>
@@ -71,29 +76,19 @@ export async function ProgressCheckInSection({
                 <Link
                   href={`/dashboard/clients/${clientId}/progress-checkins/${checkIn.id}/edit`}
                   className={buttonSecondary}
+                  style={{ position: "relative", zIndex: 2 }}
                 >
                   {t("coaching.progress.edit")}
                 </Link>
               </div>
 
-              <div className="responsive-meta-grid">
+              <div className="responsive-meta-grid" style={{ position: "relative", zIndex: 2 }}>
                 <MetaPill label={t("coaching.progress.weight")} value={checkIn.weightKg ? `${checkIn.weightKg} kg` : t("common.notAvailable")} />
                 <MetaPill
                   label={t("coaching.progress.photos")}
-                  value={checkIn.photoTypes.length > 0 ? checkIn.photoTypes.join(", ") : t("coaching.progress.none")}
+                  value={checkIn.photoTypes.length > 0 ? formatPhotoCount(checkIn.photoTypes.length) : t("coaching.progress.none")}
                 />
               </div>
-
-              {checkIn.clientNotes ? (
-                <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                  {t("coaching.progress.client")}: {checkIn.clientNotes}
-                </p>
-              ) : null}
-              {checkIn.coachNotes ? (
-                <p style={{ margin: 0, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
-                  {t("coaching.progress.coach")}: {checkIn.coachNotes}
-                </p>
-              ) : null}
             </article>
           ))}
         </div>
