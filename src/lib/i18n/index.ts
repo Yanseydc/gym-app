@@ -1,5 +1,3 @@
-import { cookies } from "next/headers";
-
 import { ADMIN_LOCALES, type AdminLocale } from "@/lib/i18n/admin-shared";
 import { coachingText } from "@/lib/i18n/coaching";
 import { commonText } from "@/lib/i18n/common";
@@ -110,6 +108,7 @@ export function getTextForLocale(namespace?: I18nNamespace, locale?: string | nu
 export async function getText(namespace: undefined): Promise<TextAccessor<TextTree>>;
 export async function getText<N extends I18nNamespace>(namespace: N): Promise<TextAccessor<NamespaceTree<N>>>;
 export async function getText(namespace?: I18nNamespace) {
+  const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
   const locale = cookieStore.get("admin_locale")?.value ?? DEFAULT_LOCALE;
 
