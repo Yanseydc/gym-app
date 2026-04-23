@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
 import { MembershipAssignmentList } from "@/modules/memberships/components/membership-assignment-list";
 import { MembershipPlanDetailCard } from "@/modules/memberships/components/membership-plan-detail-card";
 import {
@@ -17,6 +18,7 @@ type MembershipDetailPageProps = {
 export default async function MembershipDetailPage({
   params,
 }: MembershipDetailPageProps) {
+  const t = await getText("memberships");
   const { membershipId } = await params;
   const [{ data: plan, error }, { data: assignments, error: assignmentsError }] =
     await Promise.all([
@@ -31,7 +33,7 @@ export default async function MembershipDetailPage({
           href="/dashboard/memberships"
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back to memberships
+          {t.backToMemberships}
         </Link>
         <p
           style={{
@@ -55,16 +57,16 @@ export default async function MembershipDetailPage({
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href="/dashboard/memberships" style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to memberships
+        {t.backToMemberships}
       </Link>
 
       <MembershipPlanDetailCard plan={plan} />
 
       <section style={{ display: "grid", gap: 16 }}>
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Assignment history</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t.assignmentHistory}</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Clients who have used this membership plan.
+            {t.assignmentHistoryDescription}
           </p>
         </div>
 

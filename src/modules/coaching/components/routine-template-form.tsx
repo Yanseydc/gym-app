@@ -1,6 +1,8 @@
 "use client";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineTemplateForm } from "@/modules/coaching/hooks/use-routine-template-form";
 import type { RoutineTemplateFormValues, RoutineTemplateMutationState } from "@/modules/coaching/types";
 
@@ -18,18 +20,21 @@ export function RoutineTemplateForm({
   defaultValues,
   submitLabel,
 }: RoutineTemplateFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("coaching", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = useRoutineTemplateForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Title</span>
+        <span style={labelStyles}>{t.templates.title}</span>
         <input name="title" defaultValue={defaultValues.title} className={input} />
         {state.fieldErrors?.title ? <FieldError message={state.fieldErrors.title} /> : null}
       </label>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t.templates.notes}</span>
         <textarea
           name="notes"
           rows={6}
@@ -60,7 +65,7 @@ export function RoutineTemplateForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? common.saving : submitLabel}
       </button>
     </form>
   );

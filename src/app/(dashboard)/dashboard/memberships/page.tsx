@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { MembershipPlanList } from "@/modules/memberships/components/membership-plan-list";
 import { getMembershipPlansForPage } from "@/modules/memberships/services/membership-service";
 
 export default async function MembershipsPage() {
+  const t = await getText("memberships");
   const { data: plans, error } = await getMembershipPlansForPage();
 
   return (
@@ -18,9 +20,9 @@ export default async function MembershipsPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: "0 0 8px" }}>Memberships</h1>
+          <h1 style={{ margin: "0 0 8px" }}>{t.title}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Manage membership plans and review their assignment history.
+            {t.description}
           </p>
         </div>
 
@@ -34,7 +36,7 @@ export default async function MembershipsPage() {
             fontWeight: 700,
           }}
         >
-          New plan
+          {t.newPlan}
         </Link>
       </header>
 

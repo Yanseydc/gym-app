@@ -1,5 +1,8 @@
 "use client";
 
+import { getTextForLocale } from "@/lib/i18n";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+
 type MembershipsErrorProps = {
   error: Error;
   reset: () => void;
@@ -9,6 +12,8 @@ export default function MembershipsError({
   error,
   reset,
 }: MembershipsErrorProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("memberships", locale);
   return (
     <div
       style={{
@@ -21,7 +26,7 @@ export default function MembershipsError({
       }}
     >
       <div>
-        <h1 style={{ margin: "0 0 8px" }}>Unable to load memberships</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.title} error</h1>
         <p style={{ margin: 0, color: "#8a1c1c" }}>{error.message}</p>
       </div>
       <button
@@ -38,7 +43,7 @@ export default function MembershipsError({
           cursor: "pointer",
         }}
       >
-        Try again
+        {locale === "en" ? "Try again" : "Intentar de nuevo"}
       </button>
     </div>
   );

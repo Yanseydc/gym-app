@@ -1,4 +1,7 @@
-export default function MembershipsLoading() {
+import { getText } from "@/lib/i18n";
+
+export default async function MembershipsLoading() {
+  const t = await getText("memberships");
   return (
     <div
       style={{
@@ -8,7 +11,7 @@ export default function MembershipsLoading() {
         background: "var(--surface)",
       }}
     >
-      Loading memberships...
+      {`${t.title}...`}
     </div>
   );
 }

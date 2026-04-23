@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
 import { RoutineTemplateForm } from "@/modules/coaching/components/routine-template-form";
 import { createRoutineTemplate } from "@/modules/coaching/services/create-routine-template";
 import { getRoutineForPage } from "@/modules/coaching/services/routine-service";
@@ -16,6 +17,7 @@ type NewRoutineTemplatePageProps = {
 export default async function NewRoutineTemplatePage({
   searchParams,
 }: NewRoutineTemplatePageProps) {
+  const t = await getText("coaching");
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const routineId = resolvedSearchParams.routineId ?? "";
   const returnPath = resolvedSearchParams.returnTo ?? `/dashboard/coaching/routines/${routineId}`;
@@ -30,7 +32,7 @@ export default async function NewRoutineTemplatePage({
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href={returnPath} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back
+          {(await getText("common")).back}
         </Link>
         <p
           style={{
@@ -59,13 +61,13 @@ export default async function NewRoutineTemplatePage({
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href={returnPath} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to routine
+        {t.templates.backToRoutine}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Save routine as template</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.templates.saveAsTemplate}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          This will copy the routine structure, its days, and all prescribed exercises into a reusable template.
+          {t.templates.saveDescription}
         </p>
       </header>
 
@@ -80,7 +82,7 @@ export default async function NewRoutineTemplatePage({
         <RoutineTemplateForm
           action={createRoutineTemplate.bind(null, routine.id, returnPath)}
           defaultValues={defaultValues}
-          submitLabel="Save template"
+          submitLabel={t.templates.saveTemplate}
         />
       </section>
     </div>

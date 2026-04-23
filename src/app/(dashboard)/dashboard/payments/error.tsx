@@ -1,11 +1,16 @@
 "use client";
 
+import { getTextForLocale } from "@/lib/i18n";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+
 type PaymentsErrorProps = {
   error: Error;
   reset: () => void;
 };
 
 export default function PaymentsError({ error, reset }: PaymentsErrorProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("payments", locale);
   return (
     <div
       style={{
@@ -18,7 +23,7 @@ export default function PaymentsError({ error, reset }: PaymentsErrorProps) {
       }}
     >
       <div>
-        <h1 style={{ margin: "0 0 8px" }}>Unable to load payments</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t("title")} error</h1>
         <p style={{ margin: 0, color: "#8a1c1c" }}>{error.message}</p>
       </div>
       <button
@@ -35,7 +40,7 @@ export default function PaymentsError({ error, reset }: PaymentsErrorProps) {
           cursor: "pointer",
         }}
       >
-        Try again
+        {locale === "en" ? "Try again" : "Intentar de nuevo"}
       </button>
     </div>
   );

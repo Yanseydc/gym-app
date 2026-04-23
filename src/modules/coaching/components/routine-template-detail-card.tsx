@@ -1,6 +1,9 @@
+import { getText } from "@/lib/i18n";
 import type { RoutineTemplate } from "@/modules/coaching/types";
 
-export function RoutineTemplateDetailCard({ template }: { template: RoutineTemplate }) {
+export async function RoutineTemplateDetailCard({ template }: { template: RoutineTemplate }) {
+  const t = await getText("coaching");
+  const common = await getText("common");
   return (
     <article
       style={{
@@ -15,11 +18,11 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
     >
       <div style={{ display: "grid", gap: 8 }}>
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          Routine template
+          {t.templates.detailTitle}
         </span>
         <h1 style={{ margin: 0 }}>{template.title}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Reusable structure to create new client routines as drafts.
+          {t.templates.detailDescription}
         </p>
       </div>
 
@@ -30,20 +33,20 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        <DetailItem label="Days" value={String(template.days.length)} />
+        <DetailItem label={t.templates.days} value={String(template.days.length)} />
         <DetailItem
-          label="Exercises"
+          label={t.templates.exercises}
           value={String(template.days.reduce((count, day) => count + day.exercises.length, 0))}
         />
-        <DetailItem label="Updated" value={new Date(template.updatedAt).toLocaleString()} />
-        <DetailItem label="Notes" value={template.notes || "No notes"} fullWidth />
+        <DetailItem label={t.templates.updated} value={new Date(template.updatedAt).toLocaleString()} />
+        <DetailItem label={t.templates.notes} value={template.notes || t.templates.noNotes} fullWidth />
       </div>
 
       <section style={{ display: "grid", gap: 16 }}>
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Template days</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t.templates.templateDays}</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Preview the structure that will be copied into a new draft routine.
+            {t.templates.templateDaysDescription}
           </p>
         </div>
 
@@ -57,7 +60,7 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
               color: "var(--muted)",
             }}
           >
-            This template does not contain any days yet.
+            {t.templates.noDays}
           </article>
         ) : (
           <div style={{ display: "grid", gap: 16 }}>
@@ -88,7 +91,7 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                       textTransform: "uppercase",
                     }}
                   >
-                    Day {day.dayIndex}
+                    {t.templates("dayLabel", { index: day.dayIndex })}
                   </span>
                   <strong style={{ display: "block", fontSize: 20, marginTop: 10 }}>
                     {day.title}
@@ -101,7 +104,7 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                 </div>
 
                 {day.exercises.length === 0 ? (
-                  <p style={{ margin: 0, color: "var(--muted)" }}>No exercises added yet.</p>
+                  <p style={{ margin: 0, color: "var(--muted)" }}>{t.templates.noExercises}</p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
                     {day.exercises.map((exercise) => (
@@ -115,8 +118,8 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                           background: "linear-gradient(180deg, rgba(35, 41, 36, 0.98), rgba(27, 31, 28, 0.96))",
                           border: "1px solid var(--border)",
                         }}
-                      >
-                        <strong>{exercise.exerciseName}</strong>
+                        >
+                          <strong>{exercise.exerciseName}</strong>
                         <div
                           style={{
                             display: "grid",
@@ -124,10 +127,10 @@ export function RoutineTemplateDetailCard({ template }: { template: RoutineTempl
                             gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                           }}
                         >
-                          <DetailChip label="Sets" value={exercise.setsText} />
-                          <DetailChip label="Reps" value={exercise.repsText} />
-                          <DetailChip label="Weight" value={exercise.targetWeightText || "N/A"} />
-                          <DetailChip label="Rest" value={`${exercise.restSeconds ?? "N/A"} sec`} />
+                          <DetailChip label={t.templates.sets} value={exercise.setsText} />
+                          <DetailChip label={t.templates.reps} value={exercise.repsText} />
+                          <DetailChip label={t.templates.weight} value={exercise.targetWeightText || common.notAvailable} />
+                          <DetailChip label={t.templates.rest} value={`${exercise.restSeconds ?? common.notAvailable} ${t.templates.secondsShort}`} />
                         </div>
                         {exercise.notes ? (
                           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>

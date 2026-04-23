@@ -1,8 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import type { MembershipPlan } from "@/modules/memberships/types";
 
-export function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
+export async function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
+  const t = await getText("memberships");
+  const common = await getText("common");
   return (
     <article
       style={{
@@ -26,7 +29,7 @@ export function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
         <div>
           <h1 style={{ margin: "0 0 8px" }}>{plan.name}</h1>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            {plan.durationInDays} days · ${plan.price.toFixed(2)}
+            {plan.durationInDays} {t.detail.days} · ${plan.price.toFixed(2)}
           </p>
         </div>
 
@@ -39,7 +42,7 @@ export function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
             fontWeight: 700,
           }}
         >
-          Edit plan
+          {t.detail.editPlan}
         </Link>
       </div>
 
@@ -50,10 +53,10 @@ export function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        <DetailItem label="Status" value={plan.isActive ? "Active" : "Inactive"} />
-        <DetailItem label="Created" value={new Date(plan.createdAt).toLocaleString()} />
-        <DetailItem label="Updated" value={new Date(plan.updatedAt).toLocaleString()} />
-        <DetailItem label="Description" value={plan.description || "No description"} fullWidth />
+        <DetailItem label={t.detail.status} value={plan.isActive ? common.active : common.inactive} />
+        <DetailItem label={t.detail.created} value={new Date(plan.createdAt).toLocaleString()} />
+        <DetailItem label={t.detail.updated} value={new Date(plan.updatedAt).toLocaleString()} />
+        <DetailItem label={t.detail.description} value={plan.description || t.noDescription} fullWidth />
       </div>
     </article>
   );

@@ -1,6 +1,8 @@
 "use client";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useRoutineTemplateApplyForm } from "@/modules/coaching/hooks/use-routine-template-apply-form";
 import type {
   RoutineClientOption,
@@ -19,14 +21,16 @@ export function RoutineTemplateApplyForm({
   action,
   clients,
 }: RoutineTemplateApplyFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("coaching", locale);
   const { state, formAction, pending } = useRoutineTemplateApplyForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={{ fontWeight: 600 }}>Client</span>
+        <span style={{ fontWeight: 600 }}>{t.templates.client}</span>
         <select name="clientId" defaultValue="" className={input}>
-          <option value="">Select a client</option>
+          <option value="">{t.templates.selectClient}</option>
           {clients.map((client) => (
             <option key={client.id} value={client.id}>
               {client.label}
@@ -56,7 +60,7 @@ export function RoutineTemplateApplyForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Applying..." : "Apply template"}
+        {pending ? `${t.templates.applyAction}...` : t.templates.applyAction}
       </button>
     </form>
   );

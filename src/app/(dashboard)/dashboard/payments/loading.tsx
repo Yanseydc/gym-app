@@ -1,4 +1,7 @@
-export default function PaymentsLoading() {
+import { getText } from "@/lib/i18n";
+
+export default async function PaymentsLoading() {
+  const t = await getText("payments");
   return (
     <div
       style={{
@@ -8,7 +11,7 @@ export default function PaymentsLoading() {
         background: "var(--surface)",
       }}
     >
-      Loading payments...
+      {`${t.title}...`}
     </div>
   );
 }

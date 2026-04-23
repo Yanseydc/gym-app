@@ -2,7 +2,9 @@
 
 import { useActionState, useMemo, useState } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonDanger, buttonPrimary, buttonSecondary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type {
   ExerciseMediaItem,
   ExerciseMediaMutationState,
@@ -32,6 +34,9 @@ export function ExerciseGalleryManager({
   items,
   updateAction,
 }: ExerciseGalleryManagerProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("exercises", locale);
+  const common = getTextForLocale("common", locale);
   const [createState, createFormAction, createPending] = useActionState(createAction, initialState);
   const nextSortOrder = useMemo(
     () => (items.length === 0 ? 1 : Math.max(...items.map((item) => item.sortOrder)) + 1),
@@ -41,9 +46,9 @@ export function ExerciseGalleryManager({
   return (
     <div id="exercise-gallery" style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "grid", gap: 8 }}>
-        <h2 style={{ margin: 0, fontSize: 24 }}>Exercise gallery</h2>
+        <h2 style={{ margin: 0, fontSize: 24 }}>{t.gallery.title}</h2>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Manage additional exercise images shown in the client portal detail modal.
+          {t.gallery.description}
         </p>
       </div>
 
@@ -58,23 +63,23 @@ export function ExerciseGalleryManager({
         }}
       >
         <div style={{ display: "grid", gap: 6 }}>
-          <strong style={{ fontSize: 18 }}>Add gallery image</strong>
+          <strong style={{ fontSize: 18 }}>{t.gallery.addImage}</strong>
           <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-            Use image URLs only. The main `thumbnail_url` remains the cover image in the exercise list.
+            {t.gallery.addDescription}
           </span>
         </div>
 
         <form action={createFormAction} style={{ display: "grid", gap: 16 }}>
           <div style={gridStyles}>
             <Field
-              label="Image URL"
+              label={t.gallery.imageUrl}
               name="url"
               type="url"
               placeholder="https://..."
               error={createState.fieldErrors?.url}
             />
             <Field
-              label="Sort order"
+              label={t.gallery.sortOrder}
               name="sortOrder"
               type="number"
               defaultValue={String(nextSortOrder)}
@@ -82,9 +87,9 @@ export function ExerciseGalleryManager({
             />
           </div>
           <Field
-            label="Alt text"
+            label={t.gallery.altText}
             name="altText"
-            placeholder="Optional short description"
+            placeholder={t.gallery.altPlaceholder}
             error={createState.fieldErrors?.altText}
           />
 
@@ -96,7 +101,7 @@ export function ExerciseGalleryManager({
             className={buttonPrimary}
             style={{ width: "fit-content" }}
           >
-            {createPending ? "Adding..." : "Add image"}
+            {createPending ? `${common.create}...` : t.gallery.addImageAction}
           </button>
         </form>
       </section>
@@ -110,7 +115,7 @@ export function ExerciseGalleryManager({
             color: "var(--muted)",
           }}
         >
-          No gallery images yet.
+          {t.gallery.noImages}
         </div>
       ) : (
         <div style={{ display: "grid", gap: 14 }}>
@@ -118,6 +123,8 @@ export function ExerciseGalleryManager({
             <ExerciseGalleryRow
               key={item.id}
               item={item}
+              labels={t.gallery}
+              common={common}
               updateAction={updateAction}
               deleteAction={deleteAction}
             />
@@ -130,10 +137,25 @@ export function ExerciseGalleryManager({
 
 function ExerciseGalleryRow({
   item,
+  labels,
+  common,
   updateAction,
   deleteAction,
 }: {
   item: ExerciseMediaItem;
+  labels: {
+    imageUrl: string;
+    sortOrder: string;
+    altText: string;
+    altPlaceholder: string;
+    saveImage: string;
+    deleteImage: string;
+    previewUnavailable: string;
+    imageAltFallback: string;
+  };
+  common: {
+    saving: string;
+  };
   updateAction: (
     state: ExerciseMediaMutationState,
     formData: FormData,
@@ -161,14 +183,14 @@ function ExerciseGalleryRow({
           alignItems: "start",
         }}
       >
-        <CompactImagePreview src={item.url} alt={item.altText || "Exercise gallery image"} />
+        <CompactImagePreview src={item.url} alt={item.altText || labels.imageAltFallback} label={labels.previewUnavailable} />
 
         <div style={{ display: "grid", gap: 16 }}>
           <form action={formAction} style={{ display: "grid", gap: 16 }}>
             <input type="hidden" name="mediaId" value={item.id} />
             <div style={gridStyles}>
               <Field
-                label="Image URL"
+                label={labels.imageUrl}
                 name="url"
                 type="url"
                 defaultValue={item.url}
@@ -176,7 +198,7 @@ function ExerciseGalleryRow({
                 error={state.fieldErrors?.url}
               />
               <Field
-                label="Sort order"
+                label={labels.sortOrder}
                 name="sortOrder"
                 type="number"
                 defaultValue={String(item.sortOrder)}
@@ -185,10 +207,10 @@ function ExerciseGalleryRow({
             </div>
 
             <Field
-              label="Alt text"
+              label={labels.altText}
               name="altText"
               defaultValue={item.altText ?? ""}
-              placeholder="Optional short description"
+              placeholder={labels.altPlaceholder}
               error={state.fieldErrors?.altText}
             />
 
@@ -200,7 +222,7 @@ function ExerciseGalleryRow({
               className={buttonSecondary}
               style={{ width: "fit-content" }}
             >
-              {pending ? "Saving..." : "Save image"}
+              {pending ? common.saving : labels.saveImage}
             </button>
           </form>
 
@@ -208,7 +230,7 @@ function ExerciseGalleryRow({
             <form action={deleteAction}>
               <input type="hidden" name="mediaId" value={item.id} />
               <button type="submit" className={buttonDanger} style={{ width: "fit-content" }}>
-                Delete
+                {labels.deleteImage}
               </button>
             </form>
           </div>
@@ -218,7 +240,7 @@ function ExerciseGalleryRow({
   );
 }
 
-function CompactImagePreview({ src, alt }: { src: string; alt: string }) {
+function CompactImagePreview({ src, alt, label }: { src: string; alt: string; label: string }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
@@ -237,7 +259,7 @@ function CompactImagePreview({ src, alt }: { src: string; alt: string }) {
           padding: 16,
         }}
       >
-        Preview unavailable
+        {label}
       </div>
     );
   }

@@ -2,7 +2,9 @@
 
 import type { CSSProperties } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { usePaymentEditForm } from "@/modules/payments/hooks/use-payment-edit-form";
 import type {
   Payment,
@@ -24,19 +26,22 @@ export function PaymentEditForm({
   defaultValues,
   payment,
 }: PaymentEditFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("payments", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = usePaymentEditForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <div style={summaryStyles}>
-        <span>Amount: ${payment.amount.toFixed(2)}</span>
-        <span>Method: {payment.paymentMethod}</span>
-        <span>Date: {payment.paymentDate}</span>
-        <span>Membership: {payment.membershipLabel ?? "Not linked"}</span>
+        <span>{t.summary.amount}: ${payment.amount.toFixed(2)}</span>
+        <span>{t.summary.method}: {payment.paymentMethod}</span>
+        <span>{t.summary.date}: {payment.paymentDate}</span>
+        <span>{t.summary.membership}: {payment.membershipLabel ?? t.notLinked}</span>
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Concept</span>
+        <span style={labelStyles}>{t.form.concept}</span>
         <input
           name="concept"
           defaultValue={defaultValues?.concept ?? payment.concept}
@@ -46,7 +51,7 @@ export function PaymentEditForm({
       </label>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Notes</span>
+        <span style={labelStyles}>{t.form.notes}</span>
         <textarea
           name="notes"
           rows={5}
@@ -64,7 +69,7 @@ export function PaymentEditForm({
           fontSize: 14,
         }}
       >
-        Amount cannot be edited after the payment is registered.
+        {t.amountLocked}
       </p>
 
       {state.error ? (
@@ -87,7 +92,7 @@ export function PaymentEditForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : "Save changes"}
+        {pending ? common.saving : common.saveChanges}
       </button>
     </form>
   );

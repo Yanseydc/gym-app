@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { RoutineTemplateList } from "@/modules/coaching/components/routine-template-list";
 import { getRoutineTemplatesForPage } from "@/modules/coaching/services/routine-template-service";
 
 export default async function RoutineTemplatesPage() {
+  const t = await getText("coaching");
   const { data: templates, error } = await getRoutineTemplatesForPage();
 
   return (
@@ -18,9 +20,9 @@ export default async function RoutineTemplatesPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: "0 0 8px" }}>Routine templates</h1>
+          <h1 style={{ margin: "0 0 8px" }}>{t.templates.title}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Save reusable routine structures and apply them to clients as new drafts.
+            {t.templates.description}
           </p>
         </div>
 
@@ -33,7 +35,7 @@ export default async function RoutineTemplatesPage() {
             fontWeight: 700,
           }}
         >
-          Back to coaching
+          {t.templates.backToCoaching}
         </Link>
       </header>
 

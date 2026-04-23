@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { usePaymentForm } from "@/modules/payments/hooks/use-payment-form";
@@ -35,7 +36,9 @@ export function PaymentForm({
   defaultValues,
   lockClient = false,
 }: PaymentFormProps) {
-  const { t } = useAdminText();
+  const { locale } = useAdminText();
+  const t = getTextForLocale("payments", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = usePaymentForm(action);
   const [selectedClientId, setSelectedClientId] = useState(defaultValues?.clientId ?? "");
   const [selectedMembershipId, setSelectedMembershipId] = useState(
@@ -188,7 +191,7 @@ export function PaymentForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? t("common.saving") : submitLabel}
+        {pending ? common.saving : submitLabel}
       </button>
     </form>
   );

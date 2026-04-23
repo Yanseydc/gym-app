@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
 import { MembershipPlanForm } from "@/modules/memberships/components/membership-plan-form";
 import { getMembershipPlanForPage } from "@/modules/memberships/services/membership-service";
 import { updateMembershipPlan } from "@/modules/memberships/services/update-membership-plan";
@@ -15,6 +16,7 @@ type EditMembershipPlanPageProps = {
 export default async function EditMembershipPlanPage({
   params,
 }: EditMembershipPlanPageProps) {
+  const t = await getText("memberships");
   const { membershipId } = await params;
   const { data: plan, error } = await getMembershipPlanForPage(membershipId);
 
@@ -25,7 +27,7 @@ export default async function EditMembershipPlanPage({
           href="/dashboard/memberships"
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back to memberships
+          {t.backToMemberships}
         </Link>
         <p
           style={{
@@ -60,13 +62,13 @@ export default async function EditMembershipPlanPage({
         href={`/dashboard/memberships/${plan.id}`}
         style={{ color: "var(--muted)", fontWeight: 600 }}
       >
-        Back to plan
+        {t.backToPlan}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit membership plan</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.editPlan}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update duration, price and plan availability.
+          {t.editDescription}
         </p>
       </header>
 
@@ -81,7 +83,7 @@ export default async function EditMembershipPlanPage({
         <MembershipPlanForm
           action={updateMembershipPlan.bind(null, plan.id)}
           defaultValues={defaultValues}
-          submitLabel="Save changes"
+          submitLabel={(await getText("common")).saveChanges}
         />
       </section>
     </div>

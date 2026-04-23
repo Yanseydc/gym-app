@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { ExerciseList } from "@/modules/coaching/components/exercise-list";
 import { getExercisesForPage } from "@/modules/coaching/services/exercise-service";
 
 export default async function ExercisesPage() {
+  const t = await getText("exercises");
   const { data: exercises, error } = await getExercisesForPage();
 
   return (
@@ -18,9 +20,9 @@ export default async function ExercisesPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: "0 0 8px" }}>Exercise library</h1>
+          <h1 style={{ margin: "0 0 8px" }}>{t.title}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Manage reusable exercise references for coaching routines.
+            {t.description}
           </p>
         </div>
 
@@ -34,7 +36,7 @@ export default async function ExercisesPage() {
               fontWeight: 700,
             }}
           >
-            View templates
+            {t.viewTemplates}
           </Link>
           <Link
             href="/dashboard/coaching/exercises/new"
@@ -46,7 +48,7 @@ export default async function ExercisesPage() {
               fontWeight: 700,
             }}
           >
-            New exercise
+            {t.newExercise}
           </Link>
         </div>
       </header>

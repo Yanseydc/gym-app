@@ -1,9 +1,16 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { MembershipPlanForm } from "@/modules/memberships/components/membership-plan-form";
 import { createMembershipPlan } from "@/modules/memberships/services/create-membership-plan";
 
 export default function NewMembershipPlanPage() {
+  const tPromise = getText("memberships");
+  return <NewMembershipPlanPageContent tPromise={tPromise} />;
+}
+
+async function NewMembershipPlanPageContent({ tPromise }: { tPromise: ReturnType<typeof getText> }) {
+  const t = await tPromise;
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div>
@@ -11,14 +18,14 @@ export default function NewMembershipPlanPage() {
           href="/dashboard/memberships"
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back to memberships
+          {t.backToMemberships}
         </Link>
       </div>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Create membership plan</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.createPlan}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Define duration, price and availability for a new plan.
+          {t.createDescription}
         </p>
       </header>
 
@@ -32,7 +39,7 @@ export default function NewMembershipPlanPage() {
       >
         <MembershipPlanForm
           action={createMembershipPlan}
-          submitLabel="Create membership plan"
+          submitLabel={t.createPlan}
         />
       </section>
     </div>

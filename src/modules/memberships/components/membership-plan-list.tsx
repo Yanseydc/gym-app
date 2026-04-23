@@ -1,12 +1,15 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import type { MembershipPlan } from "@/modules/memberships/types";
 
 type MembershipPlanListProps = {
   plans: MembershipPlan[];
 };
 
-export function MembershipPlanList({ plans }: MembershipPlanListProps) {
+export async function MembershipPlanList({ plans }: MembershipPlanListProps) {
+  const t = await getText("memberships");
+  const common = await getText("common");
   if (plans.length === 0) {
     return (
       <article
@@ -18,7 +21,7 @@ export function MembershipPlanList({ plans }: MembershipPlanListProps) {
           color: "var(--muted)",
         }}
       >
-        No membership plans found.
+        {t.noPlans}
       </article>
     );
   }
@@ -58,11 +61,11 @@ export function MembershipPlanList({ plans }: MembershipPlanListProps) {
                 fontWeight: 700,
               }}
             >
-              {plan.isActive ? "Active" : "Inactive"}
+              {plan.isActive ? common.active : common.inactive}
             </span>
           </div>
           <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <span>{plan.durationInDays} days</span>
+            <span>{plan.durationInDays} {t.detail.days}</span>
             <span>${plan.price.toFixed(2)}</span>
           </div>
           {plan.description ? <p style={{ margin: 0, color: "var(--muted)" }}>{plan.description}</p> : null}

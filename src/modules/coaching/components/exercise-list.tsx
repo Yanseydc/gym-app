@@ -1,12 +1,15 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import type { ExerciseLibraryItem } from "@/modules/coaching/types";
 
 type ExerciseListProps = {
   exercises: ExerciseLibraryItem[];
 };
 
-export function ExerciseList({ exercises }: ExerciseListProps) {
+export async function ExerciseList({ exercises }: ExerciseListProps) {
+  const t = await getText("exercises");
+  const common = await getText("common");
   if (exercises.length === 0) {
     return (
       <article
@@ -18,7 +21,7 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           color: "var(--muted)",
         }}
       >
-        No exercises found.
+        {t.noExercises}
       </article>
     );
   }
@@ -52,7 +55,11 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
             </div>
 
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <StatusPill isActive={exercise.isActive} />
+              <StatusPill
+                isActive={exercise.isActive}
+                activeLabel={common.active}
+                inactiveLabel={common.inactive}
+              />
               <Link
                 href={`/dashboard/coaching/exercises/${exercise.id}/edit`}
                 style={{
@@ -62,15 +69,15 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
                   fontWeight: 700,
                 }}
               >
-                Edit
+                {common.edit}
               </Link>
             </div>
           </div>
 
           <div style={{ color: "var(--muted)", display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <span>{exercise.primaryMuscle || "No primary muscle"}</span>
-            <span>{exercise.equipment || "No equipment"}</span>
-            <span>{exercise.difficulty || "No difficulty"}</span>
+            <span>{exercise.primaryMuscle || t.noPrimaryMuscle}</span>
+            <span>{exercise.equipment || t.noEquipment}</span>
+            <span>{exercise.difficulty || t.noDifficulty}</span>
           </div>
 
           {exercise.description ? (
@@ -84,7 +91,15 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
   );
 }
 
-function StatusPill({ isActive }: { isActive: boolean }) {
+function StatusPill({
+  isActive,
+  activeLabel,
+  inactiveLabel,
+}: {
+  isActive: boolean;
+  activeLabel: string;
+  inactiveLabel: string;
+}) {
   return (
     <span
       style={{
@@ -96,7 +111,7 @@ function StatusPill({ isActive }: { isActive: boolean }) {
         fontWeight: 700,
       }}
     >
-      {isActive ? "Active" : "Inactive"}
+      {isActive ? activeLabel : inactiveLabel}
     </span>
   );
 }

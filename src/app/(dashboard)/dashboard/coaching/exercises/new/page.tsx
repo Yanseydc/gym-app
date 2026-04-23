@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
 import { createExercise } from "@/modules/coaching/services/create-exercise";
 
-export default function NewExercisePage() {
+export default async function NewExercisePage() {
+  const t = await getText("exercises");
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <div>
@@ -11,14 +13,14 @@ export default function NewExercisePage() {
           href="/dashboard/coaching/exercises"
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back to exercise library
+          {t.backToExerciseLibrary}
         </Link>
       </div>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Create exercise</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.createExercise}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Add a reusable exercise entry for future client routines.
+          {t.createDescription}
         </p>
       </header>
 
@@ -30,7 +32,7 @@ export default function NewExercisePage() {
           background: "var(--surface)",
         }}
       >
-        <ExerciseForm action={createExercise} submitLabel="Create exercise" />
+        <ExerciseForm action={createExercise} submitLabel={t.createExercise} />
       </section>
     </div>
   );

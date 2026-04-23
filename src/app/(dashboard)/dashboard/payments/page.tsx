@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { PaymentList } from "@/modules/payments/components/payment-list";
 import { getPaymentsForPage } from "@/modules/payments/services/payment-service";
 
 export default async function PaymentsPage() {
+  const t = await getText("payments");
   const { data: payments, error } = await getPaymentsForPage();
 
   return (
@@ -18,9 +20,9 @@ export default async function PaymentsPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: "0 0 8px" }}>Payments</h1>
+          <h1 style={{ margin: "0 0 8px" }}>{t.title}</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Register and review manual client payments.
+            {t.description}
           </p>
         </div>
 
@@ -34,7 +36,7 @@ export default async function PaymentsPage() {
             fontWeight: 700,
           }}
         >
-          New payment
+          {t.newPayment}
         </Link>
       </header>
 

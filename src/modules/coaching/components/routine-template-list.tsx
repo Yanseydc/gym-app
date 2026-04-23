@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import type { RoutineTemplateSummary } from "@/modules/coaching/types";
 
-export function RoutineTemplateList({ templates }: { templates: RoutineTemplateSummary[] }) {
+export async function RoutineTemplateList({ templates }: { templates: RoutineTemplateSummary[] }) {
+  const t = await getText("coaching");
   if (templates.length === 0) {
     return (
       <article
@@ -14,7 +16,7 @@ export function RoutineTemplateList({ templates }: { templates: RoutineTemplateS
           color: "var(--muted)",
         }}
       >
-        No routine templates saved yet.
+        {t.templates.noTemplates}
       </article>
     );
   }
@@ -45,7 +47,7 @@ export function RoutineTemplateList({ templates }: { templates: RoutineTemplateS
             </div>
 
             <Link href={`/dashboard/coaching/templates/${template.id}`} style={actionLinkStyles}>
-              View template
+              {t.templates.viewTemplate}
             </Link>
           </div>
 
@@ -56,9 +58,9 @@ export function RoutineTemplateList({ templates }: { templates: RoutineTemplateS
               gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
             }}
           >
-            <MetaChip label="Days" value={String(template.dayCount)} />
-            <MetaChip label="Exercises" value={String(template.exerciseCount)} />
-            <MetaChip label="Updated" value={new Date(template.updatedAt).toLocaleString()} />
+            <MetaChip label={t.templates.days} value={String(template.dayCount)} />
+            <MetaChip label={t.templates.exercises} value={String(template.exerciseCount)} />
+            <MetaChip label={t.templates.updated} value={new Date(template.updatedAt).toLocaleString()} />
           </div>
         </article>
       ))}

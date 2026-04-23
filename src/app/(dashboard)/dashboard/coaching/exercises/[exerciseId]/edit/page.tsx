@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
 import { ExerciseGalleryManager } from "@/modules/coaching/components/exercise-gallery-manager";
 import { createExerciseMedia } from "@/modules/coaching/services/create-exercise-media";
@@ -18,6 +19,8 @@ type EditExercisePageProps = {
 };
 
 export default async function EditExercisePage({ params }: EditExercisePageProps) {
+  const t = await getText("exercises");
+  const common = await getText("common");
   const { exerciseId } = await params;
   const [{ data: exercise, error }, { data: galleryItems, error: galleryError }] = await Promise.all([
     getExerciseForPage(exerciseId),
@@ -31,7 +34,7 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
           href="/dashboard/coaching/exercises"
           style={{ color: "var(--muted)", fontWeight: 600 }}
         >
-          Back to exercise library
+          {t.backToExerciseLibrary}
         </Link>
         <p
           style={{
@@ -74,13 +77,13 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
         href="/dashboard/coaching/exercises"
         style={{ color: "var(--muted)", fontWeight: 600 }}
       >
-        Back to exercise library
+        {t.backToExerciseLibrary}
       </Link>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Edit exercise</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.editExercise}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update exercise metadata and coaching reference content.
+          {t.editDescription}
         </p>
       </header>
 
@@ -95,7 +98,7 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
         <ExerciseForm
           action={updateExercise.bind(null, exercise.id)}
           defaultValues={defaultValues}
-          submitLabel="Save changes"
+          submitLabel={common.saveChanges}
         />
       </section>
 

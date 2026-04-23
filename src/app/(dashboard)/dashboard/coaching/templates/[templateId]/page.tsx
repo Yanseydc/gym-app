@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getText } from "@/lib/i18n";
 import { RoutineTemplateApplyForm } from "@/modules/coaching/components/routine-template-apply-form";
 import { RoutineTemplateDetailCard } from "@/modules/coaching/components/routine-template-detail-card";
 import { applyRoutineTemplate } from "@/modules/coaching/services/apply-routine-template";
@@ -16,6 +17,8 @@ type RoutineTemplateDetailPageProps = {
 export default async function RoutineTemplateDetailPage({
   params,
 }: RoutineTemplateDetailPageProps) {
+  const t = await getText("coaching");
+  const common = await getText("common");
   const { templateId } = await params;
   const [
     { data: template, error },
@@ -29,7 +32,7 @@ export default async function RoutineTemplateDetailPage({
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <Link href="/dashboard/coaching/templates" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back
+          {common.back}
         </Link>
         <p
           style={{
@@ -53,7 +56,7 @@ export default async function RoutineTemplateDetailPage({
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <Link href="/dashboard/coaching/templates" style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to templates
+        {t.templates.backToTemplates}
       </Link>
 
       <section
@@ -65,11 +68,11 @@ export default async function RoutineTemplateDetailPage({
           border: "1px solid var(--border)",
           background: "var(--surface)",
         }}
-      >
+        >
         <div>
-          <h2 style={{ margin: "0 0 8px" }}>Apply template</h2>
+          <h2 style={{ margin: "0 0 8px" }}>{t.templates.applyTemplate}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Choose a client to create a new draft routine from this template.
+            {t.templates.applyDescription}
           </p>
         </div>
 

@@ -2,7 +2,9 @@
 
 import type { CSSProperties } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useMembershipPlanForm } from "@/modules/memberships/hooks/use-membership-plan-form";
 import type {
   MembershipPlanFormValues,
@@ -31,26 +33,29 @@ export function MembershipPlanForm({
   defaultValues = emptyValues,
   submitLabel,
 }: MembershipPlanFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("memberships", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = useMembershipPlanForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <div style={gridStyles}>
         <Field
-          label="Name"
+          label={t.fields.name}
           name="name"
           defaultValue={defaultValues.name}
           error={state.fieldErrors?.name}
         />
         <Field
-          label="Duration (days)"
+          label={t.fields.durationDays}
           name="durationInDays"
           type="number"
           defaultValue={String(defaultValues.durationInDays)}
           error={state.fieldErrors?.durationInDays}
         />
         <Field
-          label="Price"
+          label={t.fields.price}
           name="price"
           type="number"
           step="0.01"
@@ -60,7 +65,7 @@ export function MembershipPlanForm({
       </div>
 
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Description</span>
+        <span style={labelStyles}>{t.fields.description}</span>
         <textarea
           name="description"
           rows={4}
@@ -89,7 +94,7 @@ export function MembershipPlanForm({
           value="true"
           defaultChecked={defaultValues.isActive}
         />
-        <span style={labelStyles}>Plan is active</span>
+        <span style={labelStyles}>{t.fields.isActive}</span>
       </label>
 
       {state.error ? (
@@ -112,7 +117,7 @@ export function MembershipPlanForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? common.saving : submitLabel}
       </button>
     </form>
   );

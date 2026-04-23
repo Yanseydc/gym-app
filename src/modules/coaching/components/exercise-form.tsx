@@ -2,7 +2,9 @@
 
 import type { CSSProperties } from "react";
 
+import { getTextForLocale } from "@/lib/i18n";
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useExerciseForm } from "@/modules/coaching/hooks/use-exercise-form";
 import type { ExerciseFormValues, ExerciseMutationState } from "@/modules/coaching/types";
 
@@ -36,63 +38,66 @@ export function ExerciseForm({
   defaultValues = emptyValues,
   submitLabel,
 }: ExerciseFormProps) {
+  const { locale } = useAdminText();
+  const t = getTextForLocale("exercises", locale);
+  const common = getTextForLocale("common", locale);
   const { state, formAction, pending } = useExerciseForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <div style={gridStyles}>
         <Field
-          label="Name"
+          label={t.form.name}
           name="name"
           defaultValue={defaultValues.name}
           error={state.fieldErrors?.name}
         />
         <Field
-          label="Slug"
+          label={t.form.slug}
           name="slug"
           defaultValue={defaultValues.slug}
           error={state.fieldErrors?.slug}
         />
         <Field
-          label="Video URL"
+          label={t.form.videoUrl}
           name="videoUrl"
           type="url"
           defaultValue={defaultValues.videoUrl}
           error={state.fieldErrors?.videoUrl}
         />
         <Field
-          label="Thumbnail URL"
+          label={t.form.thumbnailUrl}
           name="thumbnailUrl"
           type="url"
           defaultValue={defaultValues.thumbnailUrl}
           error={state.fieldErrors?.thumbnailUrl}
         />
         <Field
-          label="Primary muscle"
+          label={t.form.primaryMuscle}
           name="primaryMuscle"
           defaultValue={defaultValues.primaryMuscle}
           error={state.fieldErrors?.primaryMuscle}
         />
         <Field
-          label="Secondary muscle"
+          label={t.form.secondaryMuscle}
           name="secondaryMuscle"
           defaultValue={defaultValues.secondaryMuscle}
           error={state.fieldErrors?.secondaryMuscle}
         />
         <Field
-          label="Equipment"
+          label={t.form.equipment}
           name="equipment"
           defaultValue={defaultValues.equipment}
           error={state.fieldErrors?.equipment}
         />
 
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={labelStyles}>Difficulty</span>
+          <span style={labelStyles}>{t.form.difficulty}</span>
           <select name="difficulty" defaultValue={defaultValues.difficulty} className={input}>
-            <option value="">Not specified</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="">{t.form.difficultyPlaceholder}</option>
+            <option value="beginner">{t.form.beginner}</option>
+            <option value="intermediate">{t.form.intermediate}</option>
+            <option value="advanced">{t.form.advanced}</option>
           </select>
           {state.fieldErrors?.difficulty ? (
             <FieldError message={state.fieldErrors.difficulty} />
@@ -101,28 +106,28 @@ export function ExerciseForm({
       </div>
 
       <TextAreaField
-        label="Description"
+        label={t.form.description}
         name="description"
         rows={4}
         defaultValue={defaultValues.description}
         error={state.fieldErrors?.description}
       />
       <TextAreaField
-        label="Instructions"
+        label={t.form.instructions}
         name="instructions"
         rows={5}
         defaultValue={defaultValues.instructions}
         error={state.fieldErrors?.instructions}
       />
       <TextAreaField
-        label="Coach tips"
+        label={t.form.coachTips}
         name="coachTips"
         rows={4}
         defaultValue={defaultValues.coachTips}
         error={state.fieldErrors?.coachTips}
       />
       <TextAreaField
-        label="Common mistakes"
+        label={t.form.commonMistakes}
         name="commonMistakes"
         rows={4}
         defaultValue={defaultValues.commonMistakes}
@@ -146,7 +151,7 @@ export function ExerciseForm({
           value="true"
           defaultChecked={defaultValues.isActive}
         />
-        <span style={labelStyles}>Exercise is active</span>
+        <span style={labelStyles}>{t.form.isActive}</span>
       </label>
 
       {state.error ? (
@@ -169,7 +174,7 @@ export function ExerciseForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? common.saving : submitLabel}
       </button>
     </form>
   );

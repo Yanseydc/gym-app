@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getText } from "@/lib/i18n";
 import { PaymentForm } from "@/modules/payments/components/payment-form";
 import { createPayment } from "@/modules/payments/services/create-payment";
 import { getPaymentFormOptionsForPage } from "@/modules/payments/services/payment-service";
@@ -11,6 +12,7 @@ type NewPaymentPageProps = {
 };
 
 export default async function NewPaymentPage({ searchParams }: NewPaymentPageProps) {
+  const t = await getText("payments");
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const { clients, memberships, error } = await getPaymentFormOptionsForPage();
   const selectedClientId = resolvedSearchParams.clientId ?? "";
@@ -19,14 +21,14 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
     <div style={{ display: "grid", gap: 24 }}>
       <div>
         <Link href="/dashboard/payments" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to payments
+          {t.backToPayments}
         </Link>
       </div>
 
       <header>
-        <h1 style={{ margin: "0 0 8px" }}>Register payment</h1>
+        <h1 style={{ margin: "0 0 8px" }}>{t.registerPayment}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Record a manual payment for a client and optionally link it to a membership.
+          {t.registerDescription}
         </p>
       </header>
 
@@ -56,7 +58,7 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
           action={createPayment.bind(null, null)}
           clients={clients}
           memberships={memberships}
-          submitLabel="Register payment"
+          submitLabel={t.registerPayment}
           defaultValues={{ clientId: selectedClientId }}
         />
       </section>
