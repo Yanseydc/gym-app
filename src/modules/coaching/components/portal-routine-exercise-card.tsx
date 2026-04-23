@@ -308,12 +308,15 @@ export function PortalRoutineExerciseCard({
                 <div style={{ display: "grid", gap: 12 }}>
                   <div
                     style={{
-                      position: "relative",
                       overflow: "hidden",
                       borderRadius: 22,
                       border: "1px solid var(--border)",
-                      background: "rgba(255, 255, 255, 0.03)",
-                      minHeight: 240,
+                      background:
+                        "linear-gradient(180deg, rgba(16, 20, 17, 0.96), rgba(24, 29, 25, 0.92))",
+                      height: "clamp(280px, 48vh, 420px)",
+                      display: "grid",
+                      placeItems: "center",
+                      padding: 16,
                     }}
                   >
                     <img
@@ -321,8 +324,8 @@ export function PortalRoutineExerciseCard({
                       alt={activeSlide.altText || exercise.exerciseName}
                       style={{
                         width: "100%",
-                        maxHeight: 420,
-                        objectFit: "cover",
+                        height: "100%",
+                        objectFit: "contain",
                         display: "block",
                       }}
                     />
