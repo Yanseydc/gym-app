@@ -323,9 +323,12 @@ export function PortalRoutineExerciseCard({
                       src={activeSlide.url}
                       alt={activeSlide.altText || exercise.exerciseName}
                       style={{
-                        width: "100%",
-                        height: "100%",
+                        width: "auto",
+                        height: "auto",
+                        maxWidth: "100%",
+                        maxHeight: "100%",
                         objectFit: "contain",
+                        objectPosition: "center",
                         display: "block",
                       }}
                     />
