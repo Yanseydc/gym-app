@@ -73,6 +73,7 @@ export function RoutineDayManager({
   dragHandleProps,
 }: RoutineDayManagerProps) {
   const { t } = useAdminText();
+  const [localDay, setLocalDay] = useState(day);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const [orderedExercises, setOrderedExercises] = useState(exerciseRows);
@@ -82,10 +83,14 @@ export function RoutineDayManager({
   const previousExerciseIdsRef = useRef(exerciseRows.map((exercise) => exercise.id));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const dayDefaults: RoutineDayFormValues = {
-    dayIndex: day.dayIndex,
-    title: day.title,
-    notes: day.notes ?? "",
+    dayIndex: localDay.dayIndex,
+    title: localDay.title,
+    notes: localDay.notes ?? "",
   };
+
+  useEffect(() => {
+    setLocalDay(day);
+  }, [day]);
 
   useEffect(() => {
     const incomingSignature = getExerciseOrderSignature(exerciseRows);
@@ -210,11 +215,11 @@ export function RoutineDayManager({
               textTransform: "uppercase",
             }}
           >
-            {t("coaching.routines.day", { index: day.dayIndex })}
+            {t("coaching.routines.day", { index: localDay.dayIndex })}
           </span>
-          <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1 }}>{day.title}</h3>
-          {day.notes ? (
-            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{day.notes}</p>
+          <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1 }}>{localDay.title}</h3>
+          {localDay.notes ? (
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{localDay.notes}</p>
           ) : null}
         </div>
 
@@ -266,6 +271,15 @@ export function RoutineDayManager({
             defaultValues={dayDefaults}
             hiddenFields={{ routineDayId: day.id }}
             onCancel={onToggleEdit}
+            onSuccess={(values) => {
+              setLocalDay((current) => ({
+                ...current,
+                dayIndex: values.dayIndex || current.dayIndex,
+                title: values.title,
+                notes: values.notes || null,
+              }));
+              onToggleEdit();
+            }}
             showDayIndex={false}
             submitLabel={t("coaching.routines.saveDay")}
           />

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 
 import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -15,6 +15,7 @@ type RoutineDayFormProps = {
   defaultValues?: Partial<RoutineDayFormValues>;
   hiddenFields?: Record<string, string>;
   onCancel?: (() => void) | undefined;
+  onSuccess?: ((values: RoutineDayFormValues) => void) | undefined;
   showDayIndex?: boolean;
   submitLabel?: string;
 };
@@ -24,12 +25,36 @@ export function RoutineDayForm({
   defaultValues,
   hiddenFields,
   onCancel,
+  onSuccess,
   showDayIndex = true,
   submitLabel = "Add day",
 }: RoutineDayFormProps) {
   const { t } = useAdminText();
-  const { state, formAction, pending } = useRoutineDayForm(action);
+  const submittedValuesRef = useRef<RoutineDayFormValues | null>(null);
+  const handledSuccessRef = useRef(false);
+  const wrappedAction = useMemo(
+    () => async (state: RoutineDayMutationState, formData: FormData) => {
+      submittedValuesRef.current = {
+        dayIndex: Number(formData.get("dayIndex") ?? defaultValues?.dayIndex ?? 0),
+        title: String(formData.get("title") ?? ""),
+        notes: String(formData.get("notes") ?? ""),
+      };
+      handledSuccessRef.current = false;
+      return action(state, formData);
+    },
+    [action, defaultValues?.dayIndex],
+  );
+  const { state, formAction, pending } = useRoutineDayForm(wrappedAction);
   const resolvedSubmitLabel = submitLabel ?? t("coaching.routines.addDayAction");
+
+  useEffect(() => {
+    if (!onSuccess || pending || handledSuccessRef.current || state.error || !submittedValuesRef.current) {
+      return;
+    }
+
+    handledSuccessRef.current = true;
+    onSuccess(submittedValuesRef.current);
+  }, [onSuccess, pending, state.error]);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>
