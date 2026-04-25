@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { buttonDanger, buttonGhost, buttonSecondary } from "@/lib/ui";
@@ -55,6 +56,9 @@ type RoutineDayManagerProps = {
     formData: FormData,
   ) => Promise<RoutineExerciseMutationState>;
   dragHandleProps?: DragHandleProps;
+  onDayDeleted: (dayId: string) => void;
+  onDayUpdated: (dayId: string, values: RoutineDayFormValues) => void;
+  onExercisesUpdated: (dayId: string, exercises: ClientRoutineExercise[]) => void;
 };
 
 export function RoutineDayManager({
@@ -71,14 +75,20 @@ export function RoutineDayManager({
   updateDayAction,
   updateExerciseAction,
   dragHandleProps,
+  onDayDeleted,
+  onDayUpdated,
+  onExercisesUpdated,
 }: RoutineDayManagerProps) {
   const { t } = useAdminText();
+  const router = useRouter();
   const [localDay, setLocalDay] = useState(day);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const [orderedExercises, setOrderedExercises] = useState(exerciseRows);
   const [highlightedExerciseId, setHighlightedExerciseId] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
+  const [dayActionError, setDayActionError] = useState<string | null>(null);
+  const [exerciseActionError, setExerciseActionError] = useState<string | null>(null);
   const pendingOrderSignatureRef = useRef<string | null>(null);
   const previousExerciseIdsRef = useRef(exerciseRows.map((exercise) => exercise.id));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -183,6 +193,78 @@ export function RoutineDayManager({
     });
   }
 
+  function highlightExercise(exerciseId: string) {
+    setHighlightedExerciseId(exerciseId);
+    window.setTimeout(() => {
+      setHighlightedExerciseId((current) => (current === exerciseId ? null : current));
+    }, 1800);
+  }
+
+  function updateExercisesLocally(
+    updater: (currentExercises: ClientRoutineExercise[]) => ClientRoutineExercise[],
+  ) {
+    setOrderedExercises((currentExercises) => {
+      const nextExercises = updater(currentExercises);
+      onExercisesUpdated(day.id, nextExercises);
+      return nextExercises;
+    });
+  }
+
+  function getExerciseName(exerciseId: string, fallback: string) {
+    return exerciseOptions.find((exercise) => exercise.id === exerciseId)?.label ?? fallback;
+  }
+
+  async function handleDeleteDay() {
+    const message = orderedExercises.length > 0
+      ? t("coaching.routines.deleteDayWithExercisesConfirm", { count: orderedExercises.length })
+      : t("coaching.routines.deleteDayConfirm");
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    setDayActionError(null);
+
+    try {
+      const formData = new FormData();
+      formData.set("routineDayId", day.id);
+      await deleteDayAction(formData);
+      onDayDeleted(day.id);
+
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch {
+      setDayActionError("No se pudo eliminar el día. Intenta nuevamente.");
+    }
+  }
+
+  async function handleDeleteExercise(exerciseId: string) {
+    if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
+      return;
+    }
+
+    setExerciseActionError(null);
+
+    try {
+      const formData = new FormData();
+      formData.set("routineExerciseId", exerciseId);
+      await deleteExerciseAction(formData);
+
+      updateExercisesLocally((currentExercises) =>
+        currentExercises
+          .filter((exercise) => exercise.id !== exerciseId)
+          .map((exercise, index) => ({
+            ...exercise,
+            sortOrder: index + 1,
+          })),
+      );
+      setEditingExerciseId((current) => (current === exerciseId ? null : current));
+    } catch {
+      setExerciseActionError("No se pudo eliminar el ejercicio. Intenta nuevamente.");
+    }
+  }
+
   return (
     <section
       style={{
@@ -232,28 +314,32 @@ export function RoutineDayManager({
           <button
             type="button"
             className={buttonSecondary}
-            onClick={onToggleEdit}
+            onClick={() => {
+              setDayActionError(null);
+              onToggleEdit();
+            }}
           >
             {isEditingDay ? t("coaching.routines.closeEditor") : t("common.edit")}
           </button>
-          <form
-            action={deleteDayAction}
-            onSubmit={(event) => {
-              const message = day.exercises.length > 0
-                ? t("coaching.routines.deleteDayWithExercisesConfirm", { count: day.exercises.length })
-                : t("coaching.routines.deleteDayConfirm");
-
-              if (!window.confirm(message)) {
-                event.preventDefault();
-              }
-            }}
-          >
-            <button type="submit" className={buttonDanger}>
-              {t("common.delete")}
-            </button>
-          </form>
+          <button type="button" className={buttonDanger} onClick={() => void handleDeleteDay()}>
+            {t("common.delete")}
+          </button>
         </div>
       </div>
+
+      {dayActionError ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--danger-bg)",
+            color: "var(--danger-fg)",
+          }}
+        >
+          {dayActionError}
+        </p>
+      ) : null}
 
       {isEditingDay ? (
         <div
@@ -278,6 +364,7 @@ export function RoutineDayManager({
                 title: values.title,
                 notes: values.notes || null,
               }));
+              onDayUpdated(day.id, values);
               onToggleEdit();
             }}
             showDayIndex={false}
@@ -300,6 +387,20 @@ export function RoutineDayManager({
             }}
           >
             {reorderError}
+          </p>
+        ) : null}
+
+        {exerciseActionError ? (
+          <p
+            style={{
+              margin: 0,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "var(--danger-bg)",
+              color: "var(--danger-fg)",
+            }}
+          >
+            {exerciseActionError}
           </p>
         ) : null}
 
@@ -361,25 +462,20 @@ export function RoutineDayManager({
                               <button
                                 type="button"
                                 className={buttonGhost}
-                                onClick={() =>
-                                  setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id))
-                                }
+                                onClick={() => {
+                                  setExerciseActionError(null);
+                                  setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id));
+                                }}
                               >
                                 {isEditingExercise ? t("coaching.routines.closeEditor") : t("common.edit")}
                               </button>
-                              <form
-                                action={deleteExerciseAction}
-                                onSubmit={(event) => {
-                                  if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
-                                    event.preventDefault();
-                                  }
-                                }}
+                              <button
+                                type="button"
+                                className={buttonDanger}
+                                onClick={() => void handleDeleteExercise(exercise.id)}
                               >
-                                <input type="hidden" name="routineExerciseId" defaultValue={exercise.id} />
-                                <button type="submit" className={buttonDanger}>
-                                  {t("common.delete")}
-                                </button>
-                              </form>
+                                {t("common.delete")}
+                              </button>
                             </div>
                           </div>
 
@@ -423,6 +519,27 @@ export function RoutineDayManager({
                                 exercises={exerciseOptions}
                                 hiddenFields={{ routineExerciseId: exercise.id }}
                                 onCancel={() => setEditingExerciseId(null)}
+                                onSuccess={(values) => {
+                                  setExerciseActionError(null);
+                                  updateExercisesLocally((currentExercises) =>
+                                    currentExercises.map((currentExercise) =>
+                                      currentExercise.id === exercise.id
+                                        ? {
+                                            ...currentExercise,
+                                            exerciseId: values.exerciseId,
+                                            exerciseName: getExerciseName(values.exerciseId, currentExercise.exerciseName),
+                                            sortOrder: values.sortOrder || currentExercise.sortOrder,
+                                            setsText: values.setsText,
+                                            repsText: values.repsText,
+                                            targetWeightText: values.targetWeightText || null,
+                                            restSeconds: values.restSeconds ? Number(values.restSeconds) : null,
+                                            notes: values.notes || null,
+                                          }
+                                        : currentExercise,
+                                    ),
+                                  );
+                                  setEditingExerciseId(null);
+                                }}
                                 showSortOrder={false}
                                 submitLabel={t("coaching.routines.saveExercise")}
                               />
@@ -491,6 +608,39 @@ export function RoutineDayManager({
               action={createExerciseAction}
               exercises={exerciseOptions}
               onCancel={() => setIsAddingExercise(false)}
+              onSuccess={(values) => {
+                const tempExerciseId = `temp-exercise-${Date.now()}`;
+
+                setExerciseActionError(null);
+                updateExercisesLocally((currentExercises) => [
+                  ...currentExercises,
+                  {
+                    id: tempExerciseId,
+                    exerciseId: values.exerciseId,
+                    exerciseName: getExerciseName(values.exerciseId, t("coaching.routines.exerciseLabel")),
+                    exerciseSlug: "",
+                    videoUrl: null,
+                    thumbnailUrl: null,
+                    instructions: null,
+                    coachTips: null,
+                    commonMistakes: null,
+                    media: [],
+                    sortOrder: currentExercises.length + 1,
+                    setsText: values.setsText,
+                    repsText: values.repsText,
+                    targetWeightText: values.targetWeightText || null,
+                    restSeconds: values.restSeconds ? Number(values.restSeconds) : null,
+                    notes: values.notes || null,
+                    createdAt: new Date().toISOString(),
+                  },
+                ]);
+                setIsAddingExercise(false);
+                highlightExercise(tempExerciseId);
+
+                startTransition(() => {
+                  router.refresh();
+                });
+              }}
               showSortOrder={false}
               submitLabel={t("coaching.routines.addExerciseAction")}
             />

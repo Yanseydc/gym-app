@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 
 import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -20,6 +20,7 @@ type RoutineExerciseFormProps = {
   exercises: RoutineExerciseOption[];
   hiddenFields?: Record<string, string>;
   onCancel?: (() => void) | undefined;
+  onSuccess?: ((values: RoutineExerciseFormValues) => void) | undefined;
   showSortOrder?: boolean;
   submitLabel?: string;
 };
@@ -30,12 +31,40 @@ export function RoutineExerciseForm({
   exercises,
   hiddenFields,
   onCancel,
+  onSuccess,
   showSortOrder = true,
   submitLabel = "Add exercise",
 }: RoutineExerciseFormProps) {
   const { t } = useAdminText();
-  const { state, formAction, pending } = useRoutineExerciseForm(action);
+  const submittedValuesRef = useRef<RoutineExerciseFormValues | null>(null);
+  const handledSuccessRef = useRef(false);
+  const wrappedAction = useMemo(
+    () => async (state: RoutineExerciseMutationState, formData: FormData) => {
+      submittedValuesRef.current = {
+        exerciseId: String(formData.get("exerciseId") ?? ""),
+        sortOrder: Number(formData.get("sortOrder") ?? defaultValues?.sortOrder ?? 0),
+        setsText: String(formData.get("setsText") ?? ""),
+        repsText: String(formData.get("repsText") ?? ""),
+        targetWeightText: String(formData.get("targetWeightText") ?? ""),
+        restSeconds: String(formData.get("restSeconds") ?? ""),
+        notes: String(formData.get("notes") ?? ""),
+      };
+      handledSuccessRef.current = false;
+      return action(state, formData);
+    },
+    [action, defaultValues?.sortOrder],
+  );
+  const { state, formAction, pending } = useRoutineExerciseForm(wrappedAction);
   const resolvedSubmitLabel = submitLabel ?? t("coaching.routines.addExerciseAction");
+
+  useEffect(() => {
+    if (!onSuccess || pending || handledSuccessRef.current || state.error || !submittedValuesRef.current) {
+      return;
+    }
+
+    handledSuccessRef.current = true;
+    onSuccess(submittedValuesRef.current);
+  }, [onSuccess, pending, state.error]);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>

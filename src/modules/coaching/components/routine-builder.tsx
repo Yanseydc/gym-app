@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { buttonGhost, buttonSecondary } from "@/lib/ui";
@@ -45,6 +46,7 @@ export function RoutineBuilder({
   routineId,
 }: RoutineBuilderProps) {
   const { t } = useAdminText();
+  const router = useRouter();
   const [orderedDays, setOrderedDays] = useState(days);
   const [activeDayEditorId, setActiveDayEditorId] = useState<string | null>(null);
   const [isAddingDay, setIsAddingDay] = useState(false);
@@ -142,6 +144,40 @@ export function RoutineBuilder({
     });
   }
 
+  function highlightDay(dayId: string) {
+    setHighlightedDayId(dayId);
+    window.setTimeout(() => {
+      setHighlightedDayId((current) => (current === dayId ? null : current));
+    }, 1800);
+  }
+
+  function syncDayUpdate(dayId: string, updater: (day: ClientRoutineDay) => ClientRoutineDay) {
+    setOrderedDays((currentDays) =>
+      currentDays.map((day) => (day.id === dayId ? updater(day) : day)),
+    );
+  }
+
+  function handleDayCreated(title: string, notes: string) {
+    const tempDayId = `temp-day-${Date.now()}`;
+    setOrderedDays((currentDays) => [
+      ...currentDays,
+      {
+        id: tempDayId,
+        dayIndex: currentDays.length + 1,
+        title,
+        notes: notes || null,
+        createdAt: new Date().toISOString(),
+        exercises: [],
+      },
+    ]);
+    setIsAddingDay(false);
+    highlightDay(tempDayId);
+
+    startTransition(() => {
+      router.refresh();
+    });
+  }
+
   return (
     <div style={{ display: "grid", gap: 20 }}>
       {reorderError ? (
@@ -181,6 +217,28 @@ export function RoutineBuilder({
                       exerciseRows={day.exercises}
                       updateExerciseAction={updateRoutineExercise.bind(null, routineId)}
                       deleteExerciseAction={deleteRoutineExercise.bind(null, routineId)}
+                      onDayDeleted={(dayId) => {
+                        setOrderedDays((currentDays) =>
+                          currentDays
+                            .filter((day) => day.id !== dayId)
+                            .map((currentDay, index) => ({ ...currentDay, dayIndex: index + 1 })),
+                        );
+                        setActiveDayEditorId((current) => (current === dayId ? null : current));
+                      }}
+                      onDayUpdated={(dayId, values) => {
+                        syncDayUpdate(dayId, (currentDay) => ({
+                          ...currentDay,
+                          dayIndex: values.dayIndex || currentDay.dayIndex,
+                          title: values.title,
+                          notes: values.notes || null,
+                        }));
+                      }}
+                      onExercisesUpdated={(dayId, exercises) => {
+                        syncDayUpdate(dayId, (currentDay) => ({
+                          ...currentDay,
+                          exercises,
+                        }));
+                      }}
                     />
                   )}
                 </SortableDayItem>
@@ -223,6 +281,9 @@ export function RoutineBuilder({
             <RoutineDayForm
               action={createRoutineDay.bind(null, routineId)}
               onCancel={() => setIsAddingDay(false)}
+              onSuccess={(values) => {
+                handleDayCreated(values.title, values.notes);
+              }}
               showDayIndex={false}
               submitLabel={t("coaching.routines.addDayAction")}
             />
