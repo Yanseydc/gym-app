@@ -92,7 +92,7 @@ export async function createRoutineExercise(
   }
 
   const supabase = await createSupabaseClient();
-  const { error } = await createRoutineExerciseRecord(
+  const { data, error } = await createRoutineExerciseRecord(
     supabase,
     routineDayId,
     toRoutineExerciseFormValues(parsed.data),
@@ -110,5 +110,6 @@ export async function createRoutineExercise(
   return {
     error: undefined,
     fieldErrors: {},
+    routineExerciseId: data?.id ? String(data.id) : undefined,
   };
 }

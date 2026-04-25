@@ -15,7 +15,7 @@ type RoutineDayFormProps = {
   defaultValues?: Partial<RoutineDayFormValues>;
   hiddenFields?: Record<string, string>;
   onCancel?: (() => void) | undefined;
-  onSuccess?: ((values: RoutineDayFormValues) => void) | undefined;
+  onSuccess?: ((values: RoutineDayFormValues, result: RoutineDayMutationState) => void) | undefined;
   showDayIndex?: boolean;
   submitLabel?: string;
 };
@@ -53,8 +53,8 @@ export function RoutineDayForm({
     }
 
     handledSuccessRef.current = true;
-    onSuccess(submittedValuesRef.current);
-  }, [onSuccess, pending, state.error]);
+    onSuccess(submittedValuesRef.current, state);
+  }, [onSuccess, pending, state]);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 16 }}>

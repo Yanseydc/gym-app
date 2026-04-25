@@ -80,7 +80,7 @@ export async function createRoutineDay(
   }
 
   const supabase = await createSupabaseClient();
-  const { error } = await createRoutineDayRecord(
+  const { data, error } = await createRoutineDayRecord(
     supabase,
     routineId,
     toRoutineDayFormValues(parsed.data),
@@ -98,5 +98,6 @@ export async function createRoutineDay(
   return {
     error: undefined,
     fieldErrors: {},
+    routineDayId: data?.id ? String(data.id) : undefined,
   };
 }

@@ -116,9 +116,11 @@ export type RoutineMutationState = {
 export type RoutineDayMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof RoutineDayFormValues, string>>;
+  routineDayId?: string;
 };
 
 export type RoutineExerciseMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof RoutineExerciseFormValues, string>>;
+  routineExerciseId?: string;
 };

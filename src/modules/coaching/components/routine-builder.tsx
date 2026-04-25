@@ -94,6 +94,16 @@ export function RoutineBuilder({
   }, [activeDayEditorId, days]);
 
   async function persistDayOrder(nextDays: ClientRoutineDay[], previousDays: ClientRoutineDay[]) {
+    if (nextDays.some((day) => !isPersistedId(day.id))) {
+      pendingOrderSignatureRef.current = null;
+      setOrderedDays(previousDays);
+      setReorderError("La rutina todavía se está sincronizando. Intenta nuevamente en un momento.");
+      startTransition(() => {
+        router.refresh();
+      });
+      return;
+    }
+
     const changedDays = nextDays.filter((day, index) => previousDays[index]?.id !== day.id);
 
     if (changedDays.length === 0) {
@@ -144,6 +154,10 @@ export function RoutineBuilder({
     });
   }
 
+  function isPersistedId(id: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  }
+
   function highlightDay(dayId: string) {
     setHighlightedDayId(dayId);
     window.setTimeout(() => {
@@ -176,6 +190,16 @@ export function RoutineBuilder({
     startTransition(() => {
       router.refresh();
     });
+
+    return tempDayId;
+  }
+
+  function replaceTempDayId(tempDayId: string, persistedDayId: string) {
+    setOrderedDays((currentDays) =>
+      currentDays.map((day) => (day.id === tempDayId ? { ...day, id: persistedDayId } : day)),
+    );
+    setHighlightedDayId((current) => (current === tempDayId ? persistedDayId : current));
+    setActiveDayEditorId((current) => (current === tempDayId ? persistedDayId : current));
   }
 
   return (
@@ -281,8 +305,11 @@ export function RoutineBuilder({
             <RoutineDayForm
               action={createRoutineDay.bind(null, routineId)}
               onCancel={() => setIsAddingDay(false)}
-              onSuccess={(values) => {
-                handleDayCreated(values.title, values.notes);
+              onSuccess={(values, result) => {
+                const tempDayId = handleDayCreated(values.title, values.notes);
+                if (result.routineDayId) {
+                  replaceTempDayId(tempDayId, result.routineDayId);
+                }
               }}
               showDayIndex={false}
               submitLabel={t("coaching.routines.addDayAction")}

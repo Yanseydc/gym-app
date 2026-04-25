@@ -97,6 +97,7 @@ export function RoutineDayManager({
     title: localDay.title,
     notes: localDay.notes ?? "",
   };
+  const canMutateDay = isPersistedId(day.id);
 
   useEffect(() => {
     setLocalDay(day);
@@ -140,6 +141,16 @@ export function RoutineDayManager({
     nextExercises: ClientRoutineExercise[],
     previousExercises: ClientRoutineExercise[],
   ) {
+    if (nextExercises.some((exercise) => !isPersistedId(exercise.id))) {
+      pendingOrderSignatureRef.current = null;
+      setOrderedExercises(previousExercises);
+      setReorderError("Los ejercicios todavía se están sincronizando. Intenta nuevamente en un momento.");
+      startTransition(() => {
+        router.refresh();
+      });
+      return;
+    }
+
     const changedExercises = nextExercises.filter(
       (exercise, index) => previousExercises[index]?.id !== exercise.id,
     );
@@ -193,6 +204,10 @@ export function RoutineDayManager({
     });
   }
 
+  function isPersistedId(id: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  }
+
   function highlightExercise(exerciseId: string) {
     setHighlightedExerciseId(exerciseId);
     window.setTimeout(() => {
@@ -215,6 +230,14 @@ export function RoutineDayManager({
   }
 
   async function handleDeleteDay() {
+    if (!isPersistedId(day.id)) {
+      setDayActionError("El día todavía se está sincronizando. Intenta nuevamente en un momento.");
+      startTransition(() => {
+        router.refresh();
+      });
+      return;
+    }
+
     const message = orderedExercises.length > 0
       ? t("coaching.routines.deleteDayWithExercisesConfirm", { count: orderedExercises.length })
       : t("coaching.routines.deleteDayConfirm");
@@ -240,6 +263,14 @@ export function RoutineDayManager({
   }
 
   async function handleDeleteExercise(exerciseId: string) {
+    if (!isPersistedId(exerciseId)) {
+      setExerciseActionError("El ejercicio todavía se está sincronizando. Intenta nuevamente en un momento.");
+      startTransition(() => {
+        router.refresh();
+      });
+      return;
+    }
+
     if (!window.confirm(t("coaching.routines.deleteExerciseConfirm"))) {
       return;
     }
@@ -314,14 +345,22 @@ export function RoutineDayManager({
           <button
             type="button"
             className={buttonSecondary}
+            disabled={!canMutateDay}
             onClick={() => {
+              if (!canMutateDay) {
+                setDayActionError("El día todavía se está sincronizando. Intenta nuevamente en un momento.");
+                startTransition(() => {
+                  router.refresh();
+                });
+                return;
+              }
               setDayActionError(null);
               onToggleEdit();
             }}
           >
             {isEditingDay ? t("coaching.routines.closeEditor") : t("common.edit")}
           </button>
-          <button type="button" className={buttonDanger} onClick={() => void handleDeleteDay()}>
+          <button type="button" className={buttonDanger} disabled={!canMutateDay} onClick={() => void handleDeleteDay()}>
             {t("common.delete")}
           </button>
         </div>
@@ -424,6 +463,7 @@ export function RoutineDayManager({
                     notes: exercise.notes ?? "",
                   };
                   const isEditingExercise = editingExerciseId === exercise.id;
+                  const canMutateExercise = isPersistedId(exercise.id);
 
                   return (
                     <SortableExerciseItem key={exercise.id} exerciseId={exercise.id}>
@@ -462,7 +502,15 @@ export function RoutineDayManager({
                               <button
                                 type="button"
                                 className={buttonGhost}
+                                disabled={!canMutateExercise}
                                 onClick={() => {
+                                  if (!canMutateExercise) {
+                                    setExerciseActionError("El ejercicio todavía se está sincronizando. Intenta nuevamente en un momento.");
+                                    startTransition(() => {
+                                      router.refresh();
+                                    });
+                                    return;
+                                  }
                                   setExerciseActionError(null);
                                   setEditingExerciseId((current) => (current === exercise.id ? null : exercise.id));
                                 }}
@@ -472,6 +520,7 @@ export function RoutineDayManager({
                               <button
                                 type="button"
                                 className={buttonDanger}
+                                disabled={!canMutateExercise}
                                 onClick={() => void handleDeleteExercise(exercise.id)}
                               >
                                 {t("common.delete")}
@@ -608,39 +657,52 @@ export function RoutineDayManager({
               action={createExerciseAction}
               exercises={exerciseOptions}
               onCancel={() => setIsAddingExercise(false)}
-              onSuccess={(values) => {
-                const tempExerciseId = `temp-exercise-${Date.now()}`;
+                                onSuccess={(values, result) => {
+                                  const tempExerciseId = `temp-exercise-${Date.now()}`;
+                                  const persistedExerciseId = result.routineExerciseId;
 
-                setExerciseActionError(null);
-                updateExercisesLocally((currentExercises) => [
-                  ...currentExercises,
-                  {
-                    id: tempExerciseId,
-                    exerciseId: values.exerciseId,
-                    exerciseName: getExerciseName(values.exerciseId, t("coaching.routines.exerciseLabel")),
-                    exerciseSlug: "",
-                    videoUrl: null,
-                    thumbnailUrl: null,
-                    instructions: null,
-                    coachTips: null,
-                    commonMistakes: null,
-                    media: [],
-                    sortOrder: currentExercises.length + 1,
-                    setsText: values.setsText,
-                    repsText: values.repsText,
-                    targetWeightText: values.targetWeightText || null,
-                    restSeconds: values.restSeconds ? Number(values.restSeconds) : null,
-                    notes: values.notes || null,
-                    createdAt: new Date().toISOString(),
-                  },
-                ]);
-                setIsAddingExercise(false);
-                highlightExercise(tempExerciseId);
+                                  setExerciseActionError(null);
+                                  updateExercisesLocally((currentExercises) => [
+                                    ...currentExercises,
+                                    {
+                                      id: tempExerciseId,
+                                      exerciseId: values.exerciseId,
+                                      exerciseName: getExerciseName(values.exerciseId, t("coaching.routines.exerciseLabel")),
+                                      exerciseSlug: "",
+                                      videoUrl: null,
+                                      thumbnailUrl: null,
+                                      instructions: null,
+                                      coachTips: null,
+                                      commonMistakes: null,
+                                      media: [],
+                                      sortOrder: currentExercises.length + 1,
+                                      setsText: values.setsText,
+                                      repsText: values.repsText,
+                                      targetWeightText: values.targetWeightText || null,
+                                      restSeconds: values.restSeconds ? Number(values.restSeconds) : null,
+                                      notes: values.notes || null,
+                                      createdAt: new Date().toISOString(),
+                                    },
+                                  ]);
+                                  if (persistedExerciseId) {
+                                    updateExercisesLocally((currentExercises) =>
+                                      currentExercises.map((currentExercise) =>
+                                        currentExercise.id === tempExerciseId
+                                          ? {
+                                              ...currentExercise,
+                                              id: persistedExerciseId,
+                                            }
+                                          : currentExercise,
+                                      ),
+                                    );
+                                  }
+                                  setIsAddingExercise(false);
+                                  highlightExercise(persistedExerciseId ?? tempExerciseId);
 
-                startTransition(() => {
-                  router.refresh();
-                });
-              }}
+                                  startTransition(() => {
+                                    router.refresh();
+                                  });
+                                }}
               showSortOrder={false}
               submitLabel={t("coaching.routines.addExerciseAction")}
             />
