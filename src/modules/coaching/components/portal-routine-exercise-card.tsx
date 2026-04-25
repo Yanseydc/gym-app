@@ -39,8 +39,9 @@ export function PortalRoutineExerciseCard({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const slides: ExerciseSlide[] = exercise.media.length > 0
-    ? exercise.media.map((media) => ({
+  const media = exercise.media ?? [];
+  const slides: ExerciseSlide[] = media.length > 0
+    ? media.map((media) => ({
         id: media.id,
         url: media.url,
         altText: media.altText,

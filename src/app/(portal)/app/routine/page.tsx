@@ -75,8 +75,6 @@ export default async function PortalRoutinePage() {
           days={routine.days}
           startsOn={routine.startsOn}
           labels={{
-            dayLabel: t.routine.dayLabel,
-            exerciseCount: t.routine.exerciseCount,
             noExercises: t.routine.noExercises,
             noDayNotes: t.routine.noDayNotes,
             sets: t.routine.sets,

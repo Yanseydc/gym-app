@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { getPortalText } from "@/lib/i18n/portal";
 import { PortalRoutineExerciseCard } from "@/modules/coaching/components/portal-routine-exercise-card";
 import type { ClientRoutineDay } from "@/modules/coaching/types";
 
@@ -26,8 +27,6 @@ type PortalRoutineDayAccordionProps = {
     noExtraDetails: string;
     notAvailable: string;
     secondsShort: string;
-    dayLabel: (index: number) => string;
-    exerciseCount: (count: number) => string;
   };
 };
 
@@ -36,6 +35,7 @@ export function PortalRoutineDayAccordion({
   startsOn,
   labels,
 }: PortalRoutineDayAccordionProps) {
+  const t = getPortalText();
   const defaultOpenDayId = useMemo(() => getDefaultOpenDayId(days, startsOn), [days, startsOn]);
   const [openDayId, setOpenDayId] = useState<string | null>(defaultOpenDayId);
 
@@ -43,10 +43,27 @@ export function PortalRoutineDayAccordion({
     setOpenDayId(defaultOpenDayId);
   }, [defaultOpenDayId]);
 
+  if (days.length === 0) {
+    return (
+      <article
+        style={{
+          padding: 22,
+          borderRadius: 24,
+          border: "1px dashed var(--border)",
+          background: "linear-gradient(180deg, rgba(26, 31, 27, 0.98), rgba(20, 24, 21, 0.94))",
+          color: "var(--muted)",
+        }}
+      >
+        {labels.noExercises}
+      </article>
+    );
+  }
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
       {days.map((day) => {
         const isOpen = openDayId === day.id;
+        const exercises = day.exercises ?? [];
 
         return (
           <article
@@ -105,7 +122,7 @@ export function PortalRoutineDayAccordion({
                       textTransform: "uppercase",
                     }}
                   >
-                    {labels.dayLabel(day.dayIndex)}
+                    {t.routine.dayLabel(day.dayIndex)}
                   </span>
                   <span
                     style={{
@@ -114,7 +131,7 @@ export function PortalRoutineDayAccordion({
                       fontWeight: 600,
                     }}
                   >
-                    {labels.exerciseCount(day.exercises.length)}
+                    {t.routine.exerciseCount(exercises.length)}
                   </span>
                 </div>
 
@@ -172,11 +189,11 @@ export function PortalRoutineDayAccordion({
                   </p>
                 )}
 
-                {day.exercises.length === 0 ? (
+                {exercises.length === 0 ? (
                   <p style={{ margin: 0, color: "var(--muted)" }}>{labels.noExercises}</p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
-                    {day.exercises.map((exercise) => (
+                    {exercises.map((exercise) => (
                       <PortalRoutineExerciseCard
                         key={exercise.id}
                         exercise={exercise}
@@ -217,6 +234,11 @@ function getDefaultOpenDayId(days: ClientRoutineDay[], startsOn: string | null) 
 
   if (startsOn) {
     const startDate = new Date(`${startsOn}T00:00:00`);
+
+    if (!Number.isFinite(startDate.getTime())) {
+      return days[0]?.id ?? null;
+    }
+
     const today = new Date();
     const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const daysFromStart = Math.floor((localToday.getTime() - startDate.getTime()) / 86_400_000);
