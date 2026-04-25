@@ -1,5 +1,5 @@
 import { getPortalText } from "@/lib/i18n/portal";
-import { PortalRoutineExerciseCard } from "@/modules/coaching/components/portal-routine-exercise-card";
+import { PortalRoutineDayAccordion } from "@/modules/coaching/components/portal-routine-day-accordion";
 import { getLinkedClientForCurrentUser } from "@/modules/portal/services/portal-service";
 import { getRoutineForPage, getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
 
@@ -71,83 +71,31 @@ export default async function PortalRoutinePage() {
           {t.routine.empty}
         </article>
       ) : (
-        <div style={{ display: "grid", gap: 16 }}>
-          {routine.days.map((day) => (
-            <article
-              key={day.id}
-              style={{
-                display: "grid",
-                gap: 16,
-                padding: 18,
-                borderRadius: 22,
-                border: "1px solid var(--border)",
-                background: "linear-gradient(180deg, rgba(27, 32, 28, 0.98), rgba(21, 26, 23, 0.95))",
-                boxShadow: "0 14px 28px rgba(0, 0, 0, 0.12)",
-              }}
-            >
-              <div>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    background: "rgba(209, 108, 67, 0.16)",
-                    color: "var(--accent-strong)",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Dia {day.dayIndex}
-                </span>
-                <strong style={{ display: "block", fontSize: 20, marginTop: 10 }}>
-                  {day.title}
-                </strong>
-                {day.notes ? (
-                  <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
-                    {day.notes}
-                  </p>
-                ) : (
-                  <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>
-                    {t.routine.noDayNotes}
-                  </p>
-                )}
-              </div>
-
-              {day.exercises.length === 0 ? (
-                <p style={{ margin: 0, color: "var(--muted)" }}>{t.routine.noExercises}</p>
-              ) : (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {day.exercises.map((exercise) => (
-                    <PortalRoutineExerciseCard
-                      key={exercise.id}
-                      exercise={exercise}
-                      labels={{
-                        sets: t.routine.sets,
-                        reps: t.routine.reps,
-                        weight: t.routine.weight,
-                        rest: t.routine.rest,
-                        exerciseNotes: t.routine.exerciseNotes,
-                        viewVideo: t.routine.viewVideo,
-                        details: t.routine.details,
-                        closeDetails: t.routine.closeDetails,
-                        mediaGallery: t.routine.mediaGallery,
-                        instructions: t.routine.instructions,
-                        coachTips: t.routine.coachTips,
-                        commonMistakes: t.routine.commonMistakes,
-                        noExtraDetails: t.routine.noExtraDetails,
-                        notAvailable: t.routine.notAvailable,
-                        secondsShort: t.routine.secondsShort,
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
+        <PortalRoutineDayAccordion
+          days={routine.days}
+          startsOn={routine.startsOn}
+          labels={{
+            dayLabel: t.routine.dayLabel,
+            exerciseCount: t.routine.exerciseCount,
+            noExercises: t.routine.noExercises,
+            noDayNotes: t.routine.noDayNotes,
+            sets: t.routine.sets,
+            reps: t.routine.reps,
+            weight: t.routine.weight,
+            rest: t.routine.rest,
+            exerciseNotes: t.routine.exerciseNotes,
+            viewVideo: t.routine.viewVideo,
+            details: t.routine.details,
+            closeDetails: t.routine.closeDetails,
+            mediaGallery: t.routine.mediaGallery,
+            instructions: t.routine.instructions,
+            coachTips: t.routine.coachTips,
+            commonMistakes: t.routine.commonMistakes,
+            noExtraDetails: t.routine.noExtraDetails,
+            notAvailable: t.routine.notAvailable,
+            secondsShort: t.routine.secondsShort,
+          }}
+        />
       )}
     </div>
   );

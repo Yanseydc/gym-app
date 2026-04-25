@@ -36,6 +36,9 @@ const portalMessages = {
     description: "Este es tu plan de entrenamiento activo actual.",
     empty: "Todavía no tienes una rutina activa asignada.",
     dayTitle: "Día {index}: {title}",
+    dayLabel: "Día {index}",
+    exerciseCountOne: "{count} ejercicio",
+    exerciseCountOther: "{count} ejercicios",
     noExercises: "Todavía no hay ejercicios agregados.",
     sets: "Series",
     reps: "Repeticiones",
@@ -121,6 +124,15 @@ export function getPortalText() {
       ...portalMessages.routine,
       dayTitle: (index: number, title: string) =>
         interpolate(portalMessages.routine.dayTitle, { index, title }),
+      dayLabel: (index: number) =>
+        interpolate(portalMessages.routine.dayLabel, { index }),
+      exerciseCount: (count: number) =>
+        interpolate(
+          count === 1
+            ? portalMessages.routine.exerciseCountOne
+            : portalMessages.routine.exerciseCountOther,
+          { count },
+        ),
     },
     progress: {
       ...portalMessages.progress,
