@@ -374,25 +374,6 @@ main {
   border-color: rgba(88, 179, 124, 0.22);
 }
 
-.portal-workout-sticky-action {
-  position: sticky;
-  bottom: 14px;
-  z-index: 20;
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: rgba(18, 22, 19, 0.82);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
-}
-
-.portal-workout-sticky-action .ui-button {
-  width: 100%;
-  min-height: 52px;
-}
-
 .portal-two-column {
   display: grid;
   gap: 18px;

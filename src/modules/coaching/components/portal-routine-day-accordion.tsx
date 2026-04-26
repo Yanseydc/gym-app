@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getPortalText } from "@/lib/i18n/portal";
-import { buttonPrimary } from "@/lib/ui";
 import { PortalRoutineExerciseCard } from "@/modules/coaching/components/portal-routine-exercise-card";
 import type { ClientRoutineDay } from "@/modules/coaching/types";
 
@@ -46,7 +45,6 @@ export function PortalRoutineDayAccordion({
   const defaultOpenDayId = firstTrainingDayId ?? days[0]?.id ?? null;
   const [openDayId, setOpenDayId] = useState<string | null>(defaultOpenDayId);
   const [completedExerciseIds, setCompletedExerciseIds] = useState<Set<string>>(() => new Set());
-  const firstExerciseRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setOpenDayId(defaultOpenDayId);
@@ -66,13 +64,6 @@ export function PortalRoutineDayAccordion({
     });
   }
 
-  function handleStartWorkout() {
-    setOpenDayId(firstTrainingDayId ?? defaultOpenDayId);
-    window.setTimeout(() => {
-      firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 80);
-  }
-
   if (days.length === 0) {
     return (
       <article
@@ -90,7 +81,7 @@ export function PortalRoutineDayAccordion({
   }
 
   return (
-    <div style={{ display: "grid", gap: 16, paddingBottom: 92 }}>
+    <div style={{ display: "grid", gap: 16 }}>
       {days.map((day) => {
         const isOpen = openDayId === day.id;
         const isToday = todayDayId === day.id;
@@ -264,14 +255,7 @@ export function PortalRoutineDayAccordion({
                   ) : (
                     <div style={{ display: "grid", gap: 12 }}>
                       {exercises.map((exercise) => (
-                        <div
-                          key={exercise.id}
-                          ref={
-                            day.id === firstTrainingDayId && exercise === exercises[0]
-                              ? firstExerciseRef
-                              : undefined
-                          }
-                        >
+                        <div key={exercise.id}>
                           <PortalRoutineExerciseCard
                             exercise={exercise}
                             isCompleted={completedExerciseIds.has(exercise.id)}
@@ -307,17 +291,6 @@ export function PortalRoutineDayAccordion({
           </article>
         );
       })}
-
-      <div className="portal-workout-sticky-action">
-        <div style={{ display: "grid", gap: 8, width: "min(100%, 420px)" }}>
-          <button type="button" className={buttonPrimary} onClick={handleStartWorkout}>
-            {t.routine.startWorkout}
-          </button>
-          <span style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.35, textAlign: "center" }}>
-            {labels.sessionProgressNotice}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
