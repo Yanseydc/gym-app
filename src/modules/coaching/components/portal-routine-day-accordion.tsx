@@ -31,6 +31,7 @@ type PortalRoutineDayAccordionProps = {
     completed: string;
     markComplete: string;
     markIncomplete: string;
+    sessionProgressNotice: string;
   };
 };
 
@@ -41,7 +42,8 @@ export function PortalRoutineDayAccordion({
 }: PortalRoutineDayAccordionProps) {
   const t = getPortalText();
   const todayDayId = useMemo(() => getDefaultOpenDayId(days, startsOn), [days, startsOn]);
-  const defaultOpenDayId = todayDayId ?? days[0]?.id ?? null;
+  const firstTrainingDayId = useMemo(() => getFirstTrainingDayId(days), [days]);
+  const defaultOpenDayId = firstTrainingDayId ?? days[0]?.id ?? null;
   const [openDayId, setOpenDayId] = useState<string | null>(defaultOpenDayId);
   const [completedExerciseIds, setCompletedExerciseIds] = useState<Set<string>>(() => new Set());
   const firstExerciseRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +67,7 @@ export function PortalRoutineDayAccordion({
   }
 
   function handleStartWorkout() {
-    setOpenDayId(defaultOpenDayId);
+    setOpenDayId(firstTrainingDayId ?? defaultOpenDayId);
     window.setTimeout(() => {
       firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 80);
@@ -199,6 +201,11 @@ export function PortalRoutineDayAccordion({
                   <span style={{ color: "var(--muted)", fontSize: 14, fontWeight: 700 }}>
                     {t.routine.progress(completedCount, exercises.length)}
                   </span>
+                  {isOpen ? (
+                    <span style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.45 }}>
+                      {labels.sessionProgressNotice}
+                    </span>
+                  ) : null}
                   {!isOpen && day.notes ? (
                     <p
                       style={{
@@ -260,7 +267,7 @@ export function PortalRoutineDayAccordion({
                         <div
                           key={exercise.id}
                           ref={
-                            day.id === defaultOpenDayId && exercise === exercises[0]
+                            day.id === firstTrainingDayId && exercise === exercises[0]
                               ? firstExerciseRef
                               : undefined
                           }
@@ -302,12 +309,21 @@ export function PortalRoutineDayAccordion({
       })}
 
       <div className="portal-workout-sticky-action">
-        <button type="button" className={buttonPrimary} onClick={handleStartWorkout}>
-          {t.routine.startWorkout}
-        </button>
+        <div style={{ display: "grid", gap: 8, width: "min(100%, 420px)" }}>
+          <button type="button" className={buttonPrimary} onClick={handleStartWorkout}>
+            {t.routine.startWorkout}
+          </button>
+          <span style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.35, textAlign: "center" }}>
+            {labels.sessionProgressNotice}
+          </span>
+        </div>
       </div>
     </div>
   );
+}
+
+function getFirstTrainingDayId(days: ClientRoutineDay[]) {
+  return days.find((day) => (day.exercises ?? []).length > 0)?.id ?? null;
 }
 
 function getDefaultOpenDayId(days: ClientRoutineDay[], startsOn: string | null) {

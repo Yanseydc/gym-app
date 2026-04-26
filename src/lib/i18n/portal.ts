@@ -51,6 +51,7 @@ const portalMessages = {
     markComplete: "Marcar ejercicio como completado",
     markIncomplete: "Marcar ejercicio como pendiente",
     progress: "{completed}/{total} ejercicios completados",
+    sessionProgressNotice: "El progreso se guarda solo durante esta sesión.",
     noDayNotes: "Sigue este bloque tal como aparece en tu plan.",
     exerciseNotes: "Indicaciones",
     viewVideo: "Ver video",

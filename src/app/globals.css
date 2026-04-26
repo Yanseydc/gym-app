@@ -389,7 +389,7 @@ main {
 }
 
 .portal-workout-sticky-action .ui-button {
-  width: min(100%, 420px);
+  width: 100%;
   min-height: 52px;
 }
 

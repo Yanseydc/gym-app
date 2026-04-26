@@ -144,6 +144,7 @@ export function PortalRoutineExerciseCard({
         >
           <label
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -161,6 +162,8 @@ export function PortalRoutineExerciseCard({
               type="checkbox"
               checked={isCompleted}
               aria-label={isCompleted ? labels.markIncomplete : labels.markComplete}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
               onChange={onToggleCompleted}
               style={{
                 width: 18,

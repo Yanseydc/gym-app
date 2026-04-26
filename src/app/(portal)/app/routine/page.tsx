@@ -95,6 +95,7 @@ export default async function PortalRoutinePage() {
             completed: t.routine.completed,
             markComplete: t.routine.markComplete,
             markIncomplete: t.routine.markIncomplete,
+            sessionProgressNotice: t.routine.sessionProgressNotice,
           }}
         />
       )}
