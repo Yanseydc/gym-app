@@ -92,6 +92,9 @@ export default async function PortalRoutinePage() {
             noExtraDetails: t.routine.noExtraDetails,
             notAvailable: t.routine.notAvailable,
             secondsShort: t.routine.secondsShort,
+            completed: t.routine.completed,
+            markComplete: t.routine.markComplete,
+            markIncomplete: t.routine.markIncomplete,
           }}
         />
       )}

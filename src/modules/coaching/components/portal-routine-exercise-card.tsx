@@ -7,6 +7,8 @@ import type { ClientRoutineExercise } from "@/modules/coaching/types";
 
 type PortalRoutineExerciseCardProps = {
   exercise: ClientRoutineExercise;
+  isCompleted: boolean;
+  onToggleCompleted: () => void;
   labels: {
     sets: string;
     reps: string;
@@ -23,6 +25,9 @@ type PortalRoutineExerciseCardProps = {
     noExtraDetails: string;
     notAvailable: string;
     secondsShort: string;
+    completed: string;
+    markComplete: string;
+    markIncomplete: string;
   };
 };
 
@@ -34,6 +39,8 @@ type ExerciseSlide = {
 
 export function PortalRoutineExerciseCard({
   exercise,
+  isCompleted,
+  onToggleCompleted,
   labels,
 }: PortalRoutineExerciseCardProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -102,6 +109,18 @@ export function PortalRoutineExerciseCard({
   return (
     <>
       <article
+        className="portal-routine-exercise-card"
+        role="button"
+        tabIndex={0}
+        aria-label={exercise.exerciseName}
+        onClick={() => setIsOpen(true)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setIsOpen(true);
+          }
+        }}
+        data-completed={isCompleted ? "true" : "false"}
         style={{
           display: "grid",
           gap: 12,
@@ -110,6 +129,8 @@ export function PortalRoutineExerciseCard({
           border: "1px solid var(--border)",
           background: "linear-gradient(180deg, rgba(33, 39, 34, 0.96), rgba(24, 29, 25, 0.94))",
           minWidth: 0,
+          cursor: "pointer",
+          opacity: isCompleted ? 0.7 : 1,
         }}
       >
         <div
@@ -121,21 +142,42 @@ export function PortalRoutineExerciseCard({
             flexWrap: "wrap",
           }}
         >
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
+          <label
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 42,
+              height: 42,
+              borderRadius: 999,
+              border: isCompleted ? "1px solid rgba(88, 179, 124, 0.48)" : "1px solid var(--border)",
+              background: isCompleted ? "var(--success-bg)" : "rgba(255, 255, 255, 0.035)",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isCompleted}
+              aria-label={isCompleted ? labels.markIncomplete : labels.markComplete}
+              onChange={onToggleCompleted}
+              style={{
+                width: 18,
+                height: 18,
+                accentColor: "var(--success)",
+                cursor: "pointer",
+              }}
+            />
+          </label>
+
+          <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 14,
               minWidth: 0,
               flex: "1 1 260px",
-              padding: 0,
-              border: "none",
-              background: "transparent",
-              color: "inherit",
-              cursor: "pointer",
-              textAlign: "left",
             }}
           >
             {exercise.thumbnailUrl ? (
@@ -184,7 +226,16 @@ export function PortalRoutineExerciseCard({
                 flex: 1,
               }}
             >
-              <strong style={{ fontSize: 18, lineHeight: 1.3, minWidth: 0 }}>
+              <strong
+                style={{
+                  fontSize: 20,
+                  lineHeight: 1.25,
+                  minWidth: 0,
+                  textDecoration: isCompleted ? "line-through" : "none",
+                  textDecorationThickness: 2,
+                  textDecorationColor: "rgba(88, 179, 124, 0.72)",
+                }}
+              >
                 {exercise.exerciseName}
               </strong>
               <span
@@ -194,10 +245,23 @@ export function PortalRoutineExerciseCard({
                   fontWeight: 600,
                 }}
               >
-                {labels.details}
+                {labels.sets} {exercise.setsText} · {labels.reps} {exercise.repsText}
               </span>
+              {isCompleted ? (
+                <span
+                  style={{
+                    color: "var(--success)",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {labels.completed}
+                </span>
+              ) : null}
             </div>
-          </button>
+          </div>
 
           {exercise.videoUrl ? (
             <a
@@ -205,6 +269,7 @@ export function PortalRoutineExerciseCard({
               target="_blank"
               rel="noreferrer"
               className={buttonSecondary}
+              onClick={(event) => event.stopPropagation()}
               style={{ width: "fit-content", whiteSpace: "nowrap" }}
             >
               {labels.viewVideo}
@@ -213,8 +278,8 @@ export function PortalRoutineExerciseCard({
         </div>
 
         <div className="portal-routine-meta-grid">
-          <ExerciseMeta label={labels.sets} value={exercise.setsText} />
-          <ExerciseMeta label={labels.reps} value={exercise.repsText} />
+          <ExerciseMeta label={labels.sets} value={exercise.setsText} isPrimary />
+          <ExerciseMeta label={labels.reps} value={exercise.repsText} isPrimary />
           <ExerciseMeta label={labels.weight} value={exercise.targetWeightText || labels.notAvailable} />
           <ExerciseMeta
             label={labels.rest}
@@ -441,7 +506,15 @@ export function PortalRoutineExerciseCard({
   );
 }
 
-function ExerciseMeta({ label, value }: { label: string; value: string }) {
+function ExerciseMeta({
+  label,
+  value,
+  isPrimary = false,
+}: {
+  label: string;
+  value: string;
+  isPrimary?: boolean;
+}) {
   return (
     <div
       style={{
@@ -449,7 +522,9 @@ function ExerciseMeta({ label, value }: { label: string; value: string }) {
         gap: 6,
         padding: "12px 14px",
         borderRadius: 16,
-        background: "linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02))",
+        background: isPrimary
+          ? "linear-gradient(180deg, rgba(240, 151, 110, 0.1), rgba(255, 255, 255, 0.025))"
+          : "rgba(255, 255, 255, 0.025)",
         border: "1px solid var(--border)",
         minWidth: 0,
       }}
@@ -465,7 +540,15 @@ function ExerciseMeta({ label, value }: { label: string; value: string }) {
       >
         {label}
       </span>
-      <strong style={{ fontSize: 16, lineHeight: 1.3 }}>{value}</strong>
+      <strong
+        style={{
+          fontSize: isPrimary ? 17 : 15,
+          lineHeight: 1.3,
+          color: isPrimary ? "var(--foreground)" : "var(--muted)",
+        }}
+      >
+        {value}
+      </strong>
     </div>
   );
 }

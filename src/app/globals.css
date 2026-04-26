@@ -325,7 +325,72 @@ main {
 .portal-routine-meta-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.portal-routine-accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    grid-template-rows 220ms ease,
+    opacity 180ms ease;
+}
+
+.portal-routine-accordion-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.portal-routine-accordion-panel > * {
+  min-height: 0;
+}
+
+.portal-routine-exercise-card {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease,
+    opacity 160ms ease;
+}
+
+.portal-routine-exercise-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.14);
+  transform: translateY(-1px);
+}
+
+.portal-routine-exercise-card:active {
+  transform: scale(0.995);
+}
+
+.portal-routine-exercise-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
+}
+
+.portal-routine-exercise-card[data-completed="true"] {
+  border-color: rgba(88, 179, 124, 0.22);
+}
+
+.portal-workout-sticky-action {
+  position: sticky;
+  bottom: 14px;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(18, 22, 19, 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+}
+
+.portal-workout-sticky-action .ui-button {
+  width: min(100%, 420px);
+  min-height: 52px;
 }
 
 .portal-two-column {
@@ -513,10 +578,6 @@ main {
   }
 
   .portal-photo-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .portal-routine-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

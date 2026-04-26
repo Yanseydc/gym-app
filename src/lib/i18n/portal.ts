@@ -45,6 +45,12 @@ const portalMessages = {
     weight: "Peso",
     rest: "Descanso",
     activeBadge: "Rutina activa",
+    today: "Hoy",
+    startWorkout: "Iniciar entrenamiento",
+    completed: "Completado",
+    markComplete: "Marcar ejercicio como completado",
+    markIncomplete: "Marcar ejercicio como pendiente",
+    progress: "{completed}/{total} ejercicios completados",
     noDayNotes: "Sigue este bloque tal como aparece en tu plan.",
     exerciseNotes: "Indicaciones",
     viewVideo: "Ver video",
@@ -133,6 +139,8 @@ export function getPortalText() {
             : portalMessages.routine.exerciseCountOther,
           { count },
         ),
+      progress: (completed: number, total: number) =>
+        interpolate(portalMessages.routine.progress, { completed, total }),
     },
     progress: {
       ...portalMessages.progress,

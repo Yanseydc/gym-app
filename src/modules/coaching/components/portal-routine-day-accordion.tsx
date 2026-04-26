@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getPortalText } from "@/lib/i18n/portal";
+import { buttonPrimary } from "@/lib/ui";
 import { PortalRoutineExerciseCard } from "@/modules/coaching/components/portal-routine-exercise-card";
 import type { ClientRoutineDay } from "@/modules/coaching/types";
 
@@ -27,6 +28,9 @@ type PortalRoutineDayAccordionProps = {
     noExtraDetails: string;
     notAvailable: string;
     secondsShort: string;
+    completed: string;
+    markComplete: string;
+    markIncomplete: string;
   };
 };
 
@@ -36,12 +40,36 @@ export function PortalRoutineDayAccordion({
   labels,
 }: PortalRoutineDayAccordionProps) {
   const t = getPortalText();
-  const defaultOpenDayId = useMemo(() => getDefaultOpenDayId(days, startsOn), [days, startsOn]);
+  const todayDayId = useMemo(() => getDefaultOpenDayId(days, startsOn), [days, startsOn]);
+  const defaultOpenDayId = todayDayId ?? days[0]?.id ?? null;
   const [openDayId, setOpenDayId] = useState<string | null>(defaultOpenDayId);
+  const [completedExerciseIds, setCompletedExerciseIds] = useState<Set<string>>(() => new Set());
+  const firstExerciseRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setOpenDayId(defaultOpenDayId);
   }, [defaultOpenDayId]);
+
+  function toggleExerciseCompletion(exerciseId: string) {
+    setCompletedExerciseIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(exerciseId)) {
+        next.delete(exerciseId);
+      } else {
+        next.add(exerciseId);
+      }
+
+      return next;
+    });
+  }
+
+  function handleStartWorkout() {
+    setOpenDayId(defaultOpenDayId);
+    window.setTimeout(() => {
+      firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  }
 
   if (days.length === 0) {
     return (
@@ -60,24 +88,37 @@ export function PortalRoutineDayAccordion({
   }
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 16, paddingBottom: 92 }}>
       {days.map((day) => {
         const isOpen = openDayId === day.id;
+        const isToday = todayDayId === day.id;
         const exercises = day.exercises ?? [];
+        const completedCount = exercises.filter((exercise) =>
+          completedExerciseIds.has(exercise.id),
+        ).length;
 
         return (
           <article
             key={day.id}
+            id={`routine-day-${day.id}`}
             style={{
               display: "grid",
               gap: isOpen ? 16 : 0,
               padding: 18,
               borderRadius: 22,
-              border: isOpen ? "1px solid var(--border-strong)" : "1px solid var(--border)",
+              border: isToday
+                ? "1px solid rgba(240, 151, 110, 0.48)"
+                : isOpen
+                  ? "1px solid var(--border-strong)"
+                  : "1px solid var(--border)",
               background: isOpen
                 ? "linear-gradient(180deg, rgba(28, 34, 29, 0.99), rgba(21, 26, 23, 0.96))"
                 : "linear-gradient(180deg, rgba(25, 30, 26, 0.96), rgba(20, 24, 22, 0.94))",
-              boxShadow: isOpen ? "0 16px 30px rgba(0, 0, 0, 0.16)" : "0 10px 22px rgba(0, 0, 0, 0.08)",
+              boxShadow: isToday
+                ? "0 18px 34px rgba(209, 108, 67, 0.12)"
+                : isOpen
+                  ? "0 16px 30px rgba(0, 0, 0, 0.16)"
+                  : "0 10px 22px rgba(0, 0, 0, 0.08)",
               transition: "border-color 180ms ease, box-shadow 180ms ease, background 180ms ease",
             }}
           >
@@ -133,10 +174,31 @@ export function PortalRoutineDayAccordion({
                   >
                     {t.routine.exerciseCount(exercises.length)}
                   </span>
+                  {isToday ? (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        background: "rgba(88, 179, 124, 0.14)",
+                        color: "var(--success)",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t.routine.today}
+                    </span>
+                  ) : null}
                 </div>
 
                 <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
                   <strong style={{ display: "block", fontSize: 20, minWidth: 0 }}>{day.title}</strong>
+                  <span style={{ color: "var(--muted)", fontSize: 14, fontWeight: 700 }}>
+                    {t.routine.progress(completedCount, exercises.length)}
+                  </span>
                   {!isOpen && day.notes ? (
                     <p
                       style={{
@@ -177,52 +239,73 @@ export function PortalRoutineDayAccordion({
               </span>
             </button>
 
-            {isOpen ? (
-              <div style={{ display: "grid", gap: 16 }}>
-                {day.notes ? (
-                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                    {day.notes}
-                  </p>
-                ) : (
-                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                    {labels.noDayNotes}
-                  </p>
-                )}
+            <div className="portal-routine-accordion-panel" data-open={isOpen ? "true" : "false"}>
+              {isOpen ? (
+                <div style={{ display: "grid", gap: 16, paddingTop: 2 }}>
+                  {day.notes ? (
+                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+                      {day.notes}
+                    </p>
+                  ) : (
+                    <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+                      {labels.noDayNotes}
+                    </p>
+                  )}
 
-                {exercises.length === 0 ? (
-                  <p style={{ margin: 0, color: "var(--muted)" }}>{labels.noExercises}</p>
-                ) : (
-                  <div style={{ display: "grid", gap: 12 }}>
-                    {exercises.map((exercise) => (
-                      <PortalRoutineExerciseCard
-                        key={exercise.id}
-                        exercise={exercise}
-                        labels={{
-                          sets: labels.sets,
-                          reps: labels.reps,
-                          weight: labels.weight,
-                          rest: labels.rest,
-                          exerciseNotes: labels.exerciseNotes,
-                          viewVideo: labels.viewVideo,
-                          details: labels.details,
-                          closeDetails: labels.closeDetails,
-                          mediaGallery: labels.mediaGallery,
-                          instructions: labels.instructions,
-                          coachTips: labels.coachTips,
-                          commonMistakes: labels.commonMistakes,
-                          noExtraDetails: labels.noExtraDetails,
-                          notAvailable: labels.notAvailable,
-                          secondsShort: labels.secondsShort,
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : null}
+                  {exercises.length === 0 ? (
+                    <p style={{ margin: 0, color: "var(--muted)" }}>{labels.noExercises}</p>
+                  ) : (
+                    <div style={{ display: "grid", gap: 12 }}>
+                      {exercises.map((exercise) => (
+                        <div
+                          key={exercise.id}
+                          ref={
+                            day.id === defaultOpenDayId && exercise === exercises[0]
+                              ? firstExerciseRef
+                              : undefined
+                          }
+                        >
+                          <PortalRoutineExerciseCard
+                            exercise={exercise}
+                            isCompleted={completedExerciseIds.has(exercise.id)}
+                            onToggleCompleted={() => toggleExerciseCompletion(exercise.id)}
+                            labels={{
+                              sets: labels.sets,
+                              reps: labels.reps,
+                              weight: labels.weight,
+                              rest: labels.rest,
+                              exerciseNotes: labels.exerciseNotes,
+                              viewVideo: labels.viewVideo,
+                              details: labels.details,
+                              closeDetails: labels.closeDetails,
+                              mediaGallery: labels.mediaGallery,
+                              instructions: labels.instructions,
+                              coachTips: labels.coachTips,
+                              commonMistakes: labels.commonMistakes,
+                              noExtraDetails: labels.noExtraDetails,
+                              notAvailable: labels.notAvailable,
+                              secondsShort: labels.secondsShort,
+                              completed: labels.completed,
+                              markComplete: labels.markComplete,
+                              markIncomplete: labels.markIncomplete,
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </article>
         );
       })}
+
+      <div className="portal-workout-sticky-action">
+        <button type="button" className={buttonPrimary} onClick={handleStartWorkout}>
+          {t.routine.startWorkout}
+        </button>
+      </div>
     </div>
   );
 }
