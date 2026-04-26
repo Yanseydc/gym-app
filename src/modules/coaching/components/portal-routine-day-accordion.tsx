@@ -99,19 +99,11 @@ export function PortalRoutineDayAccordion({
               gap: isOpen ? 16 : 0,
               padding: 18,
               borderRadius: 22,
-              border: isToday
-                ? "1px solid rgba(240, 151, 110, 0.48)"
-                : isOpen
-                  ? "1px solid var(--border-strong)"
-                  : "1px solid var(--border)",
+              border: isOpen ? "1px solid var(--border-strong)" : "1px solid var(--border)",
               background: isOpen
                 ? "linear-gradient(180deg, rgba(28, 34, 29, 0.99), rgba(21, 26, 23, 0.96))"
                 : "linear-gradient(180deg, rgba(25, 30, 26, 0.96), rgba(20, 24, 22, 0.94))",
-              boxShadow: isToday
-                ? "0 18px 34px rgba(209, 108, 67, 0.12)"
-                : isOpen
-                  ? "0 16px 30px rgba(0, 0, 0, 0.16)"
-                  : "0 10px 22px rgba(0, 0, 0, 0.08)",
+              boxShadow: isOpen ? "0 16px 30px rgba(0, 0, 0, 0.16)" : "0 10px 22px rgba(0, 0, 0, 0.08)",
               transition: "border-color 180ms ease, box-shadow 180ms ease, background 180ms ease",
             }}
           >
