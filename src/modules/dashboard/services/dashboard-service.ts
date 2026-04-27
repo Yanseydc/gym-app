@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, type GymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -34,11 +35,15 @@ function emptyMetrics(): DashboardMetrics {
   };
 }
 
-async function getActiveClientsCount(supabase: AppSupabaseClient) {
-  const { count, error } = await supabase
+async function getActiveClientsCount(supabase: AppSupabaseClient, scope: GymScope) {
+  let query = supabase
     .from("clients")
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
+
+  query = applyGymScope(query, scope);
+
+  const { count, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -47,32 +52,33 @@ async function getActiveClientsCount(supabase: AppSupabaseClient) {
   return count ?? 0;
 }
 
-async function getMembershipMetrics(supabase: AppSupabaseClient) {
+async function getMembershipMetrics(supabase: AppSupabaseClient, scope: GymScope) {
   const today = toIsoDate(new Date());
   const soonDate = toIsoDate(addDays(new Date(), 7));
 
-  const [
-    activeMembershipsResult,
-    expiredMembershipsResult,
-    expiringSoonResult,
-  ] = await Promise.all([
-    supabase
-      .from("client_memberships")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "active")
-      .gte("end_date", today),
-    supabase
-      .from("client_memberships")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "active")
-      .lt("end_date", today),
-    supabase
-      .from("client_memberships")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "active")
-      .gte("end_date", today)
-      .lte("end_date", soonDate),
-  ]);
+  let activeQuery = supabase
+    .from("client_memberships")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active")
+    .gte("end_date", today);
+  let expiredQuery = supabase
+    .from("client_memberships")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active")
+    .lt("end_date", today);
+  let soonQuery = supabase
+    .from("client_memberships")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active")
+    .gte("end_date", today)
+    .lte("end_date", soonDate);
+
+  activeQuery = applyGymScope(activeQuery, scope);
+  expiredQuery = applyGymScope(expiredQuery, scope);
+  soonQuery = applyGymScope(soonQuery, scope);
+
+  const [activeMembershipsResult, expiredMembershipsResult, expiringSoonResult] =
+    await Promise.all([activeQuery, expiredQuery, soonQuery]);
 
   if (activeMembershipsResult.error) {
     throw new Error(activeMembershipsResult.error.message);
@@ -93,20 +99,17 @@ async function getMembershipMetrics(supabase: AppSupabaseClient) {
   };
 }
 
-async function getIncomeMetrics(supabase: AppSupabaseClient) {
+async function getIncomeMetrics(supabase: AppSupabaseClient, scope: GymScope) {
   const monthStart = toIsoDate(getMonthStart(new Date()));
   const today = toIsoDate(new Date());
+  let todayQuery = supabase.from("payments").select("amount").eq("payment_date", today);
+  let monthQuery = supabase.from("payments").select("amount").gte("payment_date", monthStart);
+
+  todayQuery = applyGymScope(todayQuery, scope);
+  monthQuery = applyGymScope(monthQuery, scope);
+
   const [{ data: todayPayments, error: todayError }, { data: monthPayments, error: monthError }] =
-    await Promise.all([
-      supabase
-        .from("payments")
-        .select("amount")
-        .eq("payment_date", today),
-      supabase
-        .from("payments")
-        .select("amount")
-        .gte("payment_date", monthStart),
-    ]);
+    await Promise.all([todayQuery, monthQuery]);
 
   if (todayError) {
     throw new Error(todayError.message);
@@ -128,13 +131,17 @@ async function getIncomeMetrics(supabase: AppSupabaseClient) {
   };
 }
 
-async function getRecentPayments(supabase: AppSupabaseClient): Promise<RecentDashboardPayment[]> {
-  const { data, error } = await supabase
+async function getRecentPayments(supabase: AppSupabaseClient, scope: GymScope): Promise<RecentDashboardPayment[]> {
+  let query = supabase
     .from("payments")
     .select("id, client_id, amount, payment_method, payment_date, concept")
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(5);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -146,10 +153,14 @@ async function getRecentPayments(supabase: AppSupabaseClient): Promise<RecentDas
   let clientMap = new Map<string, string>();
 
   if (clientIds.length > 0) {
-    const { data: clients, error: clientsError } = await supabase
+    let clientsQuery = supabase
       .from("clients")
       .select("id, first_name, last_name")
       .in("id", clientIds);
+
+    clientsQuery = applyGymScope(clientsQuery, scope);
+
+    const { data: clients, error: clientsError } = await clientsQuery;
 
     if (clientsError) {
       throw new Error(clientsError.message);
@@ -174,12 +185,16 @@ async function getRecentPayments(supabase: AppSupabaseClient): Promise<RecentDas
   }));
 }
 
-async function getRecentClients(supabase: AppSupabaseClient): Promise<RecentDashboardClient[]> {
-  const { data, error } = await supabase
+async function getRecentClients(supabase: AppSupabaseClient, scope: GymScope): Promise<RecentDashboardClient[]> {
+  let query = supabase
     .from("clients")
     .select("id, first_name, last_name, status, created_at")
     .order("created_at", { ascending: false })
     .limit(5);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -195,18 +210,28 @@ async function getRecentClients(supabase: AppSupabaseClient): Promise<RecentDash
 
 export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> => {
   const supabase = await createClient();
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
   const errors: string[] = [];
   const metrics = emptyMetrics();
   let recentPayments: RecentDashboardPayment[] = [];
   let recentClients: RecentDashboardClient[] = [];
 
+  if (scopeError || !scope) {
+    return {
+      metrics,
+      recentPayments,
+      recentClients,
+      errors: [scopeError ?? "Unable to resolve gym scope."],
+    };
+  }
+
   const [activeClientsResult, membershipMetricsResult, incomeMetricsResult, recentPaymentsResult, recentClientsResult] =
     await Promise.allSettled([
-      getActiveClientsCount(supabase),
-      getMembershipMetrics(supabase),
-      getIncomeMetrics(supabase),
-      getRecentPayments(supabase),
-      getRecentClients(supabase),
+      getActiveClientsCount(supabase, scope),
+      getMembershipMetrics(supabase, scope),
+      getIncomeMetrics(supabase, scope),
+      getRecentPayments(supabase, scope),
+      getRecentClients(supabase, scope),
     ]);
 
   if (activeClientsResult.status === "fulfilled") {

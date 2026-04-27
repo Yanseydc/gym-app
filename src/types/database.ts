@@ -14,6 +14,7 @@ export type Database = {
           created_at: string;
           email: string | null;
           first_name: string;
+          gym_id: string | null;
           id: string;
           last_name: string;
           notes: string | null;
@@ -25,6 +26,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           first_name: string;
+          gym_id?: string | null;
           id?: string;
           last_name: string;
           notes?: string | null;
@@ -36,6 +38,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           first_name?: string;
+          gym_id?: string | null;
           id?: string;
           last_name?: string;
           notes?: string | null;
@@ -76,6 +79,7 @@ export type Database = {
           client_notes: string | null;
           coach_notes: string | null;
           created_at: string;
+          gym_id: string | null;
           id: string;
           updated_at: string;
           weight_kg: number | null;
@@ -86,6 +90,7 @@ export type Database = {
           client_notes?: string | null;
           coach_notes?: string | null;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           updated_at?: string;
           weight_kg?: number | null;
@@ -96,6 +101,7 @@ export type Database = {
           client_notes?: string | null;
           coach_notes?: string | null;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           updated_at?: string;
           weight_kg?: number | null;
@@ -107,6 +113,7 @@ export type Database = {
           client_id: string;
           created_at: string;
           end_date: string;
+          gym_id: string | null;
           id: string;
           membership_plan_id: string;
           notes: string | null;
@@ -118,6 +125,7 @@ export type Database = {
           client_id: string;
           created_at?: string;
           end_date: string;
+          gym_id?: string | null;
           id?: string;
           membership_plan_id: string;
           notes?: string | null;
@@ -129,6 +137,7 @@ export type Database = {
           client_id?: string;
           created_at?: string;
           end_date?: string;
+          gym_id?: string | null;
           id?: string;
           membership_plan_id?: string;
           notes?: string | null;
@@ -255,6 +264,7 @@ export type Database = {
           coach_profile_id: string | null;
           created_at: string;
           ends_on: string | null;
+          gym_id: string | null;
           id: string;
           notes: string | null;
           starts_on: string | null;
@@ -267,6 +277,7 @@ export type Database = {
           coach_profile_id?: string | null;
           created_at?: string;
           ends_on?: string | null;
+          gym_id?: string | null;
           id?: string;
           notes?: string | null;
           starts_on?: string | null;
@@ -279,6 +290,7 @@ export type Database = {
           coach_profile_id?: string | null;
           created_at?: string;
           ends_on?: string | null;
+          gym_id?: string | null;
           id?: string;
           notes?: string | null;
           starts_on?: string | null;
@@ -529,6 +541,7 @@ export type Database = {
           created_at: string;
           description: string | null;
           duration_in_days: number;
+          gym_id: string | null;
           id: string;
           is_active: boolean;
           name: string;
@@ -539,6 +552,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           duration_in_days: number;
+          gym_id?: string | null;
           id?: string;
           is_active?: boolean;
           name: string;
@@ -549,6 +563,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           duration_in_days?: number;
+          gym_id?: string | null;
           id?: string;
           is_active?: boolean;
           name?: string;
@@ -564,6 +579,7 @@ export type Database = {
           client_membership_id: string | null;
           concept: string;
           created_at: string;
+          gym_id: string | null;
           id: string;
           notes: string | null;
           payment_date: string;
@@ -576,6 +592,7 @@ export type Database = {
           client_membership_id?: string | null;
           concept: string;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           notes?: string | null;
           payment_date: string;
@@ -588,6 +605,7 @@ export type Database = {
           client_membership_id?: string | null;
           concept?: string;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           notes?: string | null;
           payment_date?: string;
@@ -601,6 +619,7 @@ export type Database = {
           created_at: string;
           email: string;
           first_name: string | null;
+          gym_id: string | null;
           id: string;
           last_name: string | null;
           role: "super_admin" | "admin" | "staff" | "coach" | "client";
@@ -609,6 +628,7 @@ export type Database = {
           created_at?: string;
           email: string;
           first_name?: string | null;
+          gym_id?: string | null;
           id: string;
           last_name?: string | null;
           role?: "super_admin" | "admin" | "staff" | "coach" | "client";
@@ -617,6 +637,7 @@ export type Database = {
           created_at?: string;
           email?: string;
           first_name?: string | null;
+          gym_id?: string | null;
           id?: string;
           last_name?: string | null;
           role?: "super_admin" | "admin" | "staff" | "coach" | "client";

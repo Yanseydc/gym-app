@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId, type GymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -46,15 +47,19 @@ function getLifecycleStatus(baseStatus: string, endDate: string) {
   return endDate < today ? "expired" : "active";
 }
 
-async function getClientMap(supabase: AppSupabaseClient, clientIds: string[]) {
+async function getClientMap(supabase: AppSupabaseClient, clientIds: string[], scope: GymScope) {
   if (clientIds.length === 0) {
     return new Map<string, string>();
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("clients")
     .select("id, first_name, last_name")
     .in("id", clientIds);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -71,6 +76,7 @@ async function getClientMap(supabase: AppSupabaseClient, clientIds: string[]) {
 async function getMembershipLabelMap(
   supabase: AppSupabaseClient,
   membershipIds: string[],
+  scope: GymScope,
 ) {
   if (membershipIds.length === 0) {
     return new Map<
@@ -89,10 +95,14 @@ async function getMembershipLabelMap(
     >();
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("client_memberships")
     .select("id, client_id, start_date, end_date, membership_plan_id, status")
     .in("id", membershipIds);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -103,10 +113,14 @@ async function getMembershipLabelMap(
   let paymentTotals = new Map<string, number>();
 
   if (memberships.length > 0) {
-    const { data: payments, error: paymentsError } = await supabase
+    let paymentsQuery = supabase
       .from("payments")
       .select("client_membership_id, amount")
       .in("client_membership_id", memberships.map((membership) => String(membership.id)));
+
+    paymentsQuery = applyGymScope(paymentsQuery, scope);
+
+    const { data: payments, error: paymentsError } = await paymentsQuery;
 
     if (paymentsError) {
       throw new Error(paymentsError.message);
@@ -122,10 +136,14 @@ async function getMembershipLabelMap(
   let planNameMap = new Map<string, { name: string; price: number }>();
 
   if (planIds.length > 0) {
-    const { data: plans, error: plansError } = await supabase
+    let plansQuery = supabase
       .from("membership_plans")
       .select("id, name, price")
       .in("id", planIds);
+
+    plansQuery = applyGymScope(plansQuery, scope);
+
+    const { data: plans, error: plansError } = await plansQuery;
 
     if (plansError) {
       throw new Error(plansError.message);
@@ -177,11 +195,21 @@ async function getMembershipLabelMap(
 export async function listPayments(
   supabase: AppSupabaseClient,
 ): Promise<{ data: Payment[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("payments")
     .select("*")
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -195,10 +223,12 @@ export async function listPayments(
     const clientMap = await getClientMap(
       supabase,
       [...new Set(records.map((record) => record.client_id))],
+      scope,
     );
     const membershipMap = await getMembershipLabelMap(
       supabase,
       [...new Set(records.flatMap((record) => (record.client_membership_id ? [record.client_membership_id] : [])))],
+      scope,
     );
 
     return {
@@ -225,12 +255,22 @@ export async function listPaymentsByClient(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: Payment[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("payments")
     .select("*")
     .eq("client_id", clientId)
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -241,10 +281,11 @@ export async function listPaymentsByClient(
 
   try {
     const records = (data ?? []) as PaymentRecord[];
-    const clientMap = await getClientMap(supabase, [clientId]);
+    const clientMap = await getClientMap(supabase, [clientId], scope);
     const membershipMap = await getMembershipLabelMap(
       supabase,
       [...new Set(records.flatMap((record) => (record.client_membership_id ? [record.client_membership_id] : [])))],
+      scope,
     );
 
     return {
@@ -270,11 +311,21 @@ export async function listPaymentsByClient(
 export async function listPaymentClientOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: PaymentClientOption[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("clients")
     .select("id, first_name, last_name")
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -296,10 +347,20 @@ export async function listPaymentMembershipOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: PaymentMembershipOption[]; error: string | null }> {
   try {
-    const { data: membershipRows, error: membershipsError } = await supabase
+    const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+    if (scopeError || !scope) {
+      return { data: [], error: scopeError };
+    }
+
+    let query = supabase
       .from("client_memberships")
       .select("id")
       .order("start_date", { ascending: false });
+
+    query = applyGymScope(query, scope);
+
+    const { data: membershipRows, error: membershipsError } = await query;
 
     if (membershipsError) {
       return {
@@ -311,10 +372,12 @@ export async function listPaymentMembershipOptions(
     const membershipMap = await getMembershipLabelMap(
       supabase,
       (membershipRows ?? []).map((membership) => String(membership.id)),
+      scope,
     );
     const clientMap = await getClientMap(
       supabase,
       [...new Set(Array.from(membershipMap.values()).map((membership) => membership.clientId))],
+      scope,
     );
 
     return {
@@ -346,6 +409,12 @@ export async function createPaymentRecord(
   supabase: AppSupabaseClient,
   values: PaymentFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
   const membershipId = values.clientMembershipId || null;
   let membershipStatus: string | null = null;
   let membershipPlanId: string | null = null;
@@ -360,11 +429,14 @@ export async function createPaymentRecord(
   }
 
   if (membershipId) {
-    const { data: membership, error: membershipError } = await supabase
+    let membershipQuery = supabase
       .from("client_memberships")
       .select("id, client_id, status, membership_plan_id")
-      .eq("id", membershipId)
-      .maybeSingle();
+      .eq("id", membershipId);
+
+    membershipQuery = applyGymScope(membershipQuery, scope);
+
+    const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
 
     if (membershipError) {
       return {
@@ -383,11 +455,14 @@ export async function createPaymentRecord(
     membershipStatus = String(membership.status);
     membershipPlanId = String(membership.membership_plan_id);
 
-    const { data: plan, error: planError } = await supabase
+    let planQuery = supabase
       .from("membership_plans")
       .select("id, price")
-      .eq("id", membershipPlanId)
-      .maybeSingle();
+      .eq("id", membershipPlanId);
+
+    planQuery = applyGymScope(planQuery, scope);
+
+    const { data: plan, error: planError } = await planQuery.maybeSingle();
 
     if (planError) {
       return {
@@ -398,10 +473,14 @@ export async function createPaymentRecord(
 
     membershipPlanPrice = plan ? Number(plan.price) : 0;
 
-    const { data: previousPayments, error: previousPaymentsError } = await supabase
+    let paymentsQuery = supabase
       .from("payments")
       .select("amount")
       .eq("client_membership_id", membershipId);
+
+    paymentsQuery = applyGymScope(paymentsQuery, scope);
+
+    const { data: previousPayments, error: previousPaymentsError } = await paymentsQuery;
 
     if (previousPaymentsError) {
       return {
@@ -434,7 +513,7 @@ export async function createPaymentRecord(
 
   const paymentInsert = await supabase
     .from("payments")
-    .insert({
+    .insert(withGymId({
       client_id: values.clientId,
       client_membership_id: membershipId,
       amount: values.amount,
@@ -444,7 +523,7 @@ export async function createPaymentRecord(
       notes: values.notes.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 
@@ -457,15 +536,17 @@ export async function createPaymentRecord(
       ? "active"
       : "partial";
 
-    const membershipUpdate = await supabase
+    let membershipUpdateQuery = supabase
       .from("client_memberships")
       .update({
         status: nextStatus,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", membershipId)
-      .select("id")
-      .single();
+      .eq("id", membershipId);
+
+    membershipUpdateQuery = applyGymScope(membershipUpdateQuery, scope);
+
+    const membershipUpdate = await membershipUpdateQuery.select("id").single();
 
     if (membershipUpdate.error) {
       return {
@@ -482,11 +563,20 @@ export async function getPaymentById(
   supabase: AppSupabaseClient,
   paymentId: string,
 ): Promise<{ data: Payment | null; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError };
+  }
+
+  let query = supabase
     .from("payments")
     .select("*")
-    .eq("id", paymentId)
-    .maybeSingle();
+    .eq("id", paymentId);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return {
@@ -504,10 +594,11 @@ export async function getPaymentById(
 
   try {
     const record = data as PaymentRecord;
-    const clientMap = await getClientMap(supabase, [record.client_id]);
+    const clientMap = await getClientMap(supabase, [record.client_id], scope);
     const membershipMap = await getMembershipLabelMap(
       supabase,
       record.client_membership_id ? [record.client_membership_id] : [],
+      scope,
     );
 
     return {
@@ -533,16 +624,24 @@ export async function updatePaymentRecord(
   paymentId: string,
   values: PaymentEditFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let query = supabase
     .from("payments")
     .update({
       concept: values.concept.trim(),
       notes: values.notes.trim() || null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", paymentId)
-    .select("id, client_id")
-    .single();
+    .eq("id", paymentId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id, client_id").single();
 }
 
 export const getPaymentsForPage = cache(async () => {

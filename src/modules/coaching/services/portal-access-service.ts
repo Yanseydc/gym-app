@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { ClientPortalAccess, PortalAccessFormValues, PortalLinkedProfile } from "@/modules/coaching/types";
@@ -107,6 +108,33 @@ export async function createClientUserLinkRecord(
   clientId: string,
   values: PortalAccessFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: scopeError ?? "Unable to resolve gym scope.",
+    };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return {
+      data: null,
+      error: clientError.message,
+    };
+  }
+
+  if (!clientData) {
+    return {
+      data: null,
+      error: "Selected client is not available.",
+    };
+  }
+
   const existingLink = await getPortalAccessByClientId(supabase, clientId);
 
   if (existingLink.error) {

@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { LinkedPortalClient } from "@/modules/portal/types";
@@ -28,11 +29,23 @@ export async function getLinkedClientByProfileId(
     };
   }
 
-  const { data: clientData, error: clientError } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: scopeError,
+    };
+  }
+
+  let clientQuery = supabase
     .from("clients")
     .select("id, first_name, last_name")
-    .eq("id", String(linkData.client_id))
-    .maybeSingle();
+    .eq("id", String(linkData.client_id));
+
+  clientQuery = applyGymScope(clientQuery, scope);
+
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
 
   if (clientError) {
     return {

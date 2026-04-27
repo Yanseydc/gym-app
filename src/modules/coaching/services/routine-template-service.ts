@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -387,6 +388,24 @@ export async function applyRoutineTemplateRecord(
   template: RoutineTemplate,
   values: RoutineTemplateApplyFormValues,
 ): Promise<{ data: { id: string } | null; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", values.clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: clientError.message };
+  }
+
+  if (!clientData) {
+    return { data: null, error: "Selected client is not available." };
+  }
+
   const createdAt = new Date().toISOString();
   const routinePayload: RoutineFormValues = {
     clientId: values.clientId,
@@ -399,7 +418,7 @@ export async function applyRoutineTemplateRecord(
 
   const { data: routineRow, error: routineError } = await supabase
     .from("client_routines")
-    .insert({
+    .insert(withGymId({
       client_id: routinePayload.clientId,
       coach_profile_id: coachProfileId,
       title: routinePayload.title,
@@ -409,7 +428,7 @@ export async function applyRoutineTemplateRecord(
       ends_on: null,
       created_at: createdAt,
       updated_at: createdAt,
-    })
+    }, scope))
     .select("id")
     .single();
 

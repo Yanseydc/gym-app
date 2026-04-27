@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -39,10 +40,35 @@ function normalizeOnboardingPayload(values: ClientOnboardingFormValues) {
   };
 }
 
+async function canAccessClient(supabase: AppSupabaseClient, clientId: string) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: false, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let query = supabase.from("clients").select("id").eq("id", clientId);
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    return { data: false, error: error.message };
+  }
+
+  return { data: Boolean(data), error: null };
+}
+
 export async function getOnboardingByClientId(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: ClientOnboarding | null; error: string | null }> {
+  const access = await canAccessClient(supabase, clientId);
+
+  if (access.error || !access.data) {
+    return { data: null, error: access.error };
+  }
+
   const { data, error } = await supabase
     .from("client_onboarding_responses")
     .select("*")
@@ -67,6 +93,12 @@ export async function createOnboardingRecord(
   clientId: string,
   values: ClientOnboardingFormValues,
 ) {
+  const access = await canAccessClient(supabase, clientId);
+
+  if (access.error || !access.data) {
+    return { data: null, error: { message: access.error ?? "Selected client is not available." } };
+  }
+
   return supabase
     .from("client_onboarding_responses")
     .insert({
@@ -83,6 +115,12 @@ export async function updateOnboardingRecord(
   clientId: string,
   values: ClientOnboardingFormValues,
 ) {
+  const access = await canAccessClient(supabase, clientId);
+
+  if (access.error || !access.data) {
+    return { data: null, error: { message: access.error ?? "Selected client is not available." } };
+  }
+
   return supabase
     .from("client_onboarding_responses")
     .update(normalizeOnboardingPayload(values))

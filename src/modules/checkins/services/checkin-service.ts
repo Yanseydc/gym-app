@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { Database } from "@/types/database";
@@ -38,6 +39,12 @@ export async function searchClientsForCheckIn(
   supabase: AppSupabaseClient,
   search: string,
 ): Promise<{ data: CheckInClientResult[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
   const trimmedSearch = search.trim();
 
   if (!trimmedSearch) {
@@ -47,13 +54,17 @@ export async function searchClientsForCheckIn(
     };
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("clients")
     .select("*")
     .or(`first_name.ilike.%${trimmedSearch}%,last_name.ilike.%${trimmedSearch}%`)
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true })
     .limit(10);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -117,6 +128,29 @@ export async function createCheckInRecord(
   clientId: string,
   values: CheckInFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let clientQuery = supabase
+    .from("clients")
+    .select("id")
+    .eq("id", clientId);
+
+  clientQuery = applyGymScope(clientQuery, scope);
+
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: clientError.message };
+  }
+
+  if (!clientData) {
+    return { data: null, error: "Selected client is not available." };
+  }
+
   const now = new Date();
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const membershipLookup = await getClientMembershipLookup(supabase, [clientId]);
@@ -180,6 +214,12 @@ export async function listClientCheckIns(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: ClientCheckIn[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
   const { data, error } = await supabase
     .from("check_ins")
     .select("*")
@@ -193,11 +233,14 @@ export async function listClientCheckIns(
     };
   }
 
-  const { data: clientData, error: clientError } = await supabase
+  let clientQuery = supabase
     .from("clients")
     .select("first_name, last_name")
-    .eq("id", clientId)
-    .maybeSingle();
+    .eq("id", clientId);
+
+  clientQuery = applyGymScope(clientQuery, scope);
+
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
 
   if (clientError) {
     return {
@@ -206,9 +249,14 @@ export async function listClientCheckIns(
     };
   }
 
-  const clientName = clientData
-    ? `${String(clientData.first_name)} ${String(clientData.last_name)}`
-    : "Unknown client";
+  if (!clientData) {
+    return {
+      data: [],
+      error: null,
+    };
+  }
+
+  const clientName = `${String(clientData.first_name)} ${String(clientData.last_name)}`;
 
   return {
     data: (data ?? []).map((checkIn) => mapCheckIn(checkIn as CheckInRecord, clientName)),
@@ -219,6 +267,12 @@ export async function listClientCheckIns(
 export async function listRecentCheckIns(
   supabase: AppSupabaseClient,
 ): Promise<{ data: ClientCheckIn[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
   const { data, error } = await supabase
     .from("check_ins")
     .select("*")
@@ -238,10 +292,14 @@ export async function listRecentCheckIns(
   let clientMap = new Map<string, string>();
 
   if (clientIds.length > 0) {
-    const { data: clients, error: clientsError } = await supabase
+    let clientsQuery = supabase
       .from("clients")
       .select("id, first_name, last_name")
       .in("id", clientIds);
+
+    clientsQuery = applyGymScope(clientsQuery, scope);
+
+    const { data: clients, error: clientsError } = await clientsQuery;
 
     if (clientsError) {
       return {
@@ -259,9 +317,9 @@ export async function listRecentCheckIns(
   }
 
   return {
-    data: records.map((record) =>
-      mapCheckIn(record, clientMap.get(record.client_id) ?? "Unknown client"),
-    ),
+    data: records
+      .filter((record) => scope.isSuperAdmin || clientMap.has(record.client_id))
+      .map((record) => mapCheckIn(record, clientMap.get(record.client_id) ?? "Unknown client")),
     error: null,
   };
 }

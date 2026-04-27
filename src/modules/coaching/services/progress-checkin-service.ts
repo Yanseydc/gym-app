@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -57,6 +58,25 @@ function normalizeProgressCheckInPayload(values: ProgressCheckInFormValues) {
     coach_notes: values.coachNotes.trim() || null,
     updated_at: new Date().toISOString(),
   };
+}
+
+async function canAccessClient(supabase: AppSupabaseClient, clientId: string) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: false, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let query = supabase.from("clients").select("id").eq("id", clientId);
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    return { data: false, error: error.message };
+  }
+
+  return { data: Boolean(data), error: null };
 }
 
 function getFileExtension(file: File) {
@@ -253,11 +273,27 @@ export async function listProgressCheckInsByClient(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: ProgressCheckInSummary[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  const access = await canAccessClient(supabase, clientId);
+
+  if (access.error || !access.data) {
+    return { data: [], error: access.error };
+  }
+
+  let query = supabase
     .from("client_checkins")
     .select("*")
     .eq("client_id", clientId)
     .order("checkin_date", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -310,11 +346,20 @@ export async function getProgressCheckInById(
   supabase: AppSupabaseClient,
   checkinId: string,
 ): Promise<{ data: ProgressCheckIn | null; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError };
+  }
+
+  let query = supabase
     .from("client_checkins")
     .select("*")
-    .eq("id", checkinId)
-    .maybeSingle();
+    .eq("id", checkinId);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return {
@@ -367,13 +412,25 @@ export async function createProgressCheckInRecord(
   clientId: string,
   values: ProgressCheckInFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const access = await canAccessClient(supabase, clientId);
+
+  if (access.error || !access.data) {
+    return { data: null, error: { message: access.error ?? "Selected client is not available." } };
+  }
+
   return supabase
     .from("client_checkins")
-    .insert({
+    .insert(withGymId({
       client_id: clientId,
       ...normalizeProgressCheckInPayload(values),
       created_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 }
@@ -383,12 +440,20 @@ export async function updateProgressCheckInRecord(
   checkinId: string,
   values: ProgressCheckInFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let query = supabase
     .from("client_checkins")
     .update(normalizeProgressCheckInPayload(values))
-    .eq("id", checkinId)
-    .select("id, client_id")
-    .single();
+    .eq("id", checkinId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id, client_id").single();
 }
 
 export async function saveProgressCheckInPhotos(params: {

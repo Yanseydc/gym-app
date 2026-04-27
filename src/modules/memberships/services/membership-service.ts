@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -98,15 +99,25 @@ export async function getClientMembershipAccessLookup(
   supabase: AppSupabaseClient,
   clientIds: string[],
 ): Promise<Map<string, MembershipAccessSummary>> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    throw new Error(scopeError ?? "Unable to resolve gym scope.");
+  }
+
   if (clientIds.length === 0) {
     return new Map();
   }
 
-  const { data, error } = await supabase
+  let membershipsQuery = supabase
     .from("client_memberships")
     .select("*")
     .in("client_id", clientIds)
     .order("start_date", { ascending: false });
+
+  membershipsQuery = applyGymScope(membershipsQuery, scope);
+
+  const { data, error } = await membershipsQuery;
 
   if (error) {
     throw new Error(error.message);
@@ -119,10 +130,14 @@ export async function getClientMembershipAccessLookup(
   let planMap = new Map<string, { name: string; price: number }>();
 
   if (planIds.length > 0) {
-    const { data: plans, error: plansError } = await supabase
+    let plansQuery = supabase
       .from("membership_plans")
       .select("id, name, price")
       .in("id", planIds);
+
+    plansQuery = applyGymScope(plansQuery, scope);
+
+    const { data: plans, error: plansError } = await plansQuery;
 
     if (plansError) {
       throw new Error(plansError.message);
@@ -142,10 +157,14 @@ export async function getClientMembershipAccessLookup(
   let paymentTotals = new Map<string, number>();
 
   if (membershipIds.length > 0) {
-    const { data: payments, error: paymentsError } = await supabase
+    let paymentsQuery = supabase
       .from("payments")
       .select("client_membership_id, amount")
       .in("client_membership_id", membershipIds);
+
+    paymentsQuery = applyGymScope(paymentsQuery, scope);
+
+    const { data: payments, error: paymentsError } = await paymentsQuery;
 
     if (paymentsError) {
       throw new Error(paymentsError.message);
@@ -211,10 +230,20 @@ export async function getClientMembershipAccessLookup(
 export async function listMembershipPlans(
   supabase: AppSupabaseClient,
 ): Promise<{ data: MembershipPlan[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("membership_plans")
     .select("*")
     .order("name", { ascending: true });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -232,11 +261,21 @@ export async function listMembershipPlans(
 export async function listActiveMembershipPlans(
   supabase: AppSupabaseClient,
 ): Promise<{ data: MembershipPlan[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("membership_plans")
     .select("*")
     .eq("is_active", true)
     .order("name", { ascending: true });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -255,11 +294,20 @@ export async function getMembershipPlanById(
   supabase: AppSupabaseClient,
   membershipId: string,
 ): Promise<{ data: MembershipPlan | null; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError };
+  }
+
+  let query = supabase
     .from("membership_plans")
     .select("*")
-    .eq("id", membershipId)
-    .maybeSingle();
+    .eq("id", membershipId);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return {
@@ -278,12 +326,18 @@ export async function createMembershipPlanRecord(
   supabase: AppSupabaseClient,
   values: MembershipPlanFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
   return supabase
     .from("membership_plans")
-    .insert({
+    .insert(withGymId({
       ...normalizeMembershipPlanPayload(values),
       created_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 }
@@ -293,12 +347,20 @@ export async function updateMembershipPlanRecord(
   membershipId: string,
   values: MembershipPlanFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let query = supabase
     .from("membership_plans")
     .update(normalizeMembershipPlanPayload(values))
-    .eq("id", membershipId)
-    .select("id")
-    .single();
+    .eq("id", membershipId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id").single();
 }
 
 export async function assignMembershipToClientRecord(
@@ -306,7 +368,30 @@ export async function assignMembershipToClientRecord(
   clientId: string,
   values: ClientMembershipFormValues,
 ) {
-  const { data: overlappingMemberships, error: overlappingMembershipsError } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let clientQuery = supabase
+    .from("clients")
+    .select("id")
+    .eq("id", clientId);
+
+  clientQuery = applyGymScope(clientQuery, scope);
+
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: clientError.message };
+  }
+
+  if (!clientData) {
+    return { data: null, error: "Selected client is not available." };
+  }
+
+  let overlappingQuery = supabase
     .from("client_memberships")
     .select("id, start_date, end_date, status")
     .eq("client_id", clientId)
@@ -314,6 +399,10 @@ export async function assignMembershipToClientRecord(
     .lte("start_date", values.startDate)
     .gte("end_date", values.startDate)
     .limit(1);
+
+  overlappingQuery = applyGymScope(overlappingQuery, scope);
+
+  const { data: overlappingMemberships, error: overlappingMembershipsError } = await overlappingQuery;
 
   if (overlappingMembershipsError) {
     return {
@@ -332,12 +421,15 @@ export async function assignMembershipToClientRecord(
     };
   }
 
-  const { data: planData, error: planError } = await supabase
+  let planQuery = supabase
     .from("membership_plans")
     .select("*")
     .eq("id", values.membershipPlanId)
-    .eq("is_active", true)
-    .maybeSingle();
+    .eq("is_active", true);
+
+  planQuery = applyGymScope(planQuery, scope);
+
+  const { data: planData, error: planError } = await planQuery.maybeSingle();
 
   if (planError) {
     return {
@@ -360,7 +452,7 @@ export async function assignMembershipToClientRecord(
 
   return supabase
     .from("client_memberships")
-    .insert({
+    .insert(withGymId({
       client_id: clientId,
       membership_plan_id: plan.id,
       start_date: values.startDate,
@@ -369,7 +461,7 @@ export async function assignMembershipToClientRecord(
       notes: values.notes.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 }
@@ -378,26 +470,44 @@ export async function cancelClientMembershipRecord(
   supabase: AppSupabaseClient,
   clientMembershipId: string,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let query = supabase
     .from("client_memberships")
     .update({
       status: "cancelled",
       updated_at: new Date().toISOString(),
     })
-    .eq("id", clientMembershipId)
-    .select("id")
-    .single();
+    .eq("id", clientMembershipId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id").single();
 }
 
 export async function listClientMembershipHistory(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: ClientMembership[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("client_memberships")
     .select("*")
     .eq("client_id", clientId)
     .order("start_date", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -412,10 +522,14 @@ export async function listClientMembershipHistory(
     let planMap = new Map<string, { name: string; price: number }>();
 
     if (planIds.length > 0) {
-      const { data: plans, error: plansError } = await supabase
+      let plansQuery = supabase
         .from("membership_plans")
         .select("id, name, price")
         .in("id", planIds);
+
+      plansQuery = applyGymScope(plansQuery, scope);
+
+      const { data: plans, error: plansError } = await plansQuery;
 
       if (plansError) {
         return {
@@ -436,10 +550,14 @@ export async function listClientMembershipHistory(
     let paymentTotals = new Map<string, number>();
 
     if (membershipIds.length > 0) {
-      const { data: payments, error: paymentsError } = await supabase
+      let paymentsQuery = supabase
         .from("payments")
         .select("client_membership_id, amount")
         .in("client_membership_id", membershipIds);
+
+      paymentsQuery = applyGymScope(paymentsQuery, scope);
+
+      const { data: payments, error: paymentsError } = await paymentsQuery;
 
       if (paymentsError) {
         return {
@@ -493,11 +611,21 @@ export async function listMembershipAssignmentsByPlanId(
     error: string | null;
   }
 > {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("client_memberships")
     .select("*")
     .eq("membership_plan_id", membershipId)
     .order("start_date", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -512,10 +640,14 @@ export async function listMembershipAssignmentsByPlanId(
   let clientMap = new Map<string, string>();
 
   if (clientIds.length > 0) {
-    const { data: clients, error: clientsError } = await supabase
+    let clientsQuery = supabase
       .from("clients")
       .select("id, first_name, last_name")
       .in("id", clientIds);
+
+    clientsQuery = applyGymScope(clientsQuery, scope);
+
+    const { data: clients, error: clientsError } = await clientsQuery;
 
     if (clientsError) {
       return {
@@ -536,10 +668,14 @@ export async function listMembershipAssignmentsByPlanId(
   let paymentTotals = new Map<string, number>();
 
   if (membershipIds.length > 0) {
-    const { data: payments, error: paymentsError } = await supabase
+    let paymentsQuery = supabase
       .from("payments")
       .select("client_membership_id, amount")
       .in("client_membership_id", membershipIds);
+
+    paymentsQuery = applyGymScope(paymentsQuery, scope);
+
+    const { data: payments, error: paymentsError } = await paymentsQuery;
 
     if (paymentsError) {
       return {
@@ -555,11 +691,14 @@ export async function listMembershipAssignmentsByPlanId(
     }, new Map<string, number>());
   }
 
-  const { data: planData, error: planError } = await supabase
+  let planQuery = supabase
     .from("membership_plans")
     .select("id, price")
-    .eq("id", membershipId)
-    .maybeSingle();
+    .eq("id", membershipId);
+
+  planQuery = applyGymScope(planQuery, scope);
+
+  const { data: planData, error: planError } = await planQuery.maybeSingle();
 
   if (planError) {
     return {

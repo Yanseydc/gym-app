@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId, type GymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -146,14 +147,81 @@ function buildDuplicatedRoutineTitle(title: string) {
   return `${title.trim()} (Copy)`;
 }
 
+async function canAccessRoutineDay(
+  supabase: AppSupabaseClient,
+  routineDayId: string,
+  scope: GymScope,
+): Promise<{ data: boolean; error: string | null }> {
+  const { data: day, error: dayError } = await supabase
+    .from("client_routine_days")
+    .select("client_routine_id")
+    .eq("id", routineDayId)
+    .maybeSingle();
+
+  if (dayError) {
+    return { data: false, error: dayError.message };
+  }
+
+  if (!day) {
+    return { data: false, error: null };
+  }
+
+  let routineQuery = supabase
+    .from("client_routines")
+    .select("id")
+    .eq("id", String(day.client_routine_id));
+
+  routineQuery = applyGymScope(routineQuery, scope);
+
+  const { data: routine, error: routineError } = await routineQuery.maybeSingle();
+
+  if (routineError) {
+    return { data: false, error: routineError.message };
+  }
+
+  return { data: Boolean(routine), error: null };
+}
+
+async function canAccessRoutineExercise(
+  supabase: AppSupabaseClient,
+  routineExerciseId: string,
+  scope: GymScope,
+): Promise<{ data: boolean; error: string | null }> {
+  const { data: exercise, error: exerciseError } = await supabase
+    .from("client_routine_exercises")
+    .select("client_routine_day_id")
+    .eq("id", routineExerciseId)
+    .maybeSingle();
+
+  if (exerciseError) {
+    return { data: false, error: exerciseError.message };
+  }
+
+  if (!exercise) {
+    return { data: false, error: null };
+  }
+
+  return canAccessRoutineDay(supabase, String(exercise.client_routine_day_id), scope);
+}
+
 export async function listRoutineClientOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: RoutineClientOption[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("clients")
     .select("id, first_name, last_name")
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -202,11 +270,21 @@ export async function listRoutineSummariesByClient(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: ClientRoutineSummary[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("client_routines")
     .select("*")
     .eq("client_id", clientId)
     .order("updated_at", { ascending: false });
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -255,11 +333,20 @@ export async function getRoutineById(
   supabase: AppSupabaseClient,
   routineId: string,
 ): Promise<{ data: ClientRoutine | null; error: string | null }> {
-  const { data: routineData, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError };
+  }
+
+  let routineQuery = supabase
     .from("client_routines")
     .select("*")
-    .eq("id", routineId)
-    .maybeSingle();
+    .eq("id", routineId);
+
+  routineQuery = applyGymScope(routineQuery, scope);
+
+  const { data: routineData, error } = await routineQuery.maybeSingle();
 
   if (error) {
     return {
@@ -279,10 +366,10 @@ export async function getRoutineById(
 
   const [{ data: clientData, error: clientError }, { data: dayData, error: dayError }] =
     await Promise.all([
-      supabase
+      applyGymScope(supabase
         .from("clients")
         .select("id, first_name, last_name")
-        .eq("id", routine.client_id)
+        .eq("id", routine.client_id), scope)
         .maybeSingle(),
       supabase
         .from("client_routine_days")
@@ -441,13 +528,31 @@ export async function createRoutineRecord(
   coachProfileId: string,
   values: RoutineFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", values.clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: { message: clientError.message } };
+  }
+
+  if (!clientData) {
+    return { data: null, error: { message: "Selected client is not available." } };
+  }
+
   return supabase
     .from("client_routines")
-    .insert({
+    .insert(withGymId({
       ...normalizeRoutinePayload(values),
       coach_profile_id: coachProfileId,
       created_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 }
@@ -457,12 +562,32 @@ export async function updateRoutineRecord(
   routineId: string,
   values: RoutineFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", values.clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: { message: clientError.message } };
+  }
+
+  if (!clientData) {
+    return { data: null, error: { message: "Selected client is not available." } };
+  }
+
+  let query = supabase
     .from("client_routines")
     .update(normalizeRoutinePayload(values))
-    .eq("id", routineId)
-    .select("id")
-    .single();
+    .eq("id", routineId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id").single();
 }
 
 export async function activateRoutineRecord(
@@ -470,6 +595,39 @@ export async function activateRoutineRecord(
   routineId: string,
   values: RoutineFormValues,
 ): Promise<{ data: { archivedPrevious: boolean; id: string } | null; error: string | null; code?: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let routineQuery = supabase
+    .from("client_routines")
+    .select("id")
+    .eq("id", routineId);
+  routineQuery = applyGymScope(routineQuery, scope);
+  const { data: routineData, error: routineError } = await routineQuery.maybeSingle();
+
+  if (routineError) {
+    return { data: null, error: routineError.message };
+  }
+
+  if (!routineData) {
+    return { data: null, error: "Routine is not available." };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", values.clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: clientError.message };
+  }
+
+  if (!clientData) {
+    return { data: null, error: "Selected client is not available." };
+  }
+
   const rpcClient = supabase as RoutineActivationRpcClient;
   const { data, error } = await rpcClient.rpc("activate_client_routine", {
     target_routine_id: routineId,
@@ -511,6 +669,24 @@ export async function createRoutineDayRecord(
   routineId: string,
   values: RoutineDayFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let routineQuery = supabase.from("client_routines").select("id").eq("id", routineId);
+  routineQuery = applyGymScope(routineQuery, scope);
+  const { data: routineData, error: routineError } = await routineQuery.maybeSingle();
+
+  if (routineError) {
+    return { data: null, error: { message: routineError.message } };
+  }
+
+  if (!routineData) {
+    return { data: null, error: { message: "Routine is not available." } };
+  }
+
   return supabase
     .from("client_routine_days")
     .insert({
@@ -527,6 +703,17 @@ export async function updateRoutineDayRecord(
   routineDayId: string,
   values: RoutineDayFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineDay(supabase, routineDayId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine day is not available." } };
+  }
+
   return supabase
     .from("client_routine_days")
     .update(normalizeRoutineDayPayload(values))
@@ -539,6 +726,17 @@ export async function deleteRoutineDayRecord(
   supabase: AppSupabaseClient,
   routineDayId: string,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineDay(supabase, routineDayId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine day is not available." } };
+  }
+
   const { error: exerciseError } = await supabase
     .from("client_routine_exercises")
     .delete()
@@ -564,6 +762,17 @@ export async function createRoutineExerciseRecord(
   routineDayId: string,
   values: RoutineExerciseFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineDay(supabase, routineDayId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine day is not available." } };
+  }
+
   return supabase
     .from("client_routine_exercises")
     .insert({
@@ -580,6 +789,17 @@ export async function updateRoutineExerciseRecord(
   routineExerciseId: string,
   values: RoutineExerciseFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineExercise(supabase, routineExerciseId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine exercise is not available." } };
+  }
+
   return supabase
     .from("client_routine_exercises")
     .update(normalizeRoutineExercisePayload(values))
@@ -593,6 +813,20 @@ export async function reorderRoutineDaysRecord(
   routineId: string,
   dayIds: string[],
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let routineQuery = supabase.from("client_routines").select("id").eq("id", routineId);
+  routineQuery = applyGymScope(routineQuery, scope);
+  const { data: routineData, error: routineError } = await routineQuery.maybeSingle();
+
+  if (routineError || !routineData) {
+    return { data: null, error: { message: routineError?.message ?? "Routine is not available." } };
+  }
+
   return supabase.rpc("reorder_client_routine_days", {
     p_routine_id: routineId,
     p_day_ids: dayIds,
@@ -604,6 +838,17 @@ export async function reorderRoutineExercisesRecord(
   routineDayId: string,
   exerciseIds: string[],
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineDay(supabase, routineDayId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine day is not available." } };
+  }
+
   return supabase.rpc("reorder_client_routine_exercises", {
     p_routine_day_id: routineDayId,
     p_exercise_ids: exerciseIds,
@@ -614,6 +859,17 @@ export async function deleteRoutineExerciseRecord(
   supabase: AppSupabaseClient,
   routineExerciseId: string,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  const canAccess = await canAccessRoutineExercise(supabase, routineExerciseId, scope);
+  if (canAccess.error || !canAccess.data) {
+    return { data: null, error: { message: canAccess.error ?? "Routine exercise is not available." } };
+  }
+
   return supabase
     .from("client_routine_exercises")
     .delete()
@@ -627,11 +883,17 @@ export async function duplicateRoutineRecord(
   coachProfileId: string,
   sourceRoutine: ClientRoutine,
 ): Promise<{ data: { id: string } | null; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
   const createdAt = new Date().toISOString();
 
   const { data: duplicatedRoutine, error: routineError } = await supabase
     .from("client_routines")
-    .insert({
+    .insert(withGymId({
       client_id: sourceRoutine.clientId,
       coach_profile_id: coachProfileId,
       title: buildDuplicatedRoutineTitle(sourceRoutine.title),
@@ -641,7 +903,7 @@ export async function duplicateRoutineRecord(
       ends_on: null,
       created_at: createdAt,
       updated_at: createdAt,
-    })
+    }, scope))
     .select("id")
     .single();
 

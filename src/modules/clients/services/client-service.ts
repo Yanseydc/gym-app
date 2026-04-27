@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -41,11 +42,22 @@ export async function listClients(
   supabase: AppSupabaseClient,
   filters: ClientListFilters,
 ): Promise<{ data: Client[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: [],
+      error: scopeError,
+    };
+  }
+
   let query = supabase
     .from("clients")
     .select("*")
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
+
+  query = applyGymScope(query, scope);
 
   if (filters.search) {
     const search = filters.search.trim();
@@ -73,11 +85,23 @@ export async function getClientById(
   supabase: AppSupabaseClient,
   clientId: string,
 ): Promise<{ data: Client | null; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: scopeError,
+    };
+  }
+
+  let query = supabase
     .from("clients")
     .select("*")
-    .eq("id", clientId)
-    .maybeSingle();
+    .eq("id", clientId);
+
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return {
@@ -96,12 +120,21 @@ export async function createClientRecord(
   supabase: AppSupabaseClient,
   values: ClientFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: { message: scopeError ?? "Unable to resolve gym scope." },
+    };
+  }
+
   return supabase
     .from("clients")
-    .insert({
+    .insert(withGymId({
       ...normalizeClientPayload(values),
       created_at: new Date().toISOString(),
-    })
+    }, scope))
     .select("id")
     .single();
 }
@@ -111,12 +144,23 @@ export async function updateClientRecord(
   clientId: string,
   values: ClientFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: { message: scopeError ?? "Unable to resolve gym scope." },
+    };
+  }
+
+  let query = supabase
     .from("clients")
     .update(normalizeClientPayload(values))
-    .eq("id", clientId)
-    .select("id")
-    .single();
+    .eq("id", clientId);
+
+  query = applyGymScope(query, scope);
+
+  return query.select("id").single();
 }
 
 export const getClientForPage = cache(async (clientId: string) => {
