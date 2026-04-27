@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
+import { canEditExerciseRecord } from "@/modules/coaching/services/exercise-service";
 import type {
   ExerciseMediaFormValues,
   ExerciseMediaItem,
@@ -56,6 +57,12 @@ export async function createExerciseMediaRecord(
   exerciseId: string,
   values: ExerciseMediaFormValues,
 ) {
+  const canEdit = await canEditExerciseRecord(supabase, exerciseId);
+
+  if (canEdit.error || !canEdit.data) {
+    return { data: null, error: { message: canEdit.error ?? "Exercise gallery is not editable." } };
+  }
+
   return supabase
     .from("exercise_media")
     .insert({
@@ -72,6 +79,26 @@ export async function updateExerciseMediaRecord(
   mediaId: string,
   values: ExerciseMediaFormValues,
 ) {
+  const { data: media, error: mediaError } = await supabase
+    .from("exercise_media")
+    .select("exercise_id")
+    .eq("id", mediaId)
+    .maybeSingle();
+
+  if (mediaError) {
+    return { data: null, error: { message: mediaError.message } };
+  }
+
+  if (!media) {
+    return { data: null, error: { message: "Gallery image not found." } };
+  }
+
+  const canEdit = await canEditExerciseRecord(supabase, String(media.exercise_id));
+
+  if (canEdit.error || !canEdit.data) {
+    return { data: null, error: { message: canEdit.error ?? "Exercise gallery is not editable." } };
+  }
+
   return supabase
     .from("exercise_media")
     .update(normalizeExerciseMediaPayload(values))
@@ -84,6 +111,26 @@ export async function deleteExerciseMediaRecord(
   supabase: AppSupabaseClient,
   mediaId: string,
 ) {
+  const { data: media, error: mediaError } = await supabase
+    .from("exercise_media")
+    .select("exercise_id")
+    .eq("id", mediaId)
+    .maybeSingle();
+
+  if (mediaError) {
+    return { data: null, error: { message: mediaError.message } };
+  }
+
+  if (!media) {
+    return { data: null, error: { message: "Gallery image not found." } };
+  }
+
+  const canEdit = await canEditExerciseRecord(supabase, String(media.exercise_id));
+
+  if (canEdit.error || !canEdit.data) {
+    return { data: null, error: { message: canEdit.error ?? "Exercise gallery is not editable." } };
+  }
+
   return supabase.from("exercise_media").delete().eq("id", mediaId);
 }
 

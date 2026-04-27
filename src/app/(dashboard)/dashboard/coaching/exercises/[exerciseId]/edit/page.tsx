@@ -57,6 +57,31 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
     notFound();
   }
 
+  if (!exercise.canEdit) {
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <Link
+          href="/dashboard/coaching/exercises"
+          className={buttonSecondary}
+          style={{ width: "fit-content" }}
+        >
+          {t.backToExerciseLibrary}
+        </Link>
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--warning-bg)",
+            color: "var(--warning-fg)",
+          }}
+        >
+          This system exercise cannot be edited directly. Use it as a base to create a custom exercise for your gym.
+        </p>
+      </div>
+    );
+  }
+
   const defaultValues: ExerciseFormValues = {
     name: exercise.name,
     slug: exercise.slug,

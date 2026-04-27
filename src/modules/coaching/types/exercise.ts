@@ -6,6 +6,8 @@ export type ExerciseDifficulty = NonNullable<ExerciseLibraryRecord["difficulty"]
 
 export type ExerciseLibraryItem = {
   id: string;
+  gymId: string | null;
+  createdBy: string | null;
   name: string;
   slug: string;
   description: string | null;
@@ -19,6 +21,9 @@ export type ExerciseLibraryItem = {
   coachTips: string | null;
   commonMistakes: string | null;
   isActive: boolean;
+  source: "system" | "gym";
+  canEdit: boolean;
+  canDuplicate: boolean;
   createdAt: string;
   updatedAt: string;
 };

@@ -82,3 +82,7 @@ export function applyGymScope<T extends ScopedQuery<T>>(query: T, scope: GymScop
 export function withGymId<T extends Record<string, unknown>>(payload: T, scope: GymScope) {
   return scope.isSuperAdmin ? payload : { ...payload, gym_id: scope.gymId };
 }
+
+export function canManageGymContent(scope: GymScope) {
+  return scope.isSuperAdmin || scope.role === "admin" || scope.role === "coach";
+}

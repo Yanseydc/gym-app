@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { canManageGymContent, requireGymScope, type GymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -8,9 +9,14 @@ import type {
   ExerciseLibraryRecord,
 } from "@/modules/coaching/types";
 
-function mapExercise(record: ExerciseLibraryRecord): ExerciseLibraryItem {
+function mapExercise(record: ExerciseLibraryRecord, scope: GymScope): ExerciseLibraryItem {
+  const source = record.gym_id ? "gym" : "system";
+  const canEdit = scope.isSuperAdmin || (canManageGymContent(scope) && record.gym_id === scope.gymId);
+
   return {
     id: record.id,
+    gymId: record.gym_id,
+    createdBy: record.created_by,
     name: record.name,
     slug: record.slug,
     description: record.description,
@@ -24,6 +30,9 @@ function mapExercise(record: ExerciseLibraryRecord): ExerciseLibraryItem {
     coachTips: record.coach_tips,
     commonMistakes: record.common_mistakes,
     isActive: record.is_active,
+    source,
+    canEdit,
+    canDuplicate: source === "system" && !scope.isSuperAdmin && canManageGymContent(scope),
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
@@ -51,10 +60,22 @@ function normalizeExercisePayload(values: ExerciseFormValues) {
 export async function listExercises(
   supabase: AppSupabaseClient,
 ): Promise<{ data: ExerciseLibraryItem[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("exercise_library")
     .select("*")
     .order("name", { ascending: true });
+
+  if (!scope.isSuperAdmin) {
+    query = query.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -64,7 +85,7 @@ export async function listExercises(
   }
 
   return {
-    data: (data ?? []).map((exercise) => mapExercise(exercise as ExerciseLibraryRecord)),
+    data: (data ?? []).map((exercise) => mapExercise(exercise as ExerciseLibraryRecord, scope)),
     error: null,
   };
 }
@@ -73,11 +94,22 @@ export async function getExerciseById(
   supabase: AppSupabaseClient,
   exerciseId: string,
 ): Promise<{ data: ExerciseLibraryItem | null; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError };
+  }
+
+  let query = supabase
     .from("exercise_library")
     .select("*")
-    .eq("id", exerciseId)
-    .maybeSingle();
+    .eq("id", exerciseId);
+
+  if (!scope.isSuperAdmin) {
+    query = query.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return {
@@ -87,7 +119,7 @@ export async function getExerciseById(
   }
 
   return {
-    data: data ? mapExercise(data as ExerciseLibraryRecord) : null,
+    data: data ? mapExercise(data as ExerciseLibraryRecord, scope) : null,
     error: null,
   };
 }
@@ -96,10 +128,22 @@ export async function createExerciseRecord(
   supabase: AppSupabaseClient,
   values: ExerciseFormValues,
 ) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  if (!canManageGymContent(scope)) {
+    return { data: null, error: { message: "You do not have permission to create exercises." } };
+  }
+
   return supabase
     .from("exercise_library")
     .insert({
       ...normalizeExercisePayload(values),
+      gym_id: scope.isSuperAdmin ? null : scope.gymId,
+      created_by: scope.id,
       created_at: new Date().toISOString(),
     })
     .select("id")
@@ -111,10 +155,113 @@ export async function updateExerciseRecord(
   exerciseId: string,
   values: ExerciseFormValues,
 ) {
-  return supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let lookupQuery = supabase
+    .from("exercise_library")
+    .select("id, gym_id")
+    .eq("id", exerciseId);
+
+  if (!scope.isSuperAdmin) {
+    lookupQuery = lookupQuery.eq("gym_id", scope.gymId ?? "");
+  }
+
+  const { data: existingExercise, error: lookupError } = await lookupQuery.maybeSingle();
+
+  if (lookupError) {
+    return { data: null, error: { message: lookupError.message } };
+  }
+
+  if (!existingExercise) {
+    return { data: null, error: { message: "Exercise is not editable for your gym." } };
+  }
+
+  if (!scope.isSuperAdmin && !canManageGymContent(scope)) {
+    return { data: null, error: { message: "You do not have permission to edit exercises." } };
+  }
+
+  let updateQuery = supabase
     .from("exercise_library")
     .update(normalizeExercisePayload(values))
+    .eq("id", exerciseId);
+
+  if (!scope.isSuperAdmin) {
+    updateQuery = updateQuery.eq("gym_id", scope.gymId ?? "");
+  }
+
+  return updateQuery.select("id").single();
+}
+
+export async function canEditExerciseRecord(
+  supabase: AppSupabaseClient,
+  exerciseId: string,
+): Promise<{ data: boolean; error: string | null }> {
+  const { data: exercise, error } = await getExerciseById(supabase, exerciseId);
+
+  if (error) {
+    return { data: false, error };
+  }
+
+  return { data: Boolean(exercise?.canEdit), error: null };
+}
+
+export async function duplicateExerciseRecord(
+  supabase: AppSupabaseClient,
+  exerciseId: string,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  if (scope.isSuperAdmin || !canManageGymContent(scope)) {
+    return { data: null, error: "You do not have permission to duplicate this exercise." };
+  }
+
+  const { data: exercise, error } = await supabase
+    .from("exercise_library")
+    .select("*")
     .eq("id", exerciseId)
+    .is("gym_id", null)
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  if (!exercise) {
+    return { data: null, error: "Only system exercises can be duplicated." };
+  }
+
+  const record = exercise as ExerciseLibraryRecord;
+  const timestamp = Date.now();
+
+  return supabase
+    .from("exercise_library")
+    .insert({
+      name: `${record.name} (Copy)`,
+      slug: `${record.slug}-${timestamp}`,
+      description: record.description,
+      video_url: record.video_url,
+      thumbnail_url: record.thumbnail_url,
+      primary_muscle: record.primary_muscle,
+      secondary_muscle: record.secondary_muscle,
+      equipment: record.equipment,
+      difficulty: record.difficulty,
+      instructions: record.instructions,
+      coach_tips: record.coach_tips,
+      common_mistakes: record.common_mistakes,
+      is_active: record.is_active,
+      gym_id: scope.gymId,
+      created_by: scope.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .select("id")
     .single();
 }

@@ -242,11 +242,23 @@ export async function listRoutineClientOptions(
 export async function listRoutineExerciseOptions(
   supabase: AppSupabaseClient,
 ): Promise<{ data: RoutineExerciseOption[]; error: string | null }> {
-  const { data, error } = await supabase
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
     .from("exercise_library")
-    .select("id, name, difficulty, primary_muscle")
+    .select("id, name, difficulty, primary_muscle, gym_id")
     .eq("is_active", true)
     .order("name", { ascending: true });
+
+  if (!scope.isSuperAdmin) {
+    query = query.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -773,6 +785,26 @@ export async function createRoutineExerciseRecord(
     return { data: null, error: { message: canAccess.error ?? "Routine day is not available." } };
   }
 
+  let exerciseQuery = supabase
+    .from("exercise_library")
+    .select("id, gym_id")
+    .eq("id", values.exerciseId)
+    .eq("is_active", true);
+
+  if (!scope.isSuperAdmin) {
+    exerciseQuery = exerciseQuery.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data: exerciseData, error: exerciseError } = await exerciseQuery.maybeSingle();
+
+  if (exerciseError) {
+    return { data: null, error: { message: exerciseError.message } };
+  }
+
+  if (!exerciseData) {
+    return { data: null, error: { message: "Selected exercise is not available." } };
+  }
+
   return supabase
     .from("client_routine_exercises")
     .insert({
@@ -798,6 +830,26 @@ export async function updateRoutineExerciseRecord(
   const canAccess = await canAccessRoutineExercise(supabase, routineExerciseId, scope);
   if (canAccess.error || !canAccess.data) {
     return { data: null, error: { message: canAccess.error ?? "Routine exercise is not available." } };
+  }
+
+  let exerciseQuery = supabase
+    .from("exercise_library")
+    .select("id, gym_id")
+    .eq("id", values.exerciseId)
+    .eq("is_active", true);
+
+  if (!scope.isSuperAdmin) {
+    exerciseQuery = exerciseQuery.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data: exerciseData, error: exerciseError } = await exerciseQuery.maybeSingle();
+
+  if (exerciseError) {
+    return { data: null, error: { message: exerciseError.message } };
+  }
+
+  if (!exerciseData) {
+    return { data: null, error: { message: "Selected exercise is not available." } };
   }
 
   return supabase
