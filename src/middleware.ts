@@ -88,7 +88,7 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const profile = await getProfileByUserId(supabase, user.id);
-    const role = profile?.role ?? "member";
+    const role = profile?.role ?? "client";
     const url = request.nextUrl.clone();
     url.pathname = getDefaultAuthenticatedRoute(role);
     return NextResponse.redirect(url);
@@ -99,15 +99,15 @@ export async function middleware(request: NextRequest) {
   }
 
   const profile = await getProfileByUserId(supabase, user.id);
-  const role = profile?.role ?? "member";
+  const role = profile?.role ?? "client";
 
-  if (role === "member" && isDashboardRoute(pathname)) {
+  if (role === "client" && isDashboardRoute(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = getDefaultAuthenticatedRoute(role);
     return NextResponse.redirect(url);
   }
 
-  if (role !== "member" && isPortalRoute(pathname)) {
+  if (role !== "client" && isPortalRoute(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = getDefaultAuthenticatedRoute(role);
     return NextResponse.redirect(url);
@@ -115,7 +115,7 @@ export async function middleware(request: NextRequest) {
 
   if (!canAccessPath(role, pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = role === "member" ? getDefaultAuthenticatedRoute(role) : getAuthorizedHomePath(role);
+    url.pathname = role === "client" ? getDefaultAuthenticatedRoute(role) : getAuthorizedHomePath(role);
     return NextResponse.redirect(url);
   }
 

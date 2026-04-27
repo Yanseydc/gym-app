@@ -20,7 +20,7 @@ export default async function PortalLayout({ children }: PortalLayoutProps) {
     redirect("/login");
   }
 
-  if (user.role !== "member") {
+  if (user.role !== "client") {
     redirect("/dashboard");
   }
 

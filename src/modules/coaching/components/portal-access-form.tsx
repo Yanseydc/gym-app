@@ -23,7 +23,7 @@ export function PortalAccessForm({ action }: PortalAccessFormProps) {
         <input
           name="email"
           type="email"
-          placeholder="member@example.com"
+          placeholder="client@example.com"
           className={input}
         />
         {state.fieldErrors?.email ? <FieldError message={state.fieldErrors.email} /> : null}

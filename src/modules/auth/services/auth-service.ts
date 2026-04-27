@@ -56,7 +56,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   }
 
   const profile = await getProfileByUserId(supabase, user.id);
-  const role: Role = profile?.role ?? "member";
+  const role: Role = profile?.role ?? "client";
 
   return {
     id: user.id,

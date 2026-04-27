@@ -75,7 +75,7 @@ export default async function NewPortalAccessPage({ params }: NewPortalAccessPag
       <header>
         <h1 style={{ margin: "0 0 8px" }}>Link portal access</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Link {client.firstName} {client.lastName} to an existing member account in the portal.
+          Link {client.firstName} {client.lastName} to an existing client account in the portal.
         </p>
       </header>
 

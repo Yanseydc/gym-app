@@ -5,15 +5,15 @@ export const authRoutes = ["/login"];
 export const protectedRoutes = ["/dashboard", "/app"];
 
 export const internalAppHomeRoute = "/dashboard";
-export const memberAppHomeRoute = "/app";
+export const clientAppHomeRoute = "/app";
 export const defaultAuthenticatedRoute = internalAppHomeRoute;
 
 export function getDefaultAuthenticatedRoute(role: Role): string {
-  return role === "member" ? memberAppHomeRoute : internalAppHomeRoute;
+  return role === "client" ? clientAppHomeRoute : internalAppHomeRoute;
 }
 
 export function isPortalRoute(pathname: string): boolean {
-  return pathname === memberAppHomeRoute || pathname.startsWith(`${memberAppHomeRoute}/`);
+  return pathname === clientAppHomeRoute || pathname.startsWith(`${clientAppHomeRoute}/`);
 }
 
 export function isDashboardRoute(pathname: string): boolean {

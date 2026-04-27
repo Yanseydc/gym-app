@@ -3,7 +3,7 @@ create table if not exists public.profiles (
   email text not null unique,
   first_name text,
   last_name text,
-  role text not null default 'member' check (role in ('admin', 'staff', 'coach', 'member')),
+  role text not null default 'client' check (role in ('super_admin', 'admin', 'staff', 'coach', 'client')),
   created_at timestamptz not null default now()
 );
 

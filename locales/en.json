@@ -34,10 +34,11 @@
     "signOut": "Sign out",
     "language": "Language",
     "role": {
+      "super_admin": "Super admin",
       "admin": "Admin",
       "staff": "Staff",
       "coach": "Coach",
-      "member": "Member"
+      "client": "Member"
     },
     "status": {
       "active": "Active",
@@ -118,7 +119,7 @@
       "portalAccess": "Portal access",
       "accessUnavailable": "Access unavailable",
       "notLinkedYet": "Not linked yet",
-      "portalAccessDescription": "Link a member profile to unlock the client portal.",
+      "portalAccessDescription": "Link a client profile to unlock the client portal.",
       "linkPortalUser": "Link portal user",
       "onboardingSnapshot": "Onboarding snapshot",
       "onboardingUnavailable": "Onboarding unavailable",

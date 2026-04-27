@@ -9,7 +9,7 @@ type ProfileLookupRow = {
   first_name: string | null;
   id: string;
   last_name: string | null;
-  role: "admin" | "staff" | "coach" | "member";
+  role: "super_admin" | "admin" | "staff" | "coach" | "client";
 };
 
 function mapPortalProfile(row: ProfileLookupRow): PortalLinkedProfile {
@@ -142,10 +142,10 @@ export async function createClientUserLinkRecord(
     };
   }
 
-  if (profile.role !== "member") {
+  if (profile.role !== "client") {
     return {
       data: null,
-      error: "Only member profiles can be linked to the client portal.",
+      error: "Only client profiles can be linked to the client portal.",
     };
   }
 

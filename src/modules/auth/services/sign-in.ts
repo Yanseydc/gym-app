@@ -38,7 +38,7 @@ export async function signIn(
   } = await supabase.auth.getUser();
 
   const profile = user ? await getProfileByUserId(supabase, user.id) : null;
-  const role = profile?.role ?? "member";
+  const role = profile?.role ?? "client";
 
   redirect(getDefaultAuthenticatedRoute(role));
 }

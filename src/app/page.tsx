@@ -11,7 +11,7 @@ const sections = [
   },
   {
     title: "Auth con roles",
-    description: "Base lista para admin, staff, coach y member sobre Supabase.",
+    description: "Base lista para super admin, admin, staff, coach y cliente sobre Supabase.",
   },
 ];
 

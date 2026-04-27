@@ -3,7 +3,7 @@ export type PortalLinkedProfile = {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: "admin" | "staff" | "coach" | "member";
+  role: "super_admin" | "admin" | "staff" | "coach" | "client";
 };
 
 export type ClientPortalAccess = {

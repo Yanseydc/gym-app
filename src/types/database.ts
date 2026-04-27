@@ -603,7 +603,7 @@ export type Database = {
           first_name: string | null;
           id: string;
           last_name: string | null;
-          role: "admin" | "staff" | "coach" | "member";
+          role: "super_admin" | "admin" | "staff" | "coach" | "client";
         };
         Insert: {
           created_at?: string;
@@ -611,7 +611,7 @@ export type Database = {
           first_name?: string | null;
           id: string;
           last_name?: string | null;
-          role?: "admin" | "staff" | "coach" | "member";
+          role?: "super_admin" | "admin" | "staff" | "coach" | "client";
         };
         Update: {
           created_at?: string;
@@ -619,7 +619,7 @@ export type Database = {
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
-          role?: "admin" | "staff" | "coach" | "member";
+          role?: "super_admin" | "admin" | "staff" | "coach" | "client";
         };
         Relationships: [];
       };
@@ -653,7 +653,7 @@ export type Database = {
           first_name: string | null;
           id: string;
           last_name: string | null;
-          role: "admin" | "staff" | "coach" | "member";
+          role: "super_admin" | "admin" | "staff" | "coach" | "client";
         }[];
       };
       lookup_portal_profile_by_id: {
@@ -665,7 +665,7 @@ export type Database = {
           first_name: string | null;
           id: string;
           last_name: string | null;
-          role: "admin" | "staff" | "coach" | "member";
+          role: "super_admin" | "admin" | "staff" | "coach" | "client";
         }[];
       };
       reorder_client_routine_days: {

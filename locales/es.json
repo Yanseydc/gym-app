@@ -34,10 +34,11 @@
     "signOut": "Cerrar sesión",
     "language": "Idioma",
     "role": {
+      "super_admin": "Super admin",
       "admin": "Admin",
       "staff": "Staff",
       "coach": "Coach",
-      "member": "Miembro"
+      "client": "Miembro"
     },
     "status": {
       "active": "Activo",
@@ -118,7 +119,7 @@
       "portalAccess": "Acceso al portal",
       "accessUnavailable": "Acceso no disponible",
       "notLinkedYet": "Aún no vinculado",
-      "portalAccessDescription": "Vincula un perfil member para habilitar el portal del cliente.",
+      "portalAccessDescription": "Vincula un perfil client para habilitar el portal del cliente.",
       "linkPortalUser": "Vincular usuario del portal",
       "onboardingSnapshot": "Snapshot de onboarding",
       "onboardingUnavailable": "Onboarding no disponible",
