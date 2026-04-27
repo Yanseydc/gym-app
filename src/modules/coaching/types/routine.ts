@@ -18,6 +18,8 @@ export type RoutineExerciseOption = {
   label: string;
   difficulty: Database["public"]["Tables"]["exercise_library"]["Row"]["difficulty"];
   primaryMuscle: string | null;
+  equipment: string | null;
+  source: "system" | "gym";
 };
 
 export type ClientRoutineExercise = {

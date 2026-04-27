@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -76,14 +85,21 @@ export function RoutineExerciseForm({
       <div style={gridStyles}>
         <label style={{ display: "grid", gap: 8, gridColumn: "1 / -1" }}>
           <span style={labelStyles}>{t("coaching.routines.exerciseLabel")}</span>
-          <select name="exerciseId" defaultValue={defaultValues?.exerciseId ?? ""} className={input}>
-            <option value="">{t("coaching.routines.selectExercise")}</option>
-            {exercises.map((exercise) => (
-              <option key={exercise.id} value={exercise.id}>
-                {exercise.label}
-              </option>
-            ))}
-          </select>
+          <ExerciseCombobox
+            exercises={exercises}
+            name="exerciseId"
+            defaultValue={defaultValues?.exerciseId ?? ""}
+            labels={{
+              placeholder: t("coaching.routines.selectExercise"),
+              searchPlaceholder: t("coaching.routines.searchExercise"),
+              all: t("coaching.routines.allExercises"),
+              system: t("coaching.routines.systemExercises"),
+              custom: t("coaching.routines.customExercises"),
+              systemBadge: t("coaching.routines.systemExercise"),
+              customBadge: t("coaching.routines.customExercise"),
+              noResults: t("coaching.routines.noExerciseResults"),
+            }}
+          />
           {state.fieldErrors?.exerciseId ? (
             <FieldError message={state.fieldErrors.exerciseId} />
           ) : null}
@@ -155,6 +171,264 @@ export function RoutineExerciseForm({
   );
 }
 
+type ExerciseFilter = "all" | "system" | "gym";
+
+function ExerciseCombobox({
+  defaultValue,
+  exercises,
+  labels,
+  name,
+}: {
+  defaultValue: string;
+  exercises: RoutineExerciseOption[];
+  labels: {
+    placeholder: string;
+    searchPlaceholder: string;
+    all: string;
+    system: string;
+    custom: string;
+    systemBadge: string;
+    customBadge: string;
+    noResults: string;
+  };
+  name: string;
+}) {
+  const listboxId = useId();
+  const [selectedId, setSelectedId] = useState(defaultValue);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<ExerciseFilter>("all");
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const selectedExercise = useMemo(
+    () => exercises.find((exercise) => exercise.id === selectedId) ?? null,
+    [exercises, selectedId],
+  );
+
+  const filteredExercises = useMemo(() => {
+    const normalizedQuery = normalizeSearch(query);
+
+    return exercises.filter((exercise) => {
+      if (filter !== "all" && exercise.source !== filter) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return normalizeSearch([
+        exercise.label,
+        exercise.primaryMuscle,
+        exercise.equipment,
+        exercise.difficulty,
+        exercise.source === "system" ? labels.systemBadge : labels.customBadge,
+      ].filter(Boolean).join(" ")).includes(normalizedQuery);
+    });
+  }, [exercises, filter, labels.customBadge, labels.systemBadge, query]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [filter, query]);
+
+  function selectExercise(exercise: RoutineExerciseOption) {
+    setSelectedId(exercise.id);
+    setQuery("");
+    setIsOpen(false);
+    setActiveIndex(0);
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex((current) => Math.min(current + 1, filteredExercises.length - 1));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((current) => Math.max(current - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter" && isOpen) {
+      event.preventDefault();
+      const exercise = filteredExercises[activeIndex];
+
+      if (exercise) {
+        selectExercise(exercise);
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setIsOpen(false);
+    }
+  }
+
+  return (
+    <div style={{ position: "relative", display: "grid", gap: 8 }}>
+      <input type="hidden" name={name} value={selectedId} />
+
+      {selectedExercise ? (
+        <div style={selectedExerciseStyles}>
+          <div style={{ minWidth: 0 }}>
+            <strong style={{ display: "block" }}>{selectedExercise.label}</strong>
+            <span style={{ display: "block", color: "var(--muted)", fontSize: 13 }}>
+              {formatExerciseMeta(selectedExercise)}
+            </span>
+          </div>
+          <SourceBadge
+            source={selectedExercise.source}
+            systemLabel={labels.systemBadge}
+            customLabel={labels.customBadge}
+          />
+        </div>
+      ) : null}
+
+      <input
+        type="text"
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-controls={listboxId}
+        aria-autocomplete="list"
+        value={query}
+        className={input}
+        placeholder={selectedExercise ? labels.searchPlaceholder : labels.placeholder}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onKeyDown={handleKeyDown}
+      />
+
+      {isOpen ? (
+        <div style={popoverStyles}>
+          <div style={filterRowStyles}>
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
+              {labels.all}
+            </FilterChip>
+            <FilterChip active={filter === "system"} onClick={() => setFilter("system")}>
+              {labels.system}
+            </FilterChip>
+            <FilterChip active={filter === "gym"} onClick={() => setFilter("gym")}>
+              {labels.custom}
+            </FilterChip>
+          </div>
+
+          {filteredExercises.length === 0 ? (
+            <p style={{ margin: 0, padding: 12, color: "var(--muted)" }}>{labels.noResults}</p>
+          ) : (
+            <div id={listboxId} role="listbox" style={resultListStyles}>
+              {filteredExercises.map((exercise, index) => (
+                <button
+                  key={exercise.id}
+                  type="button"
+                  role="option"
+                  aria-selected={exercise.id === selectedId}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => selectExercise(exercise)}
+                  style={{
+                    ...resultButtonStyles,
+                    background:
+                      index === activeIndex || exercise.id === selectedId
+                        ? "var(--surface-alt)"
+                        : "transparent",
+                  }}
+                >
+                  <span style={{ minWidth: 0 }}>
+                    <strong style={{ display: "block" }}>{exercise.label}</strong>
+                    <span style={{ display: "block", color: "var(--muted)", fontSize: 13 }}>
+                      {formatExerciseMeta(exercise)}
+                    </span>
+                  </span>
+                  <SourceBadge
+                    source={exercise.source}
+                    systemLabel={labels.systemBadge}
+                    customLabel={labels.customBadge}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FilterChip({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        border: "1px solid var(--border)",
+        background: active ? "var(--surface-alt)" : "transparent",
+        color: active ? "var(--foreground)" : "var(--muted)",
+        cursor: "pointer",
+        fontSize: 13,
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SourceBadge({
+  customLabel,
+  source,
+  systemLabel,
+}: {
+  customLabel: string;
+  source: RoutineExerciseOption["source"];
+  systemLabel: string;
+}) {
+  return (
+    <span
+      style={{
+        flex: "0 0 auto",
+        padding: "4px 8px",
+        borderRadius: 999,
+        border: "1px solid var(--border)",
+        color: "var(--muted)",
+        fontSize: 12,
+        fontWeight: 700,
+      }}
+    >
+      {source === "system" ? systemLabel : customLabel}
+    </span>
+  );
+}
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function formatExerciseMeta(exercise: RoutineExerciseOption) {
+  return [exercise.primaryMuscle, exercise.equipment, exercise.difficulty]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function Field({
   defaultValue,
   error,
@@ -185,6 +459,61 @@ const gridStyles: CSSProperties = {
   display: "grid",
   gap: 16,
   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+};
+
+const selectedExerciseStyles: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  alignItems: "center",
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid var(--border)",
+  background: "var(--surface-alt)",
+};
+
+const popoverStyles: CSSProperties = {
+  position: "absolute",
+  top: "100%",
+  left: 0,
+  right: 0,
+  zIndex: 30,
+  display: "grid",
+  gap: 8,
+  marginTop: 6,
+  padding: 8,
+  borderRadius: 14,
+  border: "1px solid var(--border)",
+  background: "var(--surface)",
+  boxShadow: "0 18px 50px rgba(0, 0, 0, 0.32)",
+};
+
+const filterRowStyles: CSSProperties = {
+  display: "flex",
+  gap: 6,
+  overflowX: "auto",
+  paddingBottom: 2,
+};
+
+const resultListStyles: CSSProperties = {
+  display: "grid",
+  gap: 4,
+  maxHeight: 280,
+  overflowY: "auto",
+};
+
+const resultButtonStyles: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 10,
+  width: "100%",
+  padding: "10px 12px",
+  border: "0",
+  borderRadius: 10,
+  color: "var(--foreground)",
+  cursor: "pointer",
+  textAlign: "left",
 };
 
 const labelStyles: CSSProperties = {

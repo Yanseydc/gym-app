@@ -250,7 +250,7 @@ export async function listRoutineExerciseOptions(
 
   let query = supabase
     .from("exercise_library")
-    .select("id, name, difficulty, primary_muscle, gym_id")
+    .select("id, name, difficulty, primary_muscle, equipment, gym_id")
     .eq("is_active", true)
     .order("name", { ascending: true });
 
@@ -273,6 +273,8 @@ export async function listRoutineExerciseOptions(
       label: String(exercise.name),
       difficulty: exercise.difficulty,
       primaryMuscle: exercise.primary_muscle,
+      equipment: exercise.equipment,
+      source: exercise.gym_id ? "gym" : "system",
     })),
     error: null,
   };
