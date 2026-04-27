@@ -44,6 +44,8 @@ export type MembershipOperationalStatus = "active" | "expired" | "expiring" | "c
 
 export type MembershipOperationItem = ClientMembership & {
   clientName: string;
+  hasCurrentActiveMembership: boolean;
+  isCurrentActiveMembership: boolean;
   operationalStatus: MembershipOperationalStatus;
 };
 

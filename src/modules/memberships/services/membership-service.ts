@@ -66,6 +66,14 @@ function getOperationalStatus(endDate: string, status: MembershipStatus): Member
   return "active";
 }
 
+function isCurrentActiveMembership(record: Pick<ClientMembershipRecord, "end_date" | "status">) {
+  if (record.status === "cancelled") {
+    return false;
+  }
+
+  return record.status === "active" || record.end_date >= toIsoDate(new Date());
+}
+
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
   return {
     id: record.id,
@@ -544,6 +552,10 @@ export async function extendClientMembershipRecord(
     return { data: null, error: "Cancelled memberships cannot be extended." };
   }
 
+  if (!isCurrentActiveMembership(membership)) {
+    return { data: null, error: "Expired memberships cannot be extended. Renew instead." };
+  }
+
   const baseDate = String(membership.end_date) < toIsoDate(new Date())
     ? toIsoDate(new Date())
     : String(membership.end_date);
@@ -574,7 +586,7 @@ export async function renewClientMembershipRecord(
 
   let membershipQuery = supabase
     .from("client_memberships")
-    .select("client_id, membership_plan_id, end_date")
+    .select("client_id, membership_plan_id, end_date, status")
     .eq("id", clientMembershipId);
   membershipQuery = applyGymScope(membershipQuery, scope);
   const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
@@ -585,6 +597,28 @@ export async function renewClientMembershipRecord(
 
   if (!membership) {
     return { data: null, error: "Membership not found." };
+  }
+
+  let activeQuery = supabase
+    .from("client_memberships")
+    .select("id")
+    .eq("client_id", membership.client_id)
+    .neq("id", clientMembershipId)
+    .neq("status", "cancelled")
+    .gte("end_date", toIsoDate(new Date()))
+    .limit(1);
+  activeQuery = applyGymScope(activeQuery, scope);
+  const { data: activeMemberships, error: activeError } = await activeQuery;
+
+  if (activeError) {
+    return { data: null, error: activeError.message };
+  }
+
+  if (!isCurrentActiveMembership(membership) && (activeMemberships ?? []).length > 0) {
+    return {
+      data: null,
+      error: "Este cliente ya tiene una membresía activa.",
+    };
   }
 
   let planQuery = supabase
@@ -708,6 +742,14 @@ export async function listOperationalMemberships(
     }, new Map<string, number>());
   }
 
+  const activeMembershipByClient = records.reduce((map, record) => {
+    if (isCurrentActiveMembership(record)) {
+      map.set(record.client_id, record.id);
+    }
+
+    return map;
+  }, new Map<string, string>());
+
   return {
     data: records.map((record) => {
       const plan = planMap.get(record.membership_plan_id);
@@ -721,6 +763,8 @@ export async function listOperationalMemberships(
       return {
         ...membership,
         clientName: clientMap.get(record.client_id) ?? "Unknown client",
+        hasCurrentActiveMembership: activeMembershipByClient.has(record.client_id),
+        isCurrentActiveMembership: activeMembershipByClient.get(record.client_id) === record.id,
         operationalStatus: getOperationalStatus(record.end_date, membership.status),
       };
     }),

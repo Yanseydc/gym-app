@@ -58,6 +58,16 @@ export function MembershipOperationsDashboard({
         <div style={{ display: "grid", gap: 10 }}>
           {visibleMemberships.map((membership) => (
             <article key={membership.id} style={cardStyles}>
+              {(() => {
+                const canPay = membership.remainingBalance > 0;
+                const canRenew =
+                  membership.isCurrentActiveMembership ||
+                  (membership.operationalStatus === "expired" && !membership.hasCurrentActiveMembership);
+                const canExtend = membership.isCurrentActiveMembership;
+                const canCancel = membership.isCurrentActiveMembership;
+
+                return (
+                  <>
               <div style={{ minWidth: 0 }}>
                 <Link href={`/dashboard/clients/${membership.clientId}`} style={{ fontWeight: 800, fontSize: 17 }}>
                   {membership.clientName}
@@ -69,23 +79,38 @@ export function MembershipOperationsDashboard({
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end" }}>
                 <StatusBadge status={membership.operationalStatus} />
+                {!membership.isCurrentActiveMembership && membership.hasCurrentActiveMembership ? (
+                  <span style={activeConflictStyles}>Ya tiene membresía activa</span>
+                ) : null}
                 <span style={balanceStyles}>Saldo: ${membership.remainingBalance.toFixed(2)}</span>
               </div>
 
               <div style={actionsStyles}>
-                <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "payment", membership })}>
+                <button type="button" className={buttonSecondary} disabled={!canPay} onClick={() => setAction({ type: "payment", membership })}>
                   Registrar pago
                 </button>
-                <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "renew", membership })}>
-                  Renovar
-                </button>
-                <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "extend", membership })}>
-                  Extender
-                </button>
-                <button type="button" className={buttonDanger} onClick={() => setAction({ type: "cancel", membership })}>
-                  Cancelar
-                </button>
+                {canRenew ? (
+                  <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "renew", membership })}>
+                    Renovar
+                  </button>
+                ) : null}
+                {canExtend ? (
+                  <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "extend", membership })}>
+                    Extender
+                  </button>
+                ) : null}
+                {canCancel ? (
+                  <button type="button" className={buttonDanger} onClick={() => setAction({ type: "cancel", membership })}>
+                    Cancelar
+                  </button>
+                ) : null}
+                {!canRenew && membership.operationalStatus === "expired" && membership.hasCurrentActiveMembership ? (
+                  <span style={helperStyles}>Renovación bloqueada por membresía activa.</span>
+                ) : null}
               </div>
+                  </>
+                );
+              })()}
             </article>
           ))}
         </div>
@@ -156,7 +181,9 @@ function MembershipActionModal({
         ) : null}
 
         {action.type === "renew" ? (
-          <p style={noticeStyles}>Se creará una nueva membresía con el mismo plan.</p>
+          <p style={noticeStyles}>
+            Se creará el siguiente periodo con el mismo plan, empezando después de que termine la membresía activa.
+          </p>
         ) : null}
 
         {action.type === "cancel" ? (
@@ -228,6 +255,8 @@ const cardStyles: CSSProperties = { display: "grid", gridTemplateColumns: "minma
 const actionsStyles: CSSProperties = { gridColumn: "1 / -1", display: "flex", gap: 8, flexWrap: "wrap" };
 const badgeStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, fontSize: 12, fontWeight: 800 };
 const balanceStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, border: "1px solid var(--border)", color: "var(--muted)", fontSize: 12, fontWeight: 700 };
+const activeConflictStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)", fontSize: 12, fontWeight: 800 };
+const helperStyles: CSSProperties = { alignSelf: "center", color: "var(--muted)", fontSize: 13, fontWeight: 600 };
 const overlayStyles: CSSProperties = { position: "fixed", inset: 0, zIndex: 60, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,0.58)" };
 const modalStyles: CSSProperties = { width: "min(100%, 420px)", display: "grid", gap: 16, padding: 20, borderRadius: 18, border: "1px solid var(--border)", background: "var(--surface)" };
 const noticeStyles: CSSProperties = { margin: 0, color: "var(--muted)", lineHeight: 1.5 };
