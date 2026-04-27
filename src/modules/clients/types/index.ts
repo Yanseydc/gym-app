@@ -2,6 +2,8 @@ export type {
   Client,
   ClientFormValues,
   ClientListFilters,
+  ClientMergeCandidate,
+  ClientMergeMutationState,
   ClientMutationState,
   ClientRecord,
   ClientStatus,

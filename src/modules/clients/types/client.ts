@@ -28,6 +28,24 @@ export type ClientListFilters = {
   search: string;
 };
 
+export type ClientMergeCandidate = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  isEmailDuplicate: boolean;
+  counts: {
+    routines: number;
+    payments: number;
+    checkins: number;
+  };
+};
+
+export type ClientMergeMutationState = {
+  error?: string;
+  success?: string;
+};
+
 export type ClientMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof ClientFormValues, string>>;

@@ -7,6 +7,7 @@ import type {
   Client,
   ClientFormValues,
   ClientListFilters,
+  ClientMergeCandidate,
   ClientRecord,
 } from "@/modules/clients/types";
 
@@ -215,6 +216,130 @@ export async function updateClientRecord(
   return query.select("id").single();
 }
 
+async function countClientRows(
+  supabase: AppSupabaseClient,
+  table: "client_routines" | "payments" | "client_checkins",
+  clientId: string,
+) {
+  const { count, error } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("client_id", clientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
+
+export async function listClientMergeCandidates(
+  supabase: AppSupabaseClient,
+  clientId: string,
+): Promise<{ data: ClientMergeCandidate[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: [],
+      error: scopeError,
+    };
+  }
+
+  let currentQuery = supabase
+    .from("clients")
+    .select("id, email, gym_id")
+    .eq("id", clientId);
+  currentQuery = applyGymScope(currentQuery, scope);
+  const { data: currentClient, error: currentError } = await currentQuery.maybeSingle();
+
+  if (currentError) {
+    return {
+      data: [],
+      error: currentError.message,
+    };
+  }
+
+  if (!currentClient) {
+    return {
+      data: [],
+      error: "Client not found.",
+    };
+  }
+
+  let candidatesQuery = supabase
+    .from("clients")
+    .select("id, first_name, last_name, email")
+    .neq("id", clientId)
+    .order("last_name", { ascending: true })
+    .order("first_name", { ascending: true });
+
+  if (currentClient.gym_id) {
+    candidatesQuery = candidatesQuery.eq("gym_id", currentClient.gym_id);
+  } else {
+    candidatesQuery = candidatesQuery.is("gym_id", null);
+  }
+
+  if (!scope.isSuperAdmin) {
+    candidatesQuery = candidatesQuery.eq("gym_id", scope.gymId ?? "");
+  }
+
+  const { data: candidateRows, error: candidatesError } = await candidatesQuery;
+
+  if (candidatesError) {
+    return {
+      data: [],
+      error: candidatesError.message,
+    };
+  }
+
+  const currentEmail = normalizeClientEmail(String(currentClient.email ?? ""));
+
+  try {
+    const candidates = await Promise.all(
+      (candidateRows ?? []).map(async (candidate) => ({
+        id: String(candidate.id),
+        firstName: String(candidate.first_name),
+        lastName: String(candidate.last_name),
+        email: candidate.email,
+        isEmailDuplicate:
+          Boolean(currentEmail) &&
+          normalizeClientEmail(String(candidate.email ?? "")) === currentEmail,
+        counts: {
+          routines: await countClientRows(supabase, "client_routines", String(candidate.id)),
+          payments: await countClientRows(supabase, "payments", String(candidate.id)),
+          checkins: await countClientRows(supabase, "client_checkins", String(candidate.id)),
+        },
+      })),
+    );
+
+    return {
+      data: candidates,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : "Unable to load merge candidates.",
+    };
+  }
+}
+
+export async function mergeClientRecords(
+  supabase: AppSupabaseClient,
+  mainClientId: string,
+  duplicateClientId: string,
+) {
+  const { error } = await supabase.rpc("merge_clients", {
+    main_client_id: mainClientId,
+    duplicate_client_id: duplicateClientId,
+  });
+
+  return {
+    error: error?.message ?? null,
+  };
+}
+
 export const getClientForPage = cache(async (clientId: string) => {
   const supabase = await createClient();
   return getClientById(supabase, clientId);
@@ -223,4 +348,9 @@ export const getClientForPage = cache(async (clientId: string) => {
 export const getClientsForPage = cache(async (filters: ClientListFilters) => {
   const supabase = await createClient();
   return listClients(supabase, filters);
+});
+
+export const getClientMergeCandidatesForPage = cache(async (clientId: string) => {
+  const supabase = await createClient();
+  return listClientMergeCandidates(supabase, clientId);
 });

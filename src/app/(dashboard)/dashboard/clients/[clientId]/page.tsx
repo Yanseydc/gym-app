@@ -6,7 +6,9 @@ import { hasModuleAccess } from "@/lib/auth/permissions";
 import { getAdminText } from "@/lib/i18n/admin";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
-import { getClientForPage } from "@/modules/clients/services/client-service";
+import { ClientMergePanel } from "@/modules/clients/components/client-merge-panel";
+import { getClientForPage, getClientMergeCandidatesForPage } from "@/modules/clients/services/client-service";
+import { mergeClient } from "@/modules/clients/services/merge-client";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 import { ProgressCheckInSection } from "@/modules/coaching/components/progress-checkin-card";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
@@ -55,6 +57,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     { data: onboarding, error: onboardingError },
     { data: progressCheckIns, error: progressCheckInsError },
     { data: portalAccess, error: portalAccessError },
+    { data: mergeCandidates, error: mergeCandidatesError },
   ] = await Promise.all([
     getClientForPage(clientId),
     getClientMembershipHistoryForPage(clientId),
@@ -65,6 +68,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     getOnboardingForPage(clientId),
     getProgressCheckInsForPage(clientId),
     getPortalAccessForPage(clientId),
+    getClientMergeCandidatesForPage(clientId),
   ]);
 
   if (error) {
@@ -103,6 +107,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   const canAccessCheckIns = Boolean(user && hasModuleAccess(user.role, "checkins"));
   const canAccessOperations = canAccessMemberships || canAccessPayments || canAccessCheckIns;
   const canAccessHistory = canAccessMemberships || canAccessPayments || canAccessCheckIns;
+  const canMergeClients = Boolean(user && (user.role === "admin" || user.role === "staff"));
   const requestedTab = resolvedSearchParams?.tab;
   const activeTab =
     requestedTab === "coaching" && canAccessCoaching
@@ -166,6 +171,13 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       </nav>
 
       {activeTab === "overview" ? <ClientDetailCard client={client} /> : null}
+
+      {activeTab === "overview" && canMergeClients && !mergeCandidatesError ? (
+        <ClientMergePanel
+          candidates={mergeCandidates}
+          action={mergeClient.bind(null, client.id)}
+        />
+      ) : null}
 
       {activeTab === "overview" && canAccessCoaching ? (
         <section style={{ display: "grid", gap: 14 }}>

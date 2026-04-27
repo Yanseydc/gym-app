@@ -698,6 +698,13 @@ export type Database = {
           role: "super_admin" | "admin" | "staff" | "coach" | "client";
         }[];
       };
+      merge_clients: {
+        Args: {
+          duplicate_client_id: string;
+          main_client_id: string;
+        };
+        Returns: undefined;
+      };
       reorder_client_routine_days: {
         Args: {
           p_day_ids: string[];
