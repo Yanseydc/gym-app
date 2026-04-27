@@ -12,6 +12,7 @@ import type {
 function mapExercise(record: ExerciseLibraryRecord, scope: GymScope): ExerciseLibraryItem {
   const source = record.gym_id ? "gym" : "system";
   const canEdit = scope.isSuperAdmin || (canManageGymContent(scope) && record.gym_id === scope.gymId);
+  const canDeactivate = source === "gym" && canEdit && record.is_active;
 
   return {
     id: record.id,
@@ -33,9 +34,46 @@ function mapExercise(record: ExerciseLibraryRecord, scope: GymScope): ExerciseLi
     source,
     canEdit,
     canDuplicate: source === "system" && !scope.isSuperAdmin && canManageGymContent(scope),
+    canDeactivate,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
+}
+
+function buildDuplicateName(baseName: string, existingNames: Set<string>) {
+  const cleanBaseName = `${baseName} personalizado`;
+
+  if (!existingNames.has(cleanBaseName.toLowerCase())) {
+    return cleanBaseName;
+  }
+
+  let suffix = 2;
+  let nextName = `${cleanBaseName} ${suffix}`;
+
+  while (existingNames.has(nextName.toLowerCase())) {
+    suffix += 1;
+    nextName = `${cleanBaseName} ${suffix}`;
+  }
+
+  return nextName;
+}
+
+function buildDuplicateSlug(baseSlug: string, existingSlugs: Set<string>) {
+  const cleanBaseSlug = `${baseSlug}-personalizado`;
+
+  if (!existingSlugs.has(cleanBaseSlug)) {
+    return cleanBaseSlug;
+  }
+
+  let suffix = 2;
+  let nextSlug = `${cleanBaseSlug}-${suffix}`;
+
+  while (existingSlugs.has(nextSlug)) {
+    suffix += 1;
+    nextSlug = `${cleanBaseSlug}-${suffix}`;
+  }
+
+  return nextSlug;
 }
 
 function normalizeExercisePayload(values: ExerciseFormValues) {
@@ -239,13 +277,39 @@ export async function duplicateExerciseRecord(
   }
 
   const record = exercise as ExerciseLibraryRecord;
-  const timestamp = Date.now();
+  const { data: existingCopies, error: copyLookupError } = await supabase
+    .from("exercise_library")
+    .select("name, slug")
+    .eq("gym_id", scope.gymId ?? "")
+    .ilike("name", `${record.name} personalizado%`);
+
+  if (copyLookupError) {
+    return { data: null, error: copyLookupError.message };
+  }
+
+  const { data: existingSlugs, error: slugLookupError } = await supabase
+    .from("exercise_library")
+    .select("slug")
+    .ilike("slug", `${record.slug}-personalizado%`);
+
+  if (slugLookupError) {
+    return { data: null, error: slugLookupError.message };
+  }
+
+  const copyName = buildDuplicateName(
+    record.name,
+    new Set((existingCopies ?? []).map((copy) => String(copy.name).toLowerCase())),
+  );
+  const copySlug = buildDuplicateSlug(
+    record.slug,
+    new Set((existingSlugs ?? []).map((copy) => String(copy.slug))),
+  );
 
   return supabase
     .from("exercise_library")
     .insert({
-      name: `${record.name} (Copy)`,
-      slug: `${record.slug}-${timestamp}`,
+      name: copyName,
+      slug: copySlug,
       description: record.description,
       video_url: record.video_url,
       thumbnail_url: record.thumbnail_url,
@@ -264,6 +328,38 @@ export async function duplicateExerciseRecord(
     })
     .select("id")
     .single();
+}
+
+export async function deactivateExerciseRecord(
+  supabase: AppSupabaseClient,
+  exerciseId: string,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  if (!canManageGymContent(scope)) {
+    return { error: "You do not have permission to deactivate exercises." };
+  }
+
+  let updateQuery = supabase
+    .from("exercise_library")
+    .update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", exerciseId)
+    .not("gym_id", "is", null);
+
+  if (!scope.isSuperAdmin) {
+    updateQuery = updateQuery.eq("gym_id", scope.gymId ?? "");
+  }
+
+  const { error } = await updateQuery.select("id").single();
+
+  return { error: error?.message ?? null };
 }
 
 export const getExercisesForPage = cache(async () => {

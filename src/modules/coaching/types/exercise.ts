@@ -24,6 +24,7 @@ export type ExerciseLibraryItem = {
   source: "system" | "gym";
   canEdit: boolean;
   canDuplicate: boolean;
+  canDeactivate: boolean;
   createdAt: string;
   updatedAt: string;
 };
