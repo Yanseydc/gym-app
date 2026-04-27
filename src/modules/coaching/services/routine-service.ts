@@ -19,6 +19,7 @@ import type {
   RoutineExerciseOption,
   RoutineFormValues,
 } from "@/modules/coaching/types";
+import { restMinutesToSeconds } from "@/modules/coaching/utils/rest-time";
 
 type ActivateRoutineResult = {
   archived_previous: boolean;
@@ -138,7 +139,7 @@ function normalizeRoutineExercisePayload(values: RoutineExerciseFormValues) {
     sets_text: values.setsText.trim(),
     reps_text: values.repsText.trim(),
     target_weight_text: values.targetWeightText.trim() || null,
-    rest_seconds: values.restSeconds ? Number(values.restSeconds) : null,
+    rest_seconds: restMinutesToSeconds(values.restSeconds),
     notes: values.notes.trim() || null,
   };
 }

@@ -7,6 +7,7 @@ import { ArchiveRoutineButton } from "@/modules/coaching/components/archive-rout
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
 import type { ClientRoutine, ClientRoutineSummary } from "@/modules/coaching/types";
+import { formatRestTime } from "@/modules/coaching/utils/rest-time";
 
 export async function RoutineSummaryList({
   clientId,
@@ -433,7 +434,7 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
                           <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
                           <DetailChip label={t("coaching.routines.reps")} value={exercise.repsText} />
                           <DetailChip label={t("coaching.routines.weight")} value={exercise.targetWeightText || t("common.notAvailable")} />
-                          <DetailChip label={t("coaching.routines.rest")} value={`${exercise.restSeconds ?? t("common.notAvailable")} sec`} />
+                          <DetailChip label={t("coaching.routines.rest")} value={formatRestTime(exercise.restSeconds, t("common.notAvailable"))} />
                         </div>
                         {exercise.notes ? (
                           <div

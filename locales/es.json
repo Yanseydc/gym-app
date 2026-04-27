@@ -294,7 +294,8 @@
       "weight": "Peso",
       "targetWeight": "Peso objetivo",
       "rest": "Descanso",
-      "restSeconds": "Segundos de descanso",
+      "restSeconds": "Minutos de descanso",
+      "restMinutes": "Minutos de descanso",
       "secondsShort": "seg"
     },
     "createPage": {

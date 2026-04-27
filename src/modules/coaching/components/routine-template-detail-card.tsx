@@ -1,5 +1,6 @@
 import { getText } from "@/lib/i18n";
 import type { RoutineTemplate } from "@/modules/coaching/types";
+import { formatRestTime } from "@/modules/coaching/utils/rest-time";
 
 export async function RoutineTemplateDetailCard({ template }: { template: RoutineTemplate }) {
   const t = await getText("coaching");
@@ -157,11 +158,7 @@ export async function RoutineTemplateDetailCard({ template }: { template: Routin
                             />
                             <DetailChip
                               label={t.templates.rest}
-                              value={
-                                exercise.restSeconds == null
-                                  ? common.notAvailable
-                                  : `${exercise.restSeconds} ${t.templates.secondsShort}`
-                              }
+                              value={formatRestTime(exercise.restSeconds, common.notAvailable)}
                             />
                           </div>
                           {exercise.notes ? (

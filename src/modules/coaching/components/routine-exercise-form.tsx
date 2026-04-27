@@ -135,9 +135,10 @@ export function RoutineExerciseForm({
           error={state.fieldErrors?.targetWeightText}
         />
         <Field
-          label={t("coaching.routines.restSeconds")}
+          label={t("coaching.routines.restMinutes")}
           name="restSeconds"
           type="number"
+          step="0.5"
           defaultValue={defaultValues?.restSeconds ?? ""}
           error={state.fieldErrors?.restSeconds}
         />
@@ -435,17 +436,19 @@ function Field({
   label,
   name,
   type = "text",
+  step,
 }: {
   defaultValue?: string;
   error?: string;
   label: string;
   name: string;
+  step?: string;
   type?: string;
 }) {
   return (
     <label style={{ display: "grid", gap: 8 }}>
       <span style={labelStyles}>{label}</span>
-      <input name={name} type={type} defaultValue={defaultValue} className={input} />
+      <input name={name} type={type} step={step} defaultValue={defaultValue} className={input} />
       {error ? <FieldError message={error} /> : null}
     </label>
   );

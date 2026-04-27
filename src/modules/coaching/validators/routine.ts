@@ -42,7 +42,7 @@ export const routineExerciseFormSchema = z.object({
   repsText: z.string().trim().min(1, "Reps are required.").max(80),
   targetWeightText: z.string().trim().max(80).optional().or(z.literal("")),
   restSeconds: z
-    .union([z.literal(""), z.coerce.number().int("Rest must be a whole number.").min(0)])
+    .union([z.literal(""), z.coerce.number().min(0, "Rest must be zero or greater.")])
     .transform((value) => (value === "" ? "" : String(value))),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });

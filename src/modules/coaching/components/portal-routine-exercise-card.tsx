@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { buttonGhost, buttonSecondary } from "@/lib/ui";
 import type { ClientRoutineExercise } from "@/modules/coaching/types";
+import { formatRestTime } from "@/modules/coaching/utils/rest-time";
 
 type PortalRoutineExerciseCardProps = {
   exercise: ClientRoutineExercise;
@@ -286,7 +287,7 @@ export function PortalRoutineExerciseCard({
           <ExerciseMeta label={labels.weight} value={exercise.targetWeightText || labels.notAvailable} />
           <ExerciseMeta
             label={labels.rest}
-            value={`${exercise.restSeconds ?? labels.notAvailable} ${labels.secondsShort}`}
+            value={formatRestTime(exercise.restSeconds, labels.notAvailable)}
           />
         </div>
 
