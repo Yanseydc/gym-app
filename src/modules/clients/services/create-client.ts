@@ -32,6 +32,17 @@ function toClientFormValues(
   };
 }
 
+function isFieldError(
+  error: unknown,
+): error is { message: string; field: keyof ClientFormValues } {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "message" in error &&
+      "field" in error,
+  );
+}
+
 export async function createClient(
   _prevState: ClientMutationState,
   formData: FormData,
@@ -54,6 +65,15 @@ export async function createClient(
   );
 
   if (error || !data) {
+    if (isFieldError(error) && error.field === "email") {
+      return {
+        error: error.message,
+        fieldErrors: {
+          email: error.message,
+        },
+      };
+    }
+
     return {
       error: error?.message ?? "Unable to create client.",
     };
