@@ -40,6 +40,18 @@ export type ClientMembership = {
   updatedAt: string;
 };
 
+export type MembershipOperationalStatus = "active" | "expired" | "expiring" | "cancelled";
+
+export type MembershipOperationItem = ClientMembership & {
+  clientName: string;
+  operationalStatus: MembershipOperationalStatus;
+};
+
+export type MembershipOperationMutationState = {
+  error?: string;
+  success?: string;
+};
+
 export type ClientMembershipFormValues = {
   membershipPlanId: string;
   startDate: string;

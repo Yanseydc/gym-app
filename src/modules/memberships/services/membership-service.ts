@@ -7,6 +7,8 @@ import type {
   ClientMembership,
   ClientMembershipFormValues,
   ClientMembershipRecord,
+  MembershipOperationItem,
+  MembershipOperationalStatus,
   MembershipPlan,
   MembershipPlanFormValues,
   MembershipPlanRecord,
@@ -43,6 +45,25 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
 
   const today = toIsoDate(new Date());
   return endDate < today ? "expired" : "active";
+}
+
+function getOperationalStatus(endDate: string, status: MembershipStatus): MembershipOperationalStatus {
+  if (status === "cancelled") {
+    return "cancelled";
+  }
+
+  const today = toIsoDate(new Date());
+  const soon = addDays(today, 6);
+
+  if (endDate < today) {
+    return "expired";
+  }
+
+  if (endDate <= soon) {
+    return "expiring";
+  }
+
+  return "active";
 }
 
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
@@ -489,6 +510,224 @@ export async function cancelClientMembershipRecord(
   return query.select("id").single();
 }
 
+export async function extendClientMembershipRecord(
+  supabase: AppSupabaseClient,
+  clientMembershipId: string,
+  days: number,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  if (!Number.isFinite(days) || days <= 0) {
+    return { data: null, error: "Enter a valid number of days." };
+  }
+
+  let membershipQuery = supabase
+    .from("client_memberships")
+    .select("id, end_date, status")
+    .eq("id", clientMembershipId);
+  membershipQuery = applyGymScope(membershipQuery, scope);
+  const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
+
+  if (membershipError) {
+    return { data: null, error: membershipError.message };
+  }
+
+  if (!membership) {
+    return { data: null, error: "Membership not found." };
+  }
+
+  if (membership.status === "cancelled") {
+    return { data: null, error: "Cancelled memberships cannot be extended." };
+  }
+
+  const baseDate = String(membership.end_date) < toIsoDate(new Date())
+    ? toIsoDate(new Date())
+    : String(membership.end_date);
+  const nextEndDate = addDays(baseDate, days + 1);
+
+  let updateQuery = supabase
+    .from("client_memberships")
+    .update({
+      end_date: nextEndDate,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", clientMembershipId);
+  updateQuery = applyGymScope(updateQuery, scope);
+
+  return updateQuery.select("id").single();
+}
+
+export async function renewClientMembershipRecord(
+  supabase: AppSupabaseClient,
+  clientMembershipId: string,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  }
+
+  let membershipQuery = supabase
+    .from("client_memberships")
+    .select("client_id, membership_plan_id, end_date")
+    .eq("id", clientMembershipId);
+  membershipQuery = applyGymScope(membershipQuery, scope);
+  const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
+
+  if (membershipError) {
+    return { data: null, error: membershipError.message };
+  }
+
+  if (!membership) {
+    return { data: null, error: "Membership not found." };
+  }
+
+  let planQuery = supabase
+    .from("membership_plans")
+    .select("id, duration_in_days")
+    .eq("id", membership.membership_plan_id)
+    .eq("is_active", true);
+  planQuery = applyGymScope(planQuery, scope);
+  const { data: plan, error: planError } = await planQuery.maybeSingle();
+
+  if (planError) {
+    return { data: null, error: planError.message };
+  }
+
+  if (!plan) {
+    return { data: null, error: "Membership plan is not available." };
+  }
+
+  const today = toIsoDate(new Date());
+  const startDate = String(membership.end_date) >= today
+    ? addDays(String(membership.end_date), 2)
+    : today;
+  const endDate = addDays(startDate, Number(plan.duration_in_days));
+
+  return supabase
+    .from("client_memberships")
+    .insert(withGymId({
+      client_id: String(membership.client_id),
+      membership_plan_id: String(membership.membership_plan_id),
+      start_date: startDate,
+      end_date: endDate,
+      status: "pending_payment",
+      notes: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, scope))
+    .select("id")
+    .single();
+}
+
+export async function listOperationalMemberships(
+  supabase: AppSupabaseClient,
+): Promise<{ data: MembershipOperationItem[]; error: string | null }> {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: [], error: scopeError };
+  }
+
+  let query = supabase
+    .from("client_memberships")
+    .select("*")
+    .order("end_date", { ascending: true });
+  query = applyGymScope(query, scope);
+  const { data, error } = await query;
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  const records = (data ?? []) as ClientMembershipRecord[];
+  const clientIds = [...new Set(records.map((record) => record.client_id))];
+  const planIds = [...new Set(records.map((record) => record.membership_plan_id))];
+  const membershipIds = records.map((record) => record.id);
+  let clientMap = new Map<string, string>();
+  let planMap = new Map<string, { name: string; price: number }>();
+  let paymentTotals = new Map<string, number>();
+
+  if (clientIds.length > 0) {
+    let clientsQuery = supabase
+      .from("clients")
+      .select("id, first_name, last_name")
+      .in("id", clientIds);
+    clientsQuery = applyGymScope(clientsQuery, scope);
+    const { data: clients, error: clientsError } = await clientsQuery;
+
+    if (clientsError) {
+      return { data: [], error: clientsError.message };
+    }
+
+    clientMap = new Map((clients ?? []).map((client) => [
+      String(client.id),
+      `${String(client.first_name)} ${String(client.last_name)}`,
+    ]));
+  }
+
+  if (planIds.length > 0) {
+    let plansQuery = supabase
+      .from("membership_plans")
+      .select("id, name, price")
+      .in("id", planIds);
+    plansQuery = applyGymScope(plansQuery, scope);
+    const { data: plans, error: plansError } = await plansQuery;
+
+    if (plansError) {
+      return { data: [], error: plansError.message };
+    }
+
+    planMap = new Map((plans ?? []).map((plan) => [
+      String(plan.id),
+      { name: String(plan.name), price: Number(plan.price) },
+    ]));
+  }
+
+  if (membershipIds.length > 0) {
+    let paymentsQuery = supabase
+      .from("payments")
+      .select("client_membership_id, amount")
+      .in("client_membership_id", membershipIds);
+    paymentsQuery = applyGymScope(paymentsQuery, scope);
+    const { data: payments, error: paymentsError } = await paymentsQuery;
+
+    if (paymentsError) {
+      return { data: [], error: paymentsError.message };
+    }
+
+    paymentTotals = (payments ?? []).reduce((map, payment) => {
+      const membershipId = String(payment.client_membership_id);
+      map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+      return map;
+    }, new Map<string, number>());
+  }
+
+  return {
+    data: records.map((record) => {
+      const plan = planMap.get(record.membership_plan_id);
+      const membership = mapClientMembership(
+        record,
+        plan?.name ?? "Unknown plan",
+        plan?.price ?? 0,
+        paymentTotals.get(record.id) ?? 0,
+      );
+
+      return {
+        ...membership,
+        clientName: clientMap.get(record.client_id) ?? "Unknown client",
+        operationalStatus: getOperationalStatus(record.end_date, membership.status),
+      };
+    }),
+    error: null,
+  };
+}
+
 export async function listClientMembershipHistory(
   supabase: AppSupabaseClient,
   clientId: string,
@@ -728,6 +967,11 @@ export async function listMembershipAssignmentsByPlanId(
 export const getMembershipPlansForPage = cache(async () => {
   const supabase = await createClient();
   return listMembershipPlans(supabase);
+});
+
+export const getOperationalMembershipsForPage = cache(async () => {
+  const supabase = await createClient();
+  return listOperationalMemberships(supabase);
 });
 
 export const getActiveMembershipPlansForPage = cache(async () => {

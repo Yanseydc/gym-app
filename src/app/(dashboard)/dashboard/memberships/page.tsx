@@ -1,12 +1,22 @@
 import Link from "next/link";
 
 import { getText } from "@/lib/i18n";
+import { MembershipOperationsDashboard } from "@/modules/memberships/components/membership-operations-dashboard";
 import { MembershipPlanList } from "@/modules/memberships/components/membership-plan-list";
-import { getMembershipPlansForPage } from "@/modules/memberships/services/membership-service";
+import {
+  getMembershipPlansForPage,
+  getOperationalMembershipsForPage,
+} from "@/modules/memberships/services/membership-service";
 
 export default async function MembershipsPage() {
   const t = await getText("memberships");
-  const { data: plans, error } = await getMembershipPlansForPage();
+  const [
+    { data: plans, error },
+    { data: memberships, error: membershipsError },
+  ] = await Promise.all([
+    getMembershipPlansForPage(),
+    getOperationalMembershipsForPage(),
+  ]);
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
@@ -54,7 +64,26 @@ export default async function MembershipsPage() {
         </p>
       ) : null}
 
-      <MembershipPlanList plans={plans} />
+      {membershipsError ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "#fff2f2",
+            color: "#8a1c1c",
+          }}
+        >
+          {membershipsError}
+        </p>
+      ) : (
+        <MembershipOperationsDashboard memberships={memberships} />
+      )}
+
+      <section style={{ display: "grid", gap: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 20 }}>Planes</h2>
+        <MembershipPlanList plans={plans} />
+      </section>
     </div>
   );
 }
