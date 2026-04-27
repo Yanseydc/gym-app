@@ -304,6 +304,7 @@ export type Database = {
         Row: {
           client_id: string;
           created_at: string;
+          gym_id: string | null;
           id: string;
           profile_id: string;
           updated_at: string;
@@ -311,6 +312,7 @@ export type Database = {
         Insert: {
           client_id: string;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           profile_id: string;
           updated_at?: string;
@@ -318,6 +320,7 @@ export type Database = {
         Update: {
           client_id?: string;
           created_at?: string;
+          gym_id?: string | null;
           id?: string;
           profile_id?: string;
           updated_at?: string;

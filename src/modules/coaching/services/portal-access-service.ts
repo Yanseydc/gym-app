@@ -1,6 +1,8 @@
 import { cache } from "react";
+import type { User } from "@supabase/supabase-js";
 
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { ClientPortalAccess, PortalAccessFormValues, PortalLinkedProfile } from "@/modules/coaching/types";
@@ -8,9 +10,18 @@ import type { ClientPortalAccess, PortalAccessFormValues, PortalLinkedProfile } 
 type ProfileLookupRow = {
   email: string;
   first_name: string | null;
+  gym_id?: string | null;
   id: string;
   last_name: string | null;
   role: "super_admin" | "admin" | "staff" | "coach" | "client";
+};
+
+type ClientPortalInviteRow = {
+  email: string | null;
+  first_name: string;
+  gym_id: string | null;
+  id: string;
+  last_name: string;
 };
 
 function mapPortalProfile(row: ProfileLookupRow): PortalLinkedProfile {
@@ -117,7 +128,7 @@ export async function createClientUserLinkRecord(
     };
   }
 
-  let clientQuery = supabase.from("clients").select("id").eq("id", clientId);
+  let clientQuery = supabase.from("clients").select("id, gym_id").eq("id", clientId);
   clientQuery = applyGymScope(clientQuery, scope);
   const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
 
@@ -182,6 +193,7 @@ export async function createClientUserLinkRecord(
     .insert({
       client_id: clientId,
       profile_id: profile.id,
+      gym_id: scope.isSuperAdmin ? clientData.gym_id : scope.gymId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -206,6 +218,237 @@ export async function createClientUserLinkRecord(
     return {
       data: null,
       error: error.message,
+    };
+  }
+
+  return {
+    data,
+    error: null,
+  };
+}
+
+async function findAuthUserByEmail(email: string): Promise<User | null> {
+  const admin = createAdminClient();
+  const perPage = 1000;
+  let page = 1;
+
+  while (page <= 10) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const user = data.users.find((item) => item.email?.toLowerCase() === email.toLowerCase());
+
+    if (user) {
+      return user;
+    }
+
+    if (data.users.length < perPage) {
+      return null;
+    }
+
+    page += 1;
+  }
+
+  return null;
+}
+
+function canInvitePortalUser(role: string) {
+  return role === "super_admin" || role === "admin" || role === "staff" || role === "coach";
+}
+
+function mapInviteError(error: string) {
+  if (/client_user_links_client_id_key/.test(error)) {
+    return "This client already has portal access linked.";
+  }
+
+  if (/client_user_links_profile_id_key/.test(error)) {
+    return "This portal user is already linked to another client.";
+  }
+
+  return error;
+}
+
+export async function inviteClientPortalUser(
+  supabase: AppSupabaseClient,
+  clientId: string,
+  values: PortalAccessFormValues,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return {
+      data: null,
+      error: scopeError ?? "Unable to resolve gym scope.",
+    };
+  }
+
+  if (!canInvitePortalUser(scope.role)) {
+    return {
+      data: null,
+      error: "You do not have permission to invite clients to the portal.",
+    };
+  }
+
+  let clientQuery = supabase
+    .from("clients")
+    .select("id, first_name, last_name, email, gym_id")
+    .eq("id", clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return {
+      data: null,
+      error: clientError.message,
+    };
+  }
+
+  if (!clientData) {
+    return {
+      data: null,
+      error: "Selected client is not available.",
+    };
+  }
+
+  const client = clientData as ClientPortalInviteRow;
+  const targetGymId = scope.isSuperAdmin ? client.gym_id : scope.gymId;
+
+  if (!scope.isSuperAdmin && client.gym_id !== scope.gymId) {
+    return {
+      data: null,
+      error: "Selected client is not available for your gym.",
+    };
+  }
+
+  const existingLink = await getPortalAccessByClientId(supabase, clientId);
+
+  if (existingLink.error) {
+    return {
+      data: null,
+      error: existingLink.error,
+    };
+  }
+
+  if (existingLink.data) {
+    return {
+      data: null,
+      error: "This client already has portal access linked.",
+    };
+  }
+
+  const email = values.email.trim().toLowerCase();
+  const admin = createAdminClient();
+  const { data: existingProfile, error: existingProfileError } = await admin
+    .from("profiles")
+    .select("id, email, first_name, last_name, role, gym_id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingProfileError) {
+    return {
+      data: null,
+      error: existingProfileError.message,
+    };
+  }
+
+  if (existingProfile && existingProfile.role !== "client") {
+    return {
+      data: null,
+      error: "This email belongs to a non-client user.",
+    };
+  }
+
+  if (
+    existingProfile?.gym_id &&
+    targetGymId &&
+    existingProfile.gym_id !== targetGymId
+  ) {
+    return {
+      data: null,
+      error: "This portal user belongs to another gym.",
+    };
+  }
+
+  let profileId = existingProfile?.id ? String(existingProfile.id) : null;
+
+  if (!profileId) {
+    const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: {
+        first_name: client.first_name,
+        last_name: client.last_name,
+        role: "client",
+        gym_id: targetGymId,
+      },
+    });
+
+    if (inviteError) {
+      try {
+        const existingUser = await findAuthUserByEmail(email);
+        profileId = existingUser?.id ?? null;
+      } catch (error) {
+        return {
+          data: null,
+          error: error instanceof Error ? error.message : inviteError.message,
+        };
+      }
+
+      if (!profileId) {
+        return {
+          data: null,
+          error: inviteError.message,
+        };
+      }
+    } else {
+      profileId = inviteData.user?.id ?? null;
+    }
+  }
+
+  if (!profileId) {
+    return {
+      data: null,
+      error: "Unable to create or find the portal user.",
+    };
+  }
+
+  const timestamp = new Date().toISOString();
+  const { error: profileUpsertError } = await admin
+    .from("profiles")
+    .upsert({
+      id: profileId,
+      email,
+      first_name: client.first_name,
+      last_name: client.last_name,
+      role: "client",
+      gym_id: targetGymId,
+      created_at: timestamp,
+    }, { onConflict: "id" });
+
+  if (profileUpsertError) {
+    return {
+      data: null,
+      error: profileUpsertError.message,
+    };
+  }
+
+  const { data, error } = await admin
+    .from("client_user_links")
+    .insert({
+      client_id: clientId,
+      profile_id: profileId,
+      gym_id: targetGymId,
+      created_at: timestamp,
+      updated_at: timestamp,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    return {
+      data: null,
+      error: mapInviteError(error.message),
     };
   }
 

@@ -40,7 +40,7 @@ export function ClientPortalAccessCard({
               fontWeight: 700,
             }}
           >
-            Link portal user
+            Invitar al portal
           </Link>
         </div>
       </article>
@@ -65,7 +65,7 @@ export function ClientPortalAccessCard({
       <div>
         <h2 style={{ margin: "0 0 8px" }}>Portal access</h2>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          This client is already linked to a portal user.
+          Portal vinculado.
         </p>
       </div>
 

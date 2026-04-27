@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
-import { createClientUserLinkRecord } from "@/modules/coaching/services/portal-access-service";
+import { inviteClientPortalUser } from "@/modules/coaching/services/portal-access-service";
 import type { PortalAccessFormValues, PortalAccessMutationState } from "@/modules/coaching/types";
 import { portalAccessFormSchema } from "@/modules/coaching/validators/portal-access";
 
@@ -39,7 +39,7 @@ export async function createPortalAccess(
   }
 
   const supabase = await createSupabaseClient();
-  const { error } = await createClientUserLinkRecord(
+  const { error } = await inviteClientPortalUser(
     supabase,
     clientId,
     toPortalAccessFormValues(parsed.data),

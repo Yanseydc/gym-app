@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { usePortalAccessForm } from "@/modules/coaching/hooks/use-portal-access-form";
 import type { PortalAccessMutationState } from "@/modules/coaching/types";
 
@@ -11,18 +12,21 @@ type PortalAccessFormProps = {
     state: PortalAccessMutationState,
     formData: FormData,
   ) => Promise<PortalAccessMutationState>;
+  defaultEmail?: string | null;
 };
 
-export function PortalAccessForm({ action }: PortalAccessFormProps) {
+export function PortalAccessForm({ action, defaultEmail }: PortalAccessFormProps) {
+  const { t } = useAdminText();
   const { state, formAction, pending } = usePortalAccessForm(action);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
       <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>Portal user email</span>
+        <span style={labelStyles}>{t("clients.detail.portalInviteEmail")}</span>
         <input
           name="email"
           type="email"
+          defaultValue={defaultEmail ?? ""}
           placeholder="client@example.com"
           className={input}
         />
@@ -49,7 +53,7 @@ export function PortalAccessForm({ action }: PortalAccessFormProps) {
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? "Linking..." : "Link portal user"}
+        {pending ? t("clients.detail.invitingPortal") : t("clients.detail.invitePortal")}
       </button>
     </form>
   );

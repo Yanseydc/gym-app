@@ -181,8 +181,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               eyebrow={t("clients.detail.portalAccess")}
               title={
                 portalAccess
-                  ? [portalAccess.profile.firstName, portalAccess.profile.lastName].filter(Boolean).join(" ") ||
-                    portalAccess.profile.email
+                  ? t("clients.detail.portalLinked")
                   : portalAccessError
                     ? t("clients.detail.accessUnavailable")
                     : t("clients.detail.notLinkedYet")
