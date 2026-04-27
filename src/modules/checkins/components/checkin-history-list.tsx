@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { formatDateTimeMexico } from "@/lib/date-format";
 import { getAdminText } from "@/lib/i18n/admin";
 import type { ClientCheckIn } from "@/modules/checkins/types";
 
@@ -12,7 +13,7 @@ export async function CheckInHistoryList({
   checkIns,
   showClient = true,
 }: CheckInHistoryListProps) {
-  const { t, locale } = await getAdminText();
+  const { t } = await getAdminText();
   if (checkIns.length === 0) {
     return (
       <div
@@ -52,7 +53,7 @@ export async function CheckInHistoryList({
               )}
             </strong>
             <span style={{ color: "var(--muted)" }}>
-              {new Date(checkIn.checkedInAt).toLocaleString(locale)}
+              {formatDateTimeMexico(checkIn.checkedInAt)}
             </span>
           </div>
           {checkIn.notes ? (
