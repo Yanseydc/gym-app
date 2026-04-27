@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useActionState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, useActionState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 
 import { buttonDanger, buttonSecondary, input } from "@/lib/ui";
@@ -20,6 +20,7 @@ type Filter = "all" | "active" | "expired" | "expiring";
 type ActionType = "payment" | "renew" | "extend" | "cancel";
 
 const initialState: MembershipOperationMutationState = {};
+const PAGE_SIZE = 20;
 
 export function MembershipOperationsDashboard({
   memberships,
@@ -27,15 +28,44 @@ export function MembershipOperationsDashboard({
   memberships: MembershipOperationItem[];
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [action, setAction] = useState<{ type: ActionType; membership: MembershipOperationItem } | null>(null);
   const stats = useMemo(() => ({
     expired: memberships.filter((membership) => membership.operationalStatus === "expired").length,
     expiring: memberships.filter((membership) => membership.operationalStatus === "expiring").length,
     active: memberships.filter((membership) => membership.operationalStatus === "active").length,
   }), [memberships]);
-  const visibleMemberships = memberships.filter((membership) =>
-    filter === "all" ? membership.operationalStatus !== "cancelled" : membership.operationalStatus === filter,
-  );
+  const filteredMemberships = useMemo(() => {
+    const normalizedSearch = normalizeSearch(search);
+
+    return memberships
+      .filter((membership) =>
+        filter === "all" ? membership.operationalStatus !== "cancelled" : membership.operationalStatus === filter,
+      )
+      .filter((membership) => {
+        if (!normalizedSearch) {
+          return true;
+        }
+
+        return normalizeSearch(`${membership.clientName} ${membership.planName}`).includes(normalizedSearch);
+      })
+      .sort((first, second) => {
+        const statusPriority = getUrgencyPriority(first.operationalStatus) - getUrgencyPriority(second.operationalStatus);
+
+        if (filter === "all" && statusPriority !== 0) {
+          return statusPriority;
+        }
+
+        return first.endDate.localeCompare(second.endDate);
+      });
+  }, [filter, memberships, search]);
+  const visibleMemberships = filteredMemberships.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredMemberships.length;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filter, search]);
 
   return (
     <section style={{ display: "grid", gap: 18 }}>
@@ -45,18 +75,36 @@ export function MembershipOperationsDashboard({
         <StatCard label="Activas" value={stats.active} tone="success" />
       </div>
 
-      <div style={filterStyles}>
-        <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>Todas</FilterButton>
-        <FilterButton active={filter === "active"} onClick={() => setFilter("active")}>Activas</FilterButton>
-        <FilterButton active={filter === "expired"} onClick={() => setFilter("expired")}>Vencidas</FilterButton>
-        <FilterButton active={filter === "expiring"} onClick={() => setFilter("expiring")}>Por vencer</FilterButton>
+      <div style={controlsStyles}>
+        <label style={{ display: "grid", gap: 6, minWidth: 240, flex: "1 1 280px" }}>
+          <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>Buscar cliente</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Nombre del cliente"
+            className={input}
+          />
+        </label>
+
+        <div style={filterStyles}>
+          <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>Todas</FilterButton>
+          <FilterButton active={filter === "active"} onClick={() => setFilter("active")}>Activas</FilterButton>
+          <FilterButton active={filter === "expired"} onClick={() => setFilter("expired")}>Vencidas</FilterButton>
+          <FilterButton active={filter === "expiring"} onClick={() => setFilter("expiring")}>Por vencer</FilterButton>
+        </div>
       </div>
 
-      {visibleMemberships.length === 0 ? (
+      {filteredMemberships.length === 0 ? (
         <div style={emptyStyles}>No hay membresías para este filtro.</div>
       ) : (
-        <div style={{ display: "grid", gap: 10 }}>
-          {visibleMemberships.map((membership) => (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
+            Mostrando {visibleMemberships.length} de {filteredMemberships.length}
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {visibleMemberships.map((membership) => (
             <article key={membership.id} style={cardStyles}>
               {(() => {
                 const canPay = membership.remainingBalance > 0;
@@ -112,7 +160,19 @@ export function MembershipOperationsDashboard({
                 );
               })()}
             </article>
-          ))}
+            ))}
+          </div>
+
+          {hasMore ? (
+            <button
+              type="button"
+              className={buttonSecondary}
+              style={{ width: "fit-content" }}
+              onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
+            >
+              Cargar más
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -225,7 +285,7 @@ function StatusBadge({ status }: { status: MembershipOperationalStatus }) {
   return <span style={{ ...badgeStyles, background: palette.background, color: palette.color }}>{label}</span>;
 }
 
-function FilterButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
+function FilterButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} style={{
       padding: "8px 12px",
@@ -248,6 +308,22 @@ function getTonePalette(tone: "danger" | "warning" | "success" | "neutral") {
   return { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" };
 }
 
+function getUrgencyPriority(status: MembershipOperationalStatus) {
+  if (status === "expired") return 0;
+  if (status === "expiring") return 1;
+  if (status === "active") return 2;
+  return 3;
+}
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+const controlsStyles: CSSProperties = { display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" };
 const filterStyles: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap" };
 const statStyles: CSSProperties = { display: "grid", gap: 6, padding: 16, borderRadius: 16, border: "1px solid var(--border)" };
 const emptyStyles: CSSProperties = { padding: 18, borderRadius: 16, border: "1px dashed var(--border)", color: "var(--muted)" };
