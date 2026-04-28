@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { RecoveryHashRedirect } from "@/modules/auth/components/recovery-hash-redirect";
+
 const sections = [
   {
     title: "Operación diaria",
@@ -18,6 +20,7 @@ const sections = [
 export default function HomePage() {
   return (
     <main style={{ padding: "56px 0 72px" }}>
+      <RecoveryHashRedirect />
       <section
         style={{
           display: "grid",
