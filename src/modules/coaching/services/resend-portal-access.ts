@@ -1,6 +1,7 @@
 "use server";
 
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
+import { buildAppUrl } from "@/lib/app-url";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import type { ResendPortalAccessMutationState } from "@/modules/coaching/types";
 import type { AppSupabaseClient } from "@/types/supabase";
@@ -115,17 +116,9 @@ export async function resendClientPortalAccess(
     };
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  if (!appUrl) {
-    return {
-      error: "Application URL is not configured.",
-    };
-  }
-
   const timestamp = now.toISOString();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${appUrl}/auth/update-password`,
+    redirectTo: buildAppUrl("/auth/update-password"),
   });
 
   if (error) {
