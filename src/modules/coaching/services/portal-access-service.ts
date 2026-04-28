@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
+import { serverEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
@@ -376,6 +377,7 @@ export async function inviteClientPortalUser(
 
   if (!profileId) {
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${serverEnv.NEXT_PUBLIC_APP_URL}/auth/update-password`,
       data: {
         first_name: client.first_name,
         last_name: client.last_name,

@@ -1,0 +1,93 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+
+import { buttonPrimary, input } from "@/lib/ui";
+import { createClient } from "@/lib/supabase/client";
+
+export function UpdatePasswordForm() {
+  const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setPending(true);
+    const supabase = createClient();
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setPending(false);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+
+    setSuccess(true);
+    window.setTimeout(() => {
+      router.push("/login");
+    }, 2000);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
+      <label style={{ display: "grid", gap: 8 }}>
+        <span style={{ fontWeight: 600 }}>Nueva contraseña</span>
+        <input
+          required
+          minLength={8}
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className={input}
+        />
+      </label>
+
+      <label style={{ display: "grid", gap: 8 }}>
+        <span style={{ fontWeight: 600 }}>Confirmar contraseña</span>
+        <input
+          required
+          minLength={8}
+          type="password"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          className={input}
+        />
+      </label>
+
+      {error ? <p style={messageStyles("error")}>{error}</p> : null}
+      {success ? (
+        <p style={messageStyles("success")}>Tu contraseña ha sido configurada correctamente</p>
+      ) : null}
+
+      <button type="submit" disabled={pending || success} className={buttonPrimary}>
+        {pending ? "Configurando..." : "Configurar contraseña"}
+      </button>
+    </form>
+  );
+}
+
+function messageStyles(tone: "error" | "success") {
+  return {
+    margin: 0,
+    padding: "12px 14px",
+    borderRadius: 12,
+    color: tone === "error" ? "var(--danger-fg)" : "var(--success)",
+    background: tone === "error" ? "var(--danger-bg)" : "var(--success-bg)",
+  };
+}
