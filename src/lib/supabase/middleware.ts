@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env-client";
 
 type SupabaseCookie = {
   name: string;

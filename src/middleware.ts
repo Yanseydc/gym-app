@@ -13,7 +13,7 @@ import {
   isPortalRoute,
   protectedRoutes,
 } from "@/config/routes";
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env-client";
 import {
   getAuthenticatedUser,
   getProfileByUserId,

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env-client";
 import type { Database } from "@/types/database";
 
 type SupabaseCookie = {

@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
-import { serverEnv } from "@/lib/env";
+import { serverEnv } from "@/lib/env-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
