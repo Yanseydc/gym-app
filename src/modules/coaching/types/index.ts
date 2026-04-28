@@ -21,6 +21,7 @@ export type {
   PortalAccessFormValues,
   PortalAccessMutationState,
   PortalLinkedProfile,
+  ResendPortalAccessMutationState,
 } from "@/modules/coaching/types/portal-access";
 export type {
   ProgressCheckIn,

@@ -14,8 +14,10 @@ import { ProgressCheckInSection } from "@/modules/coaching/components/progress-c
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { getPortalAccessForPage } from "@/modules/coaching/services/portal-access-service";
 import { getProgressCheckInsForPage } from "@/modules/coaching/services/progress-checkin-service";
+import { ResendPortalAccessButton } from "@/modules/coaching/components/resend-portal-access-button";
 import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
+import { resendClientPortalAccess } from "@/modules/coaching/services/resend-portal-access";
 import { CheckInForm } from "@/modules/checkins/components/checkin-form";
 import { CheckInHistoryList } from "@/modules/checkins/components/checkin-history-list";
 import { CheckInStatusBadge } from "@/modules/checkins/components/checkin-status-badge";
@@ -108,6 +110,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   const canAccessOperations = canAccessMemberships || canAccessPayments || canAccessCheckIns;
   const canAccessHistory = canAccessMemberships || canAccessPayments || canAccessCheckIns;
   const canMergeClients = Boolean(user && (user.role === "admin" || user.role === "staff"));
+  const canResendPortalAccess = Boolean(user && (user.role === "admin" || user.role === "staff"));
   const requestedTab = resolvedSearchParams?.tab;
   const activeTab =
     requestedTab === "coaching" && canAccessCoaching
@@ -210,6 +213,11 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   : `/dashboard/clients/${client.id}/portal-access/new`
               }
               actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
+              action={
+                portalAccess && canResendPortalAccess ? (
+                  <ResendPortalAccessButton action={resendClientPortalAccess.bind(null, client.id)} />
+                ) : undefined
+              }
             />
 
             <SummaryCard
@@ -500,6 +508,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 }
 
 function SummaryCard({
+  action,
   actionHref,
   actionLabel,
   description,
@@ -508,6 +517,7 @@ function SummaryCard({
   status,
   title,
 }: {
+  action?: ReactNode;
   actionHref?: string;
   actionLabel?: string;
   description: string;
@@ -561,7 +571,7 @@ function SummaryCard({
         {meta}
       </div>
 
-      {actionHref && actionLabel ? (
+      {action ?? (actionHref && actionLabel ? (
         <div>
           <Link
             href={actionHref}
@@ -570,7 +580,7 @@ function SummaryCard({
             {actionLabel}
           </Link>
         </div>
-      ) : null}
+      ) : null)}
     </article>
   );
 }

@@ -5,7 +5,7 @@ import type { Database } from "@/types/database";
 type TypedSupabaseClient = SupabaseClient<Database>;
 
 export type AppSupabaseClient = {
-  auth: Pick<TypedSupabaseClient["auth"], "getUser" | "signInWithPassword">;
+  auth: Pick<TypedSupabaseClient["auth"], "getUser" | "resetPasswordForEmail" | "signInWithPassword">;
   from: TypedSupabaseClient["from"];
   rpc: TypedSupabaseClient["rpc"];
   storage: TypedSupabaseClient["storage"];

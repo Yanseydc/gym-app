@@ -20,3 +20,8 @@ export type PortalAccessMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof PortalAccessFormValues, string>>;
 };
+
+export type ResendPortalAccessMutationState = {
+  error?: string;
+  success?: string;
+};
