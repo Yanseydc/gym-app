@@ -1,7 +1,7 @@
 "use server";
 
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
-import { buildAppUrl } from "@/lib/app-url";
+import { buildPasswordRecoveryRedirectUrl } from "@/lib/app-url";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import type { ResendPortalAccessMutationState } from "@/modules/coaching/types";
 import type { AppSupabaseClient } from "@/types/supabase";
@@ -118,7 +118,7 @@ export async function resendClientPortalAccess(
 
   const timestamp = now.toISOString();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: buildAppUrl("/auth/update-password"),
+    redirectTo: buildPasswordRecoveryRedirectUrl(),
   });
 
   if (error) {

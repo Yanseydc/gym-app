@@ -1,7 +1,7 @@
 import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import { buildAppUrl } from "@/lib/app-url";
+import { buildPasswordRecoveryRedirectUrl } from "@/lib/app-url";
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -390,7 +390,7 @@ export async function inviteClientPortalUser(
     // Supabase invite/recovery templates should use {{ .ConfirmationURL }} so the
     // redirected URL includes the session hash required by /auth/update-password.
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: buildAppUrl("/auth/update-password"),
+      redirectTo: buildPasswordRecoveryRedirectUrl(),
       data: {
         first_name: client.first_name,
         last_name: client.last_name,
