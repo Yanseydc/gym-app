@@ -41,7 +41,9 @@ export async function getPortalAccessByClientId(
 ): Promise<{ data: ClientPortalAccess | null; error: string | null }> {
   const { data: linkData, error: linkError } = await supabase
     .from("client_user_links")
-    .select("profile_id, created_at")
+    .select(
+      "profile_id, created_at, portal_invite_last_sent_at, portal_invite_send_count_today, portal_invite_send_count_date",
+    )
     .eq("client_id", clientId)
     .maybeSingle();
 
@@ -87,6 +89,15 @@ export async function getPortalAccessByClientId(
       clientId,
       linkedAt: String(linkData.created_at),
       profile: mapPortalProfile(profile),
+      resend: {
+        countDate: linkData.portal_invite_send_count_date
+          ? String(linkData.portal_invite_send_count_date)
+          : null,
+        countToday: Number(linkData.portal_invite_send_count_today ?? 0),
+        lastSentAt: linkData.portal_invite_last_sent_at
+          ? String(linkData.portal_invite_last_sent_at)
+          : null,
+      },
     },
     error: null,
   };

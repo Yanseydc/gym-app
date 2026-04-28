@@ -306,6 +306,9 @@ export type Database = {
           created_at: string;
           gym_id: string | null;
           id: string;
+          portal_invite_last_sent_at: string | null;
+          portal_invite_send_count_date: string | null;
+          portal_invite_send_count_today: number;
           profile_id: string;
           updated_at: string;
         };
@@ -314,6 +317,9 @@ export type Database = {
           created_at?: string;
           gym_id?: string | null;
           id?: string;
+          portal_invite_last_sent_at?: string | null;
+          portal_invite_send_count_date?: string | null;
+          portal_invite_send_count_today?: number;
           profile_id: string;
           updated_at?: string;
         };
@@ -322,6 +328,9 @@ export type Database = {
           created_at?: string;
           gym_id?: string | null;
           id?: string;
+          portal_invite_last_sent_at?: string | null;
+          portal_invite_send_count_date?: string | null;
+          portal_invite_send_count_today?: number;
           profile_id?: string;
           updated_at?: string;
         };

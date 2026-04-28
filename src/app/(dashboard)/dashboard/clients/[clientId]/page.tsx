@@ -182,12 +182,16 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
         />
       ) : null}
 
-      {activeTab === "overview" && canAccessCoaching ? (
+      {activeTab === "overview" && (canAccessCoaching || canResendPortalAccess) ? (
         <section style={{ display: "grid", gap: 14 }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <h2 style={{ margin: "0 0 8px" }}>{t("clients.detail.summaryTitle")}</h2>
+            <h2 style={{ margin: "0 0 8px" }}>
+              {canAccessCoaching ? t("clients.detail.summaryTitle") : t("clients.detail.portalAccess")}
+            </h2>
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-              {t("clients.detail.summaryDescription")}
+              {canAccessCoaching
+                ? t("clients.detail.summaryDescription")
+                : t("clients.detail.portalAccessDescription")}
             </p>
           </div>
 
@@ -215,72 +219,81 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
               action={
                 portalAccess && canResendPortalAccess ? (
-                  <ResendPortalAccessButton action={resendClientPortalAccess.bind(null, client.id)} />
+                  <ResendPortalAccessButton
+                    action={resendClientPortalAccess.bind(null, client.id)}
+                    lastSentAt={portalAccess.resend.lastSentAt}
+                  />
                 ) : undefined
               }
             />
 
-            <SummaryCard
-              eyebrow={t("clients.detail.onboardingSnapshot")}
-              title={onboarding ? onboarding.goal : onboardingError ? t("clients.detail.onboardingUnavailable") : t("clients.detail.noOnboardingYet")}
-              description={
-                onboarding
-                  ? `${t("common.daysPerWeek", { count: onboarding.availableDays })} · ${onboarding.experienceLevel}`
-                  : onboardingError ?? t("clients.detail.onboardingDescription")
-              }
-              meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : t("common.planningSetup")}
-              actionHref={`/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`}
-              actionLabel={onboarding ? t("clients.detail.editOnboarding") : t("clients.detail.createOnboarding")}
-            />
+            {canAccessCoaching ? (
+              <SummaryCard
+                eyebrow={t("clients.detail.onboardingSnapshot")}
+                title={onboarding ? onboarding.goal : onboardingError ? t("clients.detail.onboardingUnavailable") : t("clients.detail.noOnboardingYet")}
+                description={
+                  onboarding
+                    ? `${t("common.daysPerWeek", { count: onboarding.availableDays })} · ${onboarding.experienceLevel}`
+                    : onboardingError ?? t("clients.detail.onboardingDescription")
+                }
+                meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : t("common.planningSetup")}
+                actionHref={`/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`}
+                actionLabel={onboarding ? t("clients.detail.editOnboarding") : t("clients.detail.createOnboarding")}
+              />
+            ) : null}
 
-            <SummaryCard
-              eyebrow={t("clients.detail.activeRoutine")}
-              title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutine")}
-              description={
-                activeRoutine
-                  ? formatDayCount(activeRoutine.dayCount)
-                  : routinesError ?? t("clients.detail.routinesDescription")
-              }
-              meta={activeRoutine ? t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }) : t("common.trainingPlan")}
-              actionHref={
-                activeRoutine
-                  ? `/dashboard/coaching/routines/${activeRoutine.id}`
-                  : `/dashboard/coaching/routines/new?clientId=${client.id}`
-              }
-              actionLabel={activeRoutine ? t("clients.detail.viewRoutine") : t("clients.detail.createRoutine")}
-              status={activeRoutine ? <StatusChip label={t("common.status.active")} tone="success" /> : undefined}
-            />
+            {canAccessCoaching ? (
+              <SummaryCard
+                eyebrow={t("clients.detail.activeRoutine")}
+                title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutine")}
+                description={
+                  activeRoutine
+                    ? formatDayCount(activeRoutine.dayCount)
+                    : routinesError ?? t("clients.detail.routinesDescription")
+                }
+                meta={activeRoutine ? t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }) : t("common.trainingPlan")}
+                actionHref={
+                  activeRoutine
+                    ? `/dashboard/coaching/routines/${activeRoutine.id}`
+                    : `/dashboard/coaching/routines/new?clientId=${client.id}`
+                }
+                actionLabel={activeRoutine ? t("clients.detail.viewRoutine") : t("clients.detail.createRoutine")}
+                status={activeRoutine ? <StatusChip label={t("common.status.active")} tone="success" /> : undefined}
+              />
+            ) : null}
 
-            <SummaryCard
-              eyebrow={t("clients.detail.latestProgress")}
-              title={
-                latestProgressCheckIn
-                  ? latestProgressCheckIn.checkinDate
-                  : progressCheckInsError
-                    ? t("clients.detail.checkinsUnavailable")
-                    : t("clients.detail.noCheckinsYet")
-              }
-              description={
-                latestProgressCheckIn
-                  ? latestProgressCheckIn.photoTypes.length > 0
-                    ? t("clients.detail.photosAttached", { count: latestProgressCheckIn.photoTypes.length })
-                    : t("clients.detail.noPhotosAttached")
-                  : progressCheckInsError ?? t("clients.detail.progressCheckinsHelper")
-              }
-              meta={
-                latestProgressCheckIn
-                  ? latestProgressCheckIn.weightKg
-                    ? `${latestProgressCheckIn.weightKg} kg`
-                    : t("clients.detail.weightNotRecorded")
-                  : t("common.progressTracking")
-              }
-              actionHref={
-                latestProgressCheckIn
-                  ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
-                  : `/dashboard/clients/${client.id}/progress-checkins/new`
-              }
-              actionLabel={latestProgressCheckIn ? t("clients.detail.openLatestCheckin") : t("clients.detail.createFirstCheckin")}
-            />
+            {canAccessCoaching ? (
+              <SummaryCard
+                eyebrow={t("clients.detail.latestProgress")}
+                title={
+                  latestProgressCheckIn
+                    ? latestProgressCheckIn.checkinDate
+                    : progressCheckInsError
+                      ? t("clients.detail.checkinsUnavailable")
+                      : t("clients.detail.noCheckinsYet")
+                }
+                description={
+                  latestProgressCheckIn
+                    ? latestProgressCheckIn.photoTypes.length > 0
+                      ? t("clients.detail.photosAttached", { count: latestProgressCheckIn.photoTypes.length })
+                      : t("clients.detail.noPhotosAttached")
+                    : progressCheckInsError ?? t("clients.detail.progressCheckinsHelper")
+                }
+                meta={
+                  latestProgressCheckIn
+                    ? latestProgressCheckIn.weightKg
+                      ? `${latestProgressCheckIn.weightKg} kg`
+                      : t("clients.detail.weightNotRecorded")
+                    : t("common.progressTracking")
+                }
+                actionHref={
+                  latestProgressCheckIn
+                    ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
+                    : `/dashboard/clients/${client.id}/progress-checkins/new`
+                }
+                actionLabel={latestProgressCheckIn ? t("clients.detail.openLatestCheckin") : t("clients.detail.createFirstCheckin")}
+              />
+            ) : null}
           </div>
         </section>
       ) : null}

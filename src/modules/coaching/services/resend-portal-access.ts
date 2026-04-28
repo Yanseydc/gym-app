@@ -5,6 +5,13 @@ import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import type { ResendPortalAccessMutationState } from "@/modules/coaching/types";
 import type { AppSupabaseClient } from "@/types/supabase";
 
+const RESEND_COOLDOWN_MS = 15 * 60 * 1000;
+const MAX_RESENDS_PER_DAY = 3;
+
+function getDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
 export async function resendClientPortalAccess(
   clientId: string,
   _prevState: ResendPortalAccessMutationState,
@@ -42,7 +49,9 @@ export async function resendClientPortalAccess(
 
   const { data: link, error: linkError } = await supabase
     .from("client_user_links")
-    .select("profile_id")
+    .select(
+      "id, profile_id, portal_invite_last_sent_at, portal_invite_send_count_today, portal_invite_send_count_date",
+    )
     .eq("client_id", clientId)
     .maybeSingle();
 
@@ -55,6 +64,32 @@ export async function resendClientPortalAccess(
   if (!link) {
     return {
       error: "This client does not have portal access linked.",
+    };
+  }
+
+  const now = new Date();
+  const today = getDateKey(now);
+  const lastSentAt = link.portal_invite_last_sent_at
+    ? new Date(String(link.portal_invite_last_sent_at))
+    : null;
+
+  if (lastSentAt && now.getTime() - lastSentAt.getTime() <= RESEND_COOLDOWN_MS) {
+    return {
+      error: "Espera unos minutos antes de reenviar el acceso.",
+      nextAllowedAt: new Date(lastSentAt.getTime() + RESEND_COOLDOWN_MS).toISOString(),
+    };
+  }
+
+  const countDate = link.portal_invite_send_count_date
+    ? String(link.portal_invite_send_count_date)
+    : null;
+  const currentCount = countDate === today
+    ? Number(link.portal_invite_send_count_today ?? 0)
+    : 0;
+
+  if (currentCount >= MAX_RESENDS_PER_DAY) {
+    return {
+      error: "Ya se alcanzó el límite de reenvíos por hoy.",
     };
   }
 
@@ -88,6 +123,7 @@ export async function resendClientPortalAccess(
     };
   }
 
+  const timestamp = now.toISOString();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/update-password`,
   });
@@ -98,7 +134,24 @@ export async function resendClientPortalAccess(
     };
   }
 
+  const { error: updateError } = await supabase
+    .from("client_user_links")
+    .update({
+      portal_invite_last_sent_at: timestamp,
+      portal_invite_send_count_date: today,
+      portal_invite_send_count_today: currentCount + 1,
+      updated_at: timestamp,
+    })
+    .eq("id", String(link.id));
+
+  if (updateError) {
+    return {
+      error: updateError.message,
+    };
+  }
+
   return {
+    nextAllowedAt: new Date(now.getTime() + RESEND_COOLDOWN_MS).toISOString(),
     success: "Correo enviado",
   };
 }

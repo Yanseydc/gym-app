@@ -10,6 +10,11 @@ export type ClientPortalAccess = {
   clientId: string;
   linkedAt: string;
   profile: PortalLinkedProfile;
+  resend: {
+    countDate: string | null;
+    countToday: number;
+    lastSentAt: string | null;
+  };
 };
 
 export type PortalAccessFormValues = {
@@ -23,5 +28,6 @@ export type PortalAccessMutationState = {
 
 export type ResendPortalAccessMutationState = {
   error?: string;
+  nextAllowedAt?: string;
   success?: string;
 };
