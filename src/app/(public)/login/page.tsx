@@ -4,7 +4,14 @@ import { getDefaultAuthenticatedRoute } from "@/config/routes";
 import { LoginForm } from "@/modules/auth/components/login-form";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
 
-export default async function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    password_updated?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const user = await getCurrentUser();
 
   if (user) {
@@ -31,6 +38,19 @@ export default async function LoginPage() {
             Base inicial para autenticación con Supabase y asignación de roles.
           </p>
         </div>
+        {resolvedSearchParams?.password_updated === "1" ? (
+          <p
+            style={{
+              margin: "0 0 16px",
+              padding: "12px 14px",
+              borderRadius: 12,
+              color: "var(--success)",
+              background: "var(--success-bg)",
+            }}
+          >
+            Tu contraseña fue actualizada. Inicia sesión con tu nueva contraseña.
+          </p>
+        ) : null}
         <LoginForm />
       </div>
     </main>

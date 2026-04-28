@@ -9,65 +9,173 @@ import { createClient } from "@/lib/supabase/client";
 
 type SupabaseBrowserClient = ReturnType<typeof createClient>;
 
+const invalidRecoveryMessage = "El enlace no es válido o expiró. Solicita uno nuevo.";
+
 export function UpdatePasswordForm() {
     const router = useRouter();
     const supabaseRef = useRef<SupabaseBrowserClient | null>(null);
+    const isRecoverySessionRef = useRef(false);
+    const recoveryUserIdRef = useRef<string | null>(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [pending, setPending] = useState(false);
     const [checking, setChecking] = useState(true);
-    const [hasSession, setHasSession] = useState(false);
+    const [isRecoverySession, setIsRecoverySession] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
         let subscription: { unsubscribe: () => void } | null = null;
+
+        function rejectRecovery(message = invalidRecoveryMessage) {
+            if (!isMounted) {
+                return;
+            }
+
+            isRecoverySessionRef.current = false;
+            recoveryUserIdRef.current = null;
+            setIsRecoverySession(false);
+            setError(message);
+            setChecking(false);
+        }
+
+        function readRecoveryParams() {
+            const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+            const queryParams = new URLSearchParams(window.location.search);
+            const hashType = hashParams.get("type");
+            const queryType = queryParams.get("type");
+            const accessToken = hashParams.get("access_token");
+            const refreshToken = hashParams.get("refresh_token");
+            const tokenHash = queryParams.get("token_hash") ?? hashParams.get("token_hash");
+            const code = queryParams.get("code");
+
+            if (accessToken && refreshToken && hashType === "recovery") {
+                return {
+                    accessToken,
+                    explicitRecovery: true,
+                    refreshToken,
+                    kind: "hash-tokens" as const,
+                };
+            }
+
+            if (tokenHash && (queryType === "recovery" || hashType === "recovery")) {
+                return {
+                    explicitRecovery: true,
+                    kind: "token-hash" as const,
+                    tokenHash,
+                };
+            }
+
+            if (code && (!queryType || queryType === "recovery")) {
+                return {
+                    code,
+                    explicitRecovery: queryType === "recovery",
+                    kind: "code" as const,
+                };
+            }
+
+            return null;
+        }
+
+        async function clearExistingSession(supabase: SupabaseBrowserClient) {
+            const { data } = await supabase.auth.getSession();
+
+            if (data.session) {
+                await supabase.auth.signOut();
+            }
+        }
+
+        async function waitForPasswordRecoveryEvent(userId: string) {
+            if (isRecoverySessionRef.current && recoveryUserIdRef.current === userId) {
+                return true;
+            }
+
+            for (let attempt = 0; attempt < 10; attempt += 1) {
+                await new Promise((resolve) => window.setTimeout(resolve, 50));
+
+                if (isRecoverySessionRef.current && recoveryUserIdRef.current === userId) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         async function resolveRecoverySession() {
             try {
                 const supabase = createClient();
                 supabaseRef.current = supabase;
 
-                const hash = window.location.hash.replace("#", "");
-                const params = new URLSearchParams(hash);
-
-                const accessToken = params.get("access_token");
-                const refreshToken = params.get("refresh_token");
-                const type = params.get("type");
-
-                if (accessToken && refreshToken && type === "recovery") {
-                    const { error: setSessionError } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    });
-
-                    if (setSessionError) {
-                        if (!isMounted) {
-                            return;
-                        }
-
-                        setHasSession(false);
-                        setError("El enlace no es válido o expiró. Solicita uno nuevo.");
-                        setChecking(false);
-                        return;
-                    }
-
-                    window.history.replaceState(null, "", "/auth/update-password");
-                }
-
-                const authListener = supabase.auth.onAuthStateChange((_event, session) => {
+                const authListener = supabase.auth.onAuthStateChange((event, session) => {
                     if (!isMounted) {
                         return;
                     }
 
-                    if (session) {
-                        setHasSession(true);
-                        setChecking(false);
+                    if (event === "PASSWORD_RECOVERY" && session?.user) {
+                        isRecoverySessionRef.current = true;
+                        recoveryUserIdRef.current = session.user.id;
+                        setIsRecoverySession(true);
                         setError(null);
                     }
                 });
                 subscription = authListener.data.subscription;
+
+                const recoveryParams = readRecoveryParams();
+
+                if (!recoveryParams) {
+                    await clearExistingSession(supabase);
+                    rejectRecovery();
+                    return;
+                }
+
+                await clearExistingSession(supabase);
+
+                let sessionUserId: string | null = null;
+
+                if (recoveryParams.kind === "hash-tokens") {
+                    const { data, error: setSessionError } = await supabase.auth.setSession({
+                        access_token: recoveryParams.accessToken,
+                        refresh_token: recoveryParams.refreshToken,
+                    });
+
+                    if (setSessionError || !data.session?.user) {
+                        await supabase.auth.signOut();
+                        rejectRecovery();
+                        return;
+                    }
+
+                    sessionUserId = data.session.user.id;
+                }
+
+                if (recoveryParams.kind === "token-hash") {
+                    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+                        token_hash: recoveryParams.tokenHash,
+                        type: "recovery",
+                    });
+
+                    if (verifyError || !data.session?.user) {
+                        await supabase.auth.signOut();
+                        rejectRecovery();
+                        return;
+                    }
+
+                    sessionUserId = data.session.user.id;
+                }
+
+                if (recoveryParams.kind === "code") {
+                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+                        recoveryParams.code,
+                    );
+
+                    if (exchangeError || !data.session?.user) {
+                        await supabase.auth.signOut();
+                        rejectRecovery();
+                        return;
+                    }
+
+                    sessionUserId = data.session.user.id;
+                }
 
                 const { data, error: sessionError } = await supabase.auth.getSession();
 
@@ -75,14 +183,26 @@ export function UpdatePasswordForm() {
                     return;
                 }
 
-                if (sessionError || !data.session) {
-                    setHasSession(false);
-                    setError("El enlace no es válido o expiró. Solicita uno nuevo.");
-                    setChecking(false);
+                if (sessionError || !data.session?.user || data.session.user.id !== sessionUserId) {
+                    await supabase.auth.signOut();
+                    rejectRecovery();
                     return;
                 }
 
-                setHasSession(true);
+                const hasRecoveryProof =
+                    recoveryParams.explicitRecovery ||
+                    await waitForPasswordRecoveryEvent(data.session.user.id);
+
+                if (!hasRecoveryProof) {
+                    await supabase.auth.signOut();
+                    rejectRecovery();
+                    return;
+                }
+
+                isRecoverySessionRef.current = true;
+                recoveryUserIdRef.current = data.session.user.id;
+                window.history.replaceState(null, "", "/auth/update-password");
+                setIsRecoverySession(true);
                 setError(null);
                 setChecking(false);
             } catch {
@@ -90,9 +210,7 @@ export function UpdatePasswordForm() {
                     return;
                 }
 
-                setHasSession(false);
-                setError("El enlace no es válido o expiró. Solicita uno nuevo.");
-                setChecking(false);
+                rejectRecovery();
             }
         }
 
@@ -108,8 +226,8 @@ export function UpdatePasswordForm() {
         event.preventDefault();
         setError(null);
 
-        if (!hasSession) {
-            setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+        if (!isRecoverySession || !isRecoverySessionRef.current || !recoveryUserIdRef.current) {
+            setError(invalidRecoveryMessage);
             return;
         }
 
@@ -128,17 +246,25 @@ export function UpdatePasswordForm() {
 
         if (!supabase) {
             setPending(false);
-            setHasSession(false);
-            setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+            setIsRecoverySession(false);
+            setError(invalidRecoveryMessage);
             return;
         }
 
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError || !sessionData.session) {
+        if (
+            sessionError ||
+            !sessionData.session?.user ||
+            sessionData.session.user.id !== recoveryUserIdRef.current ||
+            !isRecoverySessionRef.current
+        ) {
             setPending(false);
-            setHasSession(false);
-            setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+            await supabase.auth.signOut();
+            isRecoverySessionRef.current = false;
+            recoveryUserIdRef.current = null;
+            setIsRecoverySession(false);
+            setError(invalidRecoveryMessage);
             return;
         }
 
@@ -150,21 +276,22 @@ export function UpdatePasswordForm() {
             return;
         }
 
+        await supabase.auth.signOut();
         setSuccess(true);
         window.setTimeout(() => {
-            router.push("/login");
-        }, 2000);
+            router.replace("/login?password_updated=1");
+        }, 1200);
     }
 
     if (checking) {
         return <p style={messageStyles("info")}>Validando enlace...</p>;
     }
 
-    if (!hasSession) {
+    if (!isRecoverySession) {
         return (
             <div style={{ display: "grid", gap: 12 }}>
                 <p style={messageStyles("error")}>
-                    {error ?? "El enlace no es válido o expiró. Solicita uno nuevo."}
+                    {error ?? invalidRecoveryMessage}
                 </p>
                 <Link href="/login" className={buttonPrimary} style={{ width: "fit-content" }}>
                     Volver a login
