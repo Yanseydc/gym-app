@@ -50,7 +50,7 @@ export function UpdatePasswordForm() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted || sessionStatus === "ready") {
+      if (!isMounted) {
         return;
       }
 
@@ -66,7 +66,7 @@ export function UpdatePasswordForm() {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [sessionStatus, supabase]);
+  }, [supabase]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,12 +111,20 @@ export function UpdatePasswordForm() {
     }, 2000);
   }
 
+  if (sessionStatus === "checking") {
+    return <p style={messageStyles("info")}>Validando enlace...</p>;
+  }
+
+  if (sessionStatus === "invalid") {
+    return (
+      <p style={messageStyles("error")}>
+        {error ?? "El enlace no es válido o expiró. Solicita uno nuevo."}
+      </p>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
-      {sessionStatus === "checking" ? (
-        <p style={messageStyles("info")}>Validando enlace...</p>
-      ) : null}
-
       <label style={{ display: "grid", gap: 8 }}>
         <span style={{ fontWeight: 600 }}>Nueva contraseña</span>
         <input
