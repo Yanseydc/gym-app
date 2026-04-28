@@ -1,16 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
 import { createClient } from "@/lib/supabase/client";
 
 type SessionStatus = "checking" | "ready" | "invalid";
+type SupabaseBrowserClient = ReturnType<typeof createClient>;
 
 export function UpdatePasswordForm() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
+  const supabaseRef = useRef<SupabaseBrowserClient | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,9 +22,25 @@ export function UpdatePasswordForm() {
 
   useEffect(() => {
     let isMounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
 
     async function resolveRecoverySession() {
       try {
+        const supabase = createClient();
+        supabaseRef.current = supabase;
+
+        const authListener = supabase.auth.onAuthStateChange((_event, session) => {
+          if (!isMounted) {
+            return;
+          }
+
+          if (session) {
+            setSessionStatus("ready");
+            setError(null);
+          }
+        });
+        subscription = authListener.data.subscription;
+
         const { data, error: sessionError } = await supabase.auth.getSession();
 
         if (!isMounted) {
@@ -47,26 +65,13 @@ export function UpdatePasswordForm() {
       }
     }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) {
-        return;
-      }
-
-      if (session) {
-        setSessionStatus("ready");
-        setError(null);
-      }
-    });
-
     void resolveRecoverySession();
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,9 +93,18 @@ export function UpdatePasswordForm() {
     }
 
     setPending(true);
-    const { data: sessionData } = await supabase.auth.getSession();
+    const supabase = supabaseRef.current;
 
-    if (!sessionData.session) {
+    if (!supabase) {
+      setPending(false);
+      setSessionStatus("invalid");
+      setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+      return;
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
       setPending(false);
       setSessionStatus("invalid");
       setError("El enlace no es válido o expiró. Solicita uno nuevo.");
@@ -117,9 +131,14 @@ export function UpdatePasswordForm() {
 
   if (sessionStatus === "invalid") {
     return (
-      <p style={messageStyles("error")}>
-        {error ?? "El enlace no es válido o expiró. Solicita uno nuevo."}
-      </p>
+      <div style={{ display: "grid", gap: 12 }}>
+        <p style={messageStyles("error")}>
+          {error ?? "El enlace no es válido o expiró. Solicita uno nuevo."}
+        </p>
+        <Link href="/login" className={buttonPrimary} style={{ width: "fit-content" }}>
+          Volver a login
+        </Link>
+      </div>
     );
   }
 
