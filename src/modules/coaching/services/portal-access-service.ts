@@ -376,6 +376,8 @@ export async function inviteClientPortalUser(
   let profileId = existingProfile?.id ? String(existingProfile.id) : null;
 
   if (!profileId) {
+    // Supabase invite/recovery templates should use {{ .ConfirmationURL }} so the
+    // redirected URL includes the session hash required by /auth/update-password.
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${serverEnv.NEXT_PUBLIC_APP_URL}/auth/update-password`,
       data: {

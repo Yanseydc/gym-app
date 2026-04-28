@@ -1,22 +1,81 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { buttonPrimary, input } from "@/lib/ui";
 import { createClient } from "@/lib/supabase/client";
 
+type SessionStatus = "checking" | "ready" | "invalid";
+
 export function UpdatePasswordForm() {
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<SessionStatus>("checking");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function resolveRecoverySession() {
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (sessionError || !data.session) {
+          setSessionStatus("invalid");
+          setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+          return;
+        }
+
+        setSessionStatus("ready");
+        setError(null);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setSessionStatus("invalid");
+        setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+      }
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted || sessionStatus === "ready") {
+        return;
+      }
+
+      if (session) {
+        setSessionStatus("ready");
+        setError(null);
+      }
+    });
+
+    void resolveRecoverySession();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [sessionStatus, supabase]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (sessionStatus !== "ready") {
+      setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+      return;
+    }
 
     if (password.length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres.");
@@ -29,7 +88,15 @@ export function UpdatePasswordForm() {
     }
 
     setPending(true);
-    const supabase = createClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      setPending(false);
+      setSessionStatus("invalid");
+      setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setPending(false);
 
@@ -46,10 +113,15 @@ export function UpdatePasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
+      {sessionStatus === "checking" ? (
+        <p style={messageStyles("info")}>Validando enlace...</p>
+      ) : null}
+
       <label style={{ display: "grid", gap: 8 }}>
         <span style={{ fontWeight: 600 }}>Nueva contraseña</span>
         <input
           required
+          disabled={sessionStatus !== "ready" || pending || success}
           minLength={8}
           type="password"
           value={password}
@@ -62,6 +134,7 @@ export function UpdatePasswordForm() {
         <span style={{ fontWeight: 600 }}>Confirmar contraseña</span>
         <input
           required
+          disabled={sessionStatus !== "ready" || pending || success}
           minLength={8}
           type="password"
           value={confirmPassword}
@@ -75,19 +148,29 @@ export function UpdatePasswordForm() {
         <p style={messageStyles("success")}>Tu contraseña ha sido configurada correctamente</p>
       ) : null}
 
-      <button type="submit" disabled={pending || success} className={buttonPrimary}>
+      <button type="submit" disabled={sessionStatus !== "ready" || pending || success} className={buttonPrimary}>
         {pending ? "Configurando..." : "Configurar contraseña"}
       </button>
     </form>
   );
 }
 
-function messageStyles(tone: "error" | "success") {
+function messageStyles(tone: "error" | "success" | "info") {
   return {
     margin: 0,
     padding: "12px 14px",
     borderRadius: 12,
-    color: tone === "error" ? "var(--danger-fg)" : "var(--success)",
-    background: tone === "error" ? "var(--danger-bg)" : "var(--success-bg)",
+    color:
+      tone === "error"
+        ? "var(--danger-fg)"
+        : tone === "success"
+          ? "var(--success)"
+          : "var(--muted)",
+    background:
+      tone === "error"
+        ? "var(--danger-bg)"
+        : tone === "success"
+          ? "var(--success-bg)"
+          : "var(--surface-alt)",
   };
 }
