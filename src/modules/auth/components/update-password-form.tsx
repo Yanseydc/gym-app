@@ -7,7 +7,6 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { buttonPrimary, input } from "@/lib/ui";
 import { createClient } from "@/lib/supabase/client";
 
-type SessionStatus = "checking" | "ready" | "invalid";
 type SupabaseBrowserClient = ReturnType<typeof createClient>;
 
 export function UpdatePasswordForm() {
@@ -18,7 +17,8 @@ export function UpdatePasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
-  const [sessionStatus, setSessionStatus] = useState<SessionStatus>("checking");
+  const [checking, setChecking] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -35,7 +35,8 @@ export function UpdatePasswordForm() {
           }
 
           if (session) {
-            setSessionStatus("ready");
+            setHasSession(true);
+            setChecking(false);
             setError(null);
           }
         });
@@ -48,20 +49,23 @@ export function UpdatePasswordForm() {
         }
 
         if (sessionError || !data.session) {
-          setSessionStatus("invalid");
+          setHasSession(false);
           setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+          setChecking(false);
           return;
         }
 
-        setSessionStatus("ready");
+        setHasSession(true);
         setError(null);
+        setChecking(false);
       } catch {
         if (!isMounted) {
           return;
         }
 
-        setSessionStatus("invalid");
+        setHasSession(false);
         setError("El enlace no es válido o expiró. Solicita uno nuevo.");
+        setChecking(false);
       }
     }
 
@@ -77,7 +81,7 @@ export function UpdatePasswordForm() {
     event.preventDefault();
     setError(null);
 
-    if (sessionStatus !== "ready") {
+    if (!hasSession) {
       setError("El enlace no es válido o expiró. Solicita uno nuevo.");
       return;
     }
@@ -97,7 +101,7 @@ export function UpdatePasswordForm() {
 
     if (!supabase) {
       setPending(false);
-      setSessionStatus("invalid");
+      setHasSession(false);
       setError("El enlace no es válido o expiró. Solicita uno nuevo.");
       return;
     }
@@ -106,7 +110,7 @@ export function UpdatePasswordForm() {
 
     if (sessionError || !sessionData.session) {
       setPending(false);
-      setSessionStatus("invalid");
+      setHasSession(false);
       setError("El enlace no es válido o expiró. Solicita uno nuevo.");
       return;
     }
@@ -125,11 +129,11 @@ export function UpdatePasswordForm() {
     }, 2000);
   }
 
-  if (sessionStatus === "checking") {
+  if (checking) {
     return <p style={messageStyles("info")}>Validando enlace...</p>;
   }
 
-  if (sessionStatus === "invalid") {
+  if (!hasSession) {
     return (
       <div style={{ display: "grid", gap: 12 }}>
         <p style={messageStyles("error")}>
@@ -148,7 +152,7 @@ export function UpdatePasswordForm() {
         <span style={{ fontWeight: 600 }}>Nueva contraseña</span>
         <input
           required
-          disabled={sessionStatus !== "ready" || pending || success}
+          disabled={pending || success}
           minLength={8}
           type="password"
           value={password}
@@ -161,7 +165,7 @@ export function UpdatePasswordForm() {
         <span style={{ fontWeight: 600 }}>Confirmar contraseña</span>
         <input
           required
-          disabled={sessionStatus !== "ready" || pending || success}
+          disabled={pending || success}
           minLength={8}
           type="password"
           value={confirmPassword}
@@ -175,7 +179,7 @@ export function UpdatePasswordForm() {
         <p style={messageStyles("success")}>Tu contraseña ha sido configurada correctamente</p>
       ) : null}
 
-      <button type="submit" disabled={sessionStatus !== "ready" || pending || success} className={buttonPrimary}>
+      <button type="submit" disabled={pending || success} className={buttonPrimary}>
         {pending ? "Configurando..." : "Configurar contraseña"}
       </button>
     </form>
