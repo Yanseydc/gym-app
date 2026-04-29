@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { buttonSecondary } from "@/lib/ui";
 import type { ResendPortalAccessMutationState } from "@/modules/coaching/types";
@@ -10,7 +10,6 @@ type ResendPortalAccessButtonProps = {
     state: ResendPortalAccessMutationState,
   ) => Promise<ResendPortalAccessMutationState>;
   initialCooldownRemainingSeconds: number;
-  initialNextAllowedAt?: string | null;
 };
 
 const initialState: ResendPortalAccessMutationState = {};
@@ -18,40 +17,39 @@ const initialState: ResendPortalAccessMutationState = {};
 export function ResendPortalAccessButton({
   action,
   initialCooldownRemainingSeconds,
-  initialNextAllowedAt,
 }: ResendPortalAccessButtonProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [now, setNow] = useState(() => Date.now());
-
-  const serverNextAllowedAt = useMemo(() => {
-    if (!initialNextAllowedAt || initialCooldownRemainingSeconds <= 0) {
-      return null;
-    }
-
-    return initialNextAllowedAt;
-  }, [initialCooldownRemainingSeconds, initialNextAllowedAt]);
-
-  const nextAllowedAt = state.nextAllowedAt ?? serverNextAllowedAt;
-  const nextAllowedTime = nextAllowedAt ? Date.parse(nextAllowedAt) : Number.NaN;
-  const cooldownMs = Number.isNaN(nextAllowedTime)
-    ? 0
-    : Math.max(0, nextAllowedTime - now);
-  const cooldownMinutes = Math.max(1, Math.ceil(cooldownMs / 60000));
-  const isCoolingDown = cooldownMs > 0;
+  const [cooldownRemainingSeconds, setCooldownRemainingSeconds] = useState(
+    Math.max(0, initialCooldownRemainingSeconds),
+  );
 
   useEffect(() => {
-    if (!isCoolingDown) {
+    setCooldownRemainingSeconds(Math.max(0, initialCooldownRemainingSeconds));
+  }, [initialCooldownRemainingSeconds]);
+
+  useEffect(() => {
+    if (typeof state.cooldownRemainingSeconds !== "number") {
+      return;
+    }
+
+    setCooldownRemainingSeconds(Math.max(0, state.cooldownRemainingSeconds));
+  }, [state.cooldownRemainingSeconds]);
+
+  useEffect(() => {
+    if (cooldownRemainingSeconds <= 0) {
       return;
     }
 
     const intervalId = window.setInterval(() => {
-      setNow(Date.now());
+      setCooldownRemainingSeconds((current) => Math.max(0, current - 1));
     }, 1000);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isCoolingDown]);
+  }, [cooldownRemainingSeconds]);
+
+  const isCoolingDown = cooldownRemainingSeconds > 0;
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 8, justifyItems: "start" }}>
@@ -61,7 +59,7 @@ export function ResendPortalAccessButton({
 
       {isCoolingDown ? (
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, fontWeight: 600 }}>
-          Podrás reenviar en {cooldownMinutes} minutos.
+          Podrás reenviar en {cooldownRemainingSeconds} segundos.
         </p>
       ) : null}
 

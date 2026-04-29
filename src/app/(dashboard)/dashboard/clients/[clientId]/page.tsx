@@ -222,7 +222,6 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   <ResendPortalAccessButton
                     action={resendClientPortalAccess.bind(null, client.id)}
                     initialCooldownRemainingSeconds={portalAccess.resend.cooldownRemainingSeconds}
-                    initialNextAllowedAt={portalAccess.resend.nextAllowedAt}
                   />
                 ) : undefined
               }

@@ -3,10 +3,13 @@
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { buildPasswordRecoveryRedirectUrl } from "@/lib/app-url";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
+import {
+  PORTAL_ACCESS_RESEND_COOLDOWN_MS,
+  PORTAL_ACCESS_RESEND_COOLDOWN_SECONDS,
+} from "@/modules/coaching/constants/portal-access";
 import type { ResendPortalAccessMutationState } from "@/modules/coaching/types";
 import type { AppSupabaseClient } from "@/types/supabase";
 
-const RESEND_COOLDOWN_MS = 15 * 60 * 1000;
 const MAX_RESENDS_PER_DAY = 3;
 
 function getDateKey(date: Date) {
@@ -74,8 +77,8 @@ export async function resendClientPortalAccess(
     ? new Date(String(link.portal_invite_last_sent_at))
     : null;
 
-  if (lastSentAt && now.getTime() - lastSentAt.getTime() <= RESEND_COOLDOWN_MS) {
-    const nextAllowedAt = new Date(lastSentAt.getTime() + RESEND_COOLDOWN_MS);
+  if (lastSentAt && now.getTime() - lastSentAt.getTime() < PORTAL_ACCESS_RESEND_COOLDOWN_MS) {
+    const nextAllowedAt = new Date(lastSentAt.getTime() + PORTAL_ACCESS_RESEND_COOLDOWN_MS);
 
     return {
       cooldownRemainingSeconds: Math.max(1, Math.ceil((nextAllowedAt.getTime() - now.getTime()) / 1000)),
@@ -147,8 +150,8 @@ export async function resendClientPortalAccess(
   }
 
   return {
-    cooldownRemainingSeconds: Math.ceil(RESEND_COOLDOWN_MS / 1000),
-    nextAllowedAt: new Date(now.getTime() + RESEND_COOLDOWN_MS).toISOString(),
+    cooldownRemainingSeconds: PORTAL_ACCESS_RESEND_COOLDOWN_SECONDS,
+    nextAllowedAt: new Date(now.getTime() + PORTAL_ACCESS_RESEND_COOLDOWN_MS).toISOString(),
     success: "Correo enviado",
   };
 }

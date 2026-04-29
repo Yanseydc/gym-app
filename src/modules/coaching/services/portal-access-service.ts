@@ -5,6 +5,7 @@ import { buildPasswordRecoveryRedirectUrl } from "@/lib/app-url";
 import { applyGymScope, requireGymScope } from "@/lib/auth/gym-scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { PORTAL_ACCESS_RESEND_COOLDOWN_MS } from "@/modules/coaching/constants/portal-access";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type { ClientPortalAccess, PortalAccessFormValues, PortalLinkedProfile } from "@/modules/coaching/types";
 
@@ -24,8 +25,6 @@ type ClientPortalInviteRow = {
   id: string;
   last_name: string;
 };
-
-const PORTAL_ACCESS_RESEND_COOLDOWN_MS = 15 * 60 * 1000;
 
 function mapPortalProfile(row: ProfileLookupRow): PortalLinkedProfile {
   return {
