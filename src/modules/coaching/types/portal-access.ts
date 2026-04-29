@@ -11,9 +11,11 @@ export type ClientPortalAccess = {
   linkedAt: string;
   profile: PortalLinkedProfile;
   resend: {
+    cooldownRemainingSeconds: number;
     countDate: string | null;
     countToday: number;
     lastSentAt: string | null;
+    nextAllowedAt: string | null;
   };
 };
 
@@ -27,6 +29,7 @@ export type PortalAccessMutationState = {
 };
 
 export type ResendPortalAccessMutationState = {
+  cooldownRemainingSeconds?: number;
   error?: string;
   nextAllowedAt?: string;
   success?: string;

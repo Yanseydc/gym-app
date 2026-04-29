@@ -75,9 +75,12 @@ export async function resendClientPortalAccess(
     : null;
 
   if (lastSentAt && now.getTime() - lastSentAt.getTime() <= RESEND_COOLDOWN_MS) {
+    const nextAllowedAt = new Date(lastSentAt.getTime() + RESEND_COOLDOWN_MS);
+
     return {
+      cooldownRemainingSeconds: Math.max(1, Math.ceil((nextAllowedAt.getTime() - now.getTime()) / 1000)),
       error: "Espera unos minutos antes de reenviar el acceso.",
-      nextAllowedAt: new Date(lastSentAt.getTime() + RESEND_COOLDOWN_MS).toISOString(),
+      nextAllowedAt: nextAllowedAt.toISOString(),
     };
   }
 
@@ -144,6 +147,7 @@ export async function resendClientPortalAccess(
   }
 
   return {
+    cooldownRemainingSeconds: Math.ceil(RESEND_COOLDOWN_MS / 1000),
     nextAllowedAt: new Date(now.getTime() + RESEND_COOLDOWN_MS).toISOString(),
     success: "Correo enviado",
   };

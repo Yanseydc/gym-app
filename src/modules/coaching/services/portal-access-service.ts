@@ -25,6 +25,8 @@ type ClientPortalInviteRow = {
   last_name: string;
 };
 
+const PORTAL_ACCESS_RESEND_COOLDOWN_MS = 15 * 60 * 1000;
+
 function mapPortalProfile(row: ProfileLookupRow): PortalLinkedProfile {
   return {
     id: row.id,
@@ -32,6 +34,32 @@ function mapPortalProfile(row: ProfileLookupRow): PortalLinkedProfile {
     firstName: row.first_name,
     lastName: row.last_name,
     role: row.role,
+  };
+}
+
+function getPortalAccessResendCooldown(lastSentAt: string | null) {
+  if (!lastSentAt) {
+    return {
+      cooldownRemainingSeconds: 0,
+      nextAllowedAt: null,
+    };
+  }
+
+  const lastSentTime = Date.parse(lastSentAt);
+
+  if (Number.isNaN(lastSentTime)) {
+    return {
+      cooldownRemainingSeconds: 0,
+      nextAllowedAt: null,
+    };
+  }
+
+  const nextAllowedTime = lastSentTime + PORTAL_ACCESS_RESEND_COOLDOWN_MS;
+  const remainingMs = Math.max(0, nextAllowedTime - Date.now());
+
+  return {
+    cooldownRemainingSeconds: Math.ceil(remainingMs / 1000),
+    nextAllowedAt: remainingMs > 0 ? new Date(nextAllowedTime).toISOString() : null,
   };
 }
 
@@ -89,15 +117,21 @@ export async function getPortalAccessByClientId(
       clientId,
       linkedAt: String(linkData.created_at),
       profile: mapPortalProfile(profile),
-      resend: {
-        countDate: linkData.portal_invite_send_count_date
-          ? String(linkData.portal_invite_send_count_date)
-          : null,
-        countToday: Number(linkData.portal_invite_send_count_today ?? 0),
-        lastSentAt: linkData.portal_invite_last_sent_at
+      resend: (() => {
+        const lastSentAt = linkData.portal_invite_last_sent_at
           ? String(linkData.portal_invite_last_sent_at)
-          : null,
-      },
+          : null;
+        const cooldown = getPortalAccessResendCooldown(lastSentAt);
+
+        return {
+          ...cooldown,
+          countDate: linkData.portal_invite_send_count_date
+            ? String(linkData.portal_invite_send_count_date)
+            : null,
+          countToday: Number(linkData.portal_invite_send_count_today ?? 0),
+          lastSentAt,
+        };
+      })(),
     },
     error: null,
   };

@@ -221,7 +221,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                 portalAccess && canResendPortalAccess ? (
                   <ResendPortalAccessButton
                     action={resendClientPortalAccess.bind(null, client.id)}
-                    lastSentAt={portalAccess.resend.lastSentAt}
+                    initialCooldownRemainingSeconds={portalAccess.resend.cooldownRemainingSeconds}
+                    initialNextAllowedAt={portalAccess.resend.nextAllowedAt}
                   />
                 ) : undefined
               }

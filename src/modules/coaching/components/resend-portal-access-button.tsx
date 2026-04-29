@@ -9,28 +9,29 @@ type ResendPortalAccessButtonProps = {
   action: (
     state: ResendPortalAccessMutationState,
   ) => Promise<ResendPortalAccessMutationState>;
-  lastSentAt?: string | null;
+  initialCooldownRemainingSeconds: number;
+  initialNextAllowedAt?: string | null;
 };
 
 const initialState: ResendPortalAccessMutationState = {};
-const resendCooldownMs = 15 * 60 * 1000;
 
-export function ResendPortalAccessButton({ action, lastSentAt }: ResendPortalAccessButtonProps) {
+export function ResendPortalAccessButton({
+  action,
+  initialCooldownRemainingSeconds,
+  initialNextAllowedAt,
+}: ResendPortalAccessButtonProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [now, setNow] = useState(() => Date.now());
 
-  const initialNextAllowedAt = useMemo(() => {
-    if (!lastSentAt) {
+  const serverNextAllowedAt = useMemo(() => {
+    if (!initialNextAllowedAt || initialCooldownRemainingSeconds <= 0) {
       return null;
     }
 
-    const lastSentTime = Date.parse(lastSentAt);
-    return Number.isNaN(lastSentTime)
-      ? null
-      : new Date(lastSentTime + resendCooldownMs).toISOString();
-  }, [lastSentAt]);
+    return initialNextAllowedAt;
+  }, [initialCooldownRemainingSeconds, initialNextAllowedAt]);
 
-  const nextAllowedAt = state.nextAllowedAt ?? initialNextAllowedAt;
+  const nextAllowedAt = state.nextAllowedAt ?? serverNextAllowedAt;
   const nextAllowedTime = nextAllowedAt ? Date.parse(nextAllowedAt) : Number.NaN;
   const cooldownMs = Number.isNaN(nextAllowedTime)
     ? 0
