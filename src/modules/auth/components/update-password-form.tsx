@@ -70,20 +70,12 @@ export function UpdatePasswordForm() {
             if (code && (!queryType || queryType === "recovery")) {
                 return {
                     code,
-                    explicitRecovery: queryType === "recovery",
+                    explicitRecovery: true,
                     kind: "code" as const,
                 };
             }
 
             return null;
-        }
-
-        async function clearExistingSession(supabase: SupabaseBrowserClient) {
-            const { data } = await supabase.auth.getSession();
-
-            if (data.session) {
-                await supabase.auth.signOut();
-            }
         }
 
         async function waitForPasswordRecoveryEvent(userId: string) {
@@ -124,14 +116,26 @@ export function UpdatePasswordForm() {
                 const recoveryParams = readRecoveryParams();
 
                 if (!recoveryParams) {
-                    await clearExistingSession(supabase);
+                    await supabase.auth.signOut();
                     rejectRecovery();
                     return;
                 }
 
-                await clearExistingSession(supabase);
-
                 let sessionUserId: string | null = null;
+
+                if (recoveryParams.kind === "code") {
+                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+                        recoveryParams.code,
+                    );
+
+                    if (exchangeError || !data.session?.user) {
+                        await supabase.auth.signOut();
+                        rejectRecovery();
+                        return;
+                    }
+
+                    sessionUserId = data.session.user.id;
+                }
 
                 if (recoveryParams.kind === "hash-tokens") {
                     const { data, error: setSessionError } = await supabase.auth.setSession({
@@ -155,20 +159,6 @@ export function UpdatePasswordForm() {
                     });
 
                     if (verifyError || !data.session?.user) {
-                        await supabase.auth.signOut();
-                        rejectRecovery();
-                        return;
-                    }
-
-                    sessionUserId = data.session.user.id;
-                }
-
-                if (recoveryParams.kind === "code") {
-                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-                        recoveryParams.code,
-                    );
-
-                    if (exchangeError || !data.session?.user) {
                         await supabase.auth.signOut();
                         rejectRecovery();
                         return;
