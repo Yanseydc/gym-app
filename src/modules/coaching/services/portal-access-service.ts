@@ -387,8 +387,10 @@ export async function inviteClientPortalUser(
   let profileId = existingProfile?.id ? String(existingProfile.id) : null;
 
   if (!profileId) {
-    // Supabase invite/recovery templates should use {{ .ConfirmationURL }} so the
-    // redirected URL includes the session hash required by /auth/update-password.
+    // Supabase recovery templates for this admin/server-generated flow should use:
+    // https://gym-app-pied-ten.vercel.app/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/update-password
+    // Do not use {{ .ConfirmationURL }} here because it can create PKCE links whose
+    // code verifier only exists in the server/admin context, not the recipient browser.
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo: buildPasswordRecoveryRedirectUrl(),
       data: {

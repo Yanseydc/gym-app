@@ -11,14 +11,22 @@ type SupabaseBrowserClient = ReturnType<typeof createClient>;
 
 const invalidRecoveryMessage = "El enlace no es válido o expiró. Solicita uno nuevo.";
 
-export function UpdatePasswordForm() {
+type UpdatePasswordFormProps = {
+    expectedRecoveryUserId: string | null;
+    initialError?: string | null;
+};
+
+export function UpdatePasswordForm({
+    expectedRecoveryUserId,
+    initialError,
+}: UpdatePasswordFormProps) {
     const router = useRouter();
     const supabaseRef = useRef<SupabaseBrowserClient | null>(null);
     const isRecoverySessionRef = useRef(false);
     const recoveryUserIdRef = useRef<string | null>(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(initialError ?? null);
     const [success, setSuccess] = useState(false);
     const [pending, setPending] = useState(false);
     const [checking, setChecking] = useState(true);
@@ -26,7 +34,6 @@ export function UpdatePasswordForm() {
 
     useEffect(() => {
         let isMounted = true;
-        let subscription: { unsubscribe: () => void } | null = null;
 
         function rejectRecovery(message = invalidRecoveryMessage) {
             if (!isMounted) {
@@ -40,132 +47,10 @@ export function UpdatePasswordForm() {
             setChecking(false);
         }
 
-        function readRecoveryParams() {
-            const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-            const queryParams = new URLSearchParams(window.location.search);
-            const hashType = hashParams.get("type");
-            const queryType = queryParams.get("type");
-            const accessToken = hashParams.get("access_token");
-            const refreshToken = hashParams.get("refresh_token");
-            const tokenHash = queryParams.get("token_hash") ?? hashParams.get("token_hash");
-            const code = queryParams.get("code");
-
-            if (accessToken && refreshToken && hashType === "recovery") {
-                return {
-                    accessToken,
-                    explicitRecovery: true,
-                    refreshToken,
-                    kind: "hash-tokens" as const,
-                };
-            }
-
-            if (tokenHash && (queryType === "recovery" || hashType === "recovery")) {
-                return {
-                    explicitRecovery: true,
-                    kind: "token-hash" as const,
-                    tokenHash,
-                };
-            }
-
-            if (code && (!queryType || queryType === "recovery")) {
-                return {
-                    code,
-                    explicitRecovery: true,
-                    kind: "code" as const,
-                };
-            }
-
-            return null;
-        }
-
-        async function waitForPasswordRecoveryEvent(userId: string) {
-            if (isRecoverySessionRef.current && recoveryUserIdRef.current === userId) {
-                return true;
-            }
-
-            for (let attempt = 0; attempt < 10; attempt += 1) {
-                await new Promise((resolve) => window.setTimeout(resolve, 50));
-
-                if (isRecoverySessionRef.current && recoveryUserIdRef.current === userId) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         async function resolveRecoverySession() {
             try {
                 const supabase = createClient();
                 supabaseRef.current = supabase;
-
-                const authListener = supabase.auth.onAuthStateChange((event, session) => {
-                    if (!isMounted) {
-                        return;
-                    }
-
-                    if (event === "PASSWORD_RECOVERY" && session?.user) {
-                        isRecoverySessionRef.current = true;
-                        recoveryUserIdRef.current = session.user.id;
-                        setIsRecoverySession(true);
-                        setError(null);
-                    }
-                });
-                subscription = authListener.data.subscription;
-
-                const recoveryParams = readRecoveryParams();
-
-                if (!recoveryParams) {
-                    await supabase.auth.signOut();
-                    rejectRecovery();
-                    return;
-                }
-
-                let sessionUserId: string | null = null;
-
-                if (recoveryParams.kind === "code") {
-                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-                        recoveryParams.code,
-                    );
-
-                    if (exchangeError || !data.session?.user) {
-                        await supabase.auth.signOut();
-                        rejectRecovery();
-                        return;
-                    }
-
-                    sessionUserId = data.session.user.id;
-                }
-
-                if (recoveryParams.kind === "hash-tokens") {
-                    const { data, error: setSessionError } = await supabase.auth.setSession({
-                        access_token: recoveryParams.accessToken,
-                        refresh_token: recoveryParams.refreshToken,
-                    });
-
-                    if (setSessionError || !data.session?.user) {
-                        await supabase.auth.signOut();
-                        rejectRecovery();
-                        return;
-                    }
-
-                    sessionUserId = data.session.user.id;
-                }
-
-                if (recoveryParams.kind === "token-hash") {
-                    const { data, error: verifyError } = await supabase.auth.verifyOtp({
-                        token_hash: recoveryParams.tokenHash,
-                        type: "recovery",
-                    });
-
-                    if (verifyError || !data.session?.user) {
-                        await supabase.auth.signOut();
-                        rejectRecovery();
-                        return;
-                    }
-
-                    sessionUserId = data.session.user.id;
-                }
 
                 const { data, error: sessionError } = await supabase.auth.getSession();
 
@@ -173,17 +58,12 @@ export function UpdatePasswordForm() {
                     return;
                 }
 
-                if (sessionError || !data.session?.user || data.session.user.id !== sessionUserId) {
-                    await supabase.auth.signOut();
-                    rejectRecovery();
-                    return;
-                }
-
-                const hasRecoveryProof =
-                    recoveryParams.explicitRecovery ||
-                    await waitForPasswordRecoveryEvent(data.session.user.id);
-
-                if (!hasRecoveryProof) {
+                if (
+                    sessionError ||
+                    !data.session?.user ||
+                    !expectedRecoveryUserId ||
+                    data.session.user.id !== expectedRecoveryUserId
+                ) {
                     await supabase.auth.signOut();
                     rejectRecovery();
                     return;
@@ -191,7 +71,6 @@ export function UpdatePasswordForm() {
 
                 isRecoverySessionRef.current = true;
                 recoveryUserIdRef.current = data.session.user.id;
-                window.history.replaceState(null, "", "/auth/update-password");
                 setIsRecoverySession(true);
                 setError(null);
                 setChecking(false);
@@ -208,9 +87,8 @@ export function UpdatePasswordForm() {
 
         return () => {
             isMounted = false;
-            subscription?.unsubscribe();
         };
-    }, []);
+    }, [expectedRecoveryUserId]);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();

@@ -10,7 +10,10 @@ export function buildAppUrl(path: `/${string}`) {
 }
 
 export function buildPasswordRecoveryRedirectUrl() {
-  const redirectUrl = buildAppUrl("/auth/update-password");
+  // Supabase recovery emails for admin/server-generated links must use this template:
+  // https://gym-app-pied-ten.vercel.app/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/update-password
+  // Do not use {{ .ConfirmationURL }} for this flow; PKCE code verifiers are not present in the recipient browser.
+  const redirectUrl = buildAppUrl("/auth/confirm");
   const url = new URL(redirectUrl);
 
   if (url.searchParams.has("redirect_to")) {

@@ -1,6 +1,28 @@
-import { UpdatePasswordForm } from "@/modules/auth/components/update-password-form";
+import { cookies } from "next/headers";
 
-export default function UpdatePasswordPage() {
+import { createClient } from "@/lib/supabase/server";
+import { UpdatePasswordForm } from "@/modules/auth/components/update-password-form";
+import { passwordRecoverySessionCookie } from "@/modules/auth/constants/recovery";
+
+type UpdatePasswordPageProps = {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+};
+
+export default async function UpdatePasswordPage({ searchParams }: UpdatePasswordPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const cookieStore = await cookies();
+  const recoveryUserId = cookieStore.get(passwordRecoverySessionCookie)?.value ?? null;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const expectedRecoveryUserId = recoveryUserId && user?.id === recoveryUserId ? recoveryUserId : null;
+  const initialError = resolvedSearchParams?.error === "invalid_recovery"
+    ? "El enlace no es válido o expiró. Solicita uno nuevo."
+    : null;
+
   return (
     <main style={{ padding: "72px 0" }}>
       <div
@@ -21,7 +43,10 @@ export default function UpdatePasswordPage() {
             Ingresa una contraseña nueva para activar tu acceso.
           </p>
         </div>
-        <UpdatePasswordForm />
+        <UpdatePasswordForm
+          expectedRecoveryUserId={expectedRecoveryUserId}
+          initialError={initialError}
+        />
       </div>
     </main>
   );
