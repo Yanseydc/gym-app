@@ -111,6 +111,13 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   const canAccessHistory = canAccessMemberships || canAccessPayments || canAccessCheckIns;
   const canMergeClients = Boolean(user && (user.role === "admin" || user.role === "staff"));
   const canResendPortalAccess = Boolean(user && (user.role === "admin" || user.role === "staff"));
+  const clientEmail = client.email?.trim() || null;
+  const portalEmail = portalAccess?.profile.email.trim() || null;
+  const hasPortalEmailMismatch = Boolean(
+    clientEmail &&
+    portalEmail &&
+    clientEmail.toLowerCase() !== portalEmail.toLowerCase(),
+  );
   const requestedTab = resolvedSearchParams?.tab;
   const activeTab =
     requestedTab === "coaching" && canAccessCoaching
@@ -205,10 +212,15 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                     ? t("clients.detail.accessUnavailable")
                     : t("clients.detail.notLinkedYet")
               }
-              description={
-                portalAccess
-                  ? portalAccess.profile.email
-                  : portalAccessError ?? t("clients.detail.portalAccessDescription")
+              description={portalAccessError ?? t("clients.detail.portalAccessDescription")}
+              descriptionNode={
+                portalAccess ? (
+                  <PortalAccessEmailSummary
+                    clientEmail={clientEmail}
+                    hasMismatch={hasPortalEmailMismatch}
+                    portalEmail={portalEmail}
+                  />
+                ) : undefined
               }
               meta={portalAccess ? t("common.linked", { date: new Date(portalAccess.linkedAt).toLocaleDateString(locale) }) : t("common.manualSetup")}
               actionHref={
@@ -219,10 +231,20 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
               action={
                 portalAccess && canResendPortalAccess ? (
-                  <ResendPortalAccessButton
-                    action={resendClientPortalAccess.bind(null, client.id)}
-                    initialCooldownRemainingSeconds={portalAccess.resend.cooldownRemainingSeconds}
-                  />
+                  <div style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+                    <ResendPortalAccessButton
+                      action={resendClientPortalAccess.bind(null, client.id)}
+                      initialCooldownRemainingSeconds={portalAccess.resend.cooldownRemainingSeconds}
+                    />
+                    <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+                      Se reenviará al correo de acceso al portal: <strong>{portalEmail}</strong>.
+                    </p>
+                    {hasPortalEmailMismatch ? (
+                      <button type="button" disabled className={buttonSecondary}>
+                        Actualizar acceso del portal
+                      </button>
+                    ) : null}
+                  </div>
                 ) : undefined
               }
             />
@@ -525,6 +547,7 @@ function SummaryCard({
   actionHref,
   actionLabel,
   description,
+  descriptionNode,
   eyebrow,
   meta,
   status,
@@ -533,7 +556,8 @@ function SummaryCard({
   action?: ReactNode;
   actionHref?: string;
   actionLabel?: string;
-  description: string;
+  description?: string;
+  descriptionNode?: ReactNode;
   eyebrow: string;
   meta: string;
   status?: ReactNode;
@@ -568,7 +592,9 @@ function SummaryCard({
 
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 20, lineHeight: 1.25 }}>{title}</strong>
-        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
+        {descriptionNode ?? (
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
+        )}
       </div>
 
       <div
@@ -595,6 +621,38 @@ function SummaryCard({
         </div>
       ) : null)}
     </article>
+  );
+}
+
+function PortalAccessEmailSummary({
+  clientEmail,
+  hasMismatch,
+  portalEmail,
+}: {
+  clientEmail: string | null;
+  hasMismatch: boolean;
+  portalEmail: string | null;
+}) {
+  return (
+    <div style={{ display: "grid", gap: 8, color: "var(--muted)", lineHeight: 1.55 }}>
+      {hasMismatch ? (
+        <>
+          <p style={{ margin: 0 }}>
+            Correo del cliente: <strong style={{ color: "inherit" }}>{clientEmail}</strong>
+          </p>
+          <p style={{ margin: 0 }}>
+            Correo de acceso al portal: <strong style={{ color: "inherit" }}>{portalEmail}</strong>
+          </p>
+          <p style={warningBoxStyles}>
+            El correo del cliente no coincide con el correo de acceso al portal.
+          </p>
+        </>
+      ) : (
+        <p style={{ margin: 0 }}>
+          Correo de acceso al portal: <strong style={{ color: "inherit" }}>{portalEmail}</strong>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -664,6 +722,15 @@ const errorBoxStyles: CSSProperties = {
   borderRadius: 12,
   background: "var(--danger-bg)",
   color: "var(--danger-fg)",
+};
+
+const warningBoxStyles: CSSProperties = {
+  margin: 0,
+  padding: "10px 12px",
+  borderRadius: 12,
+  background: "var(--warning-bg)",
+  color: "var(--warning-fg)",
+  fontWeight: 700,
 };
 
 
