@@ -17,6 +17,8 @@ import { getProgressCheckInsForPage } from "@/modules/coaching/services/progress
 import { ResendPortalAccessButton } from "@/modules/coaching/components/resend-portal-access-button";
 import { RoutineSummaryList } from "@/modules/coaching/components/routine-detail-card";
 import { getClientRoutineSummariesForPage } from "@/modules/coaching/services/routine-service";
+import { UpdatePortalAccessEmailButton } from "@/modules/coaching/components/update-portal-access-email-button";
+import { updateClientPortalAccessEmail } from "@/modules/coaching/services/update-portal-access-email";
 import { resendClientPortalAccess } from "@/modules/coaching/services/resend-portal-access";
 import { CheckInForm } from "@/modules/checkins/components/checkin-form";
 import { CheckInHistoryList } from "@/modules/checkins/components/checkin-history-list";
@@ -240,9 +242,11 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                       Se reenviará al correo de acceso al portal: <strong>{portalEmail}</strong>.
                     </p>
                     {hasPortalEmailMismatch ? (
-                      <button type="button" disabled className={buttonSecondary}>
-                        Actualizar acceso del portal
-                      </button>
+                      <UpdatePortalAccessEmailButton
+                        action={updateClientPortalAccessEmail.bind(null, client.id)}
+                        clientEmail={clientEmail ?? ""}
+                        portalEmail={portalEmail ?? ""}
+                      />
                     ) : null}
                   </div>
                 ) : undefined

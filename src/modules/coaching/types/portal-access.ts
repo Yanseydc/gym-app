@@ -34,3 +34,8 @@ export type ResendPortalAccessMutationState = {
   nextAllowedAt?: string;
   success?: string;
 };
+
+export type UpdatePortalAccessEmailMutationState = {
+  error?: string;
+  success?: string;
+};
