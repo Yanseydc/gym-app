@@ -573,11 +573,9 @@ function SummaryCard({
       style={{
         display: "grid",
         gap: 12,
-        padding: 18,
         borderRadius: 18,
         border: "1px solid var(--border)",
         background: "rgba(255, 255, 255, 0.03)",
-        minHeight: 168,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
@@ -642,10 +640,10 @@ function PortalAccessEmailSummary({
     <div className="client-summary-card-text" style={{ display: "grid", gap: 8, color: "var(--muted)", lineHeight: 1.55 }}>
       {hasMismatch ? (
         <>
-          <p style={{ margin: 0 }}>
+          <p className="client-summary-card-text break-words text-sm leading-relaxed" style={{ margin: 0 }}>
             Correo del cliente: <strong style={{ color: "inherit" }}>{clientEmail}</strong>
           </p>
-          <p style={{ margin: 0 }}>
+          <p className="client-summary-card-text break-words text-sm leading-relaxed" style={{ margin: 0 }}>
             Correo de acceso al portal: <strong style={{ color: "inherit" }}>{portalEmail}</strong>
           </p>
           <p style={warningBoxStyles}>
@@ -653,7 +651,7 @@ function PortalAccessEmailSummary({
           </p>
         </>
       ) : (
-        <p style={{ margin: 0 }}>
+        <p className="client-summary-card-text break-words text-sm leading-relaxed" style={{ margin: 0 }}>
           Correo de acceso al portal: <strong style={{ color: "inherit" }}>{portalEmail}</strong>
         </p>
       )}
