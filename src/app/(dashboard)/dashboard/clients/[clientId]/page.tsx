@@ -233,7 +233,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
               actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
               action={
                 portalAccess && canResendPortalAccess ? (
-                  <div style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+                  <div className="client-summary-card-actions client-summary-card-text" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
                     <ResendPortalAccessButton
                       action={resendClientPortalAccess.bind(null, client.id)}
                       initialCooldownRemainingSeconds={portalAccess.resend.cooldownRemainingSeconds}
@@ -569,6 +569,7 @@ function SummaryCard({
 }) {
   return (
     <article
+      className="client-summary-card"
       style={{
         display: "grid",
         gap: 12,
@@ -595,9 +596,9 @@ function SummaryCard({
       </div>
 
       <div style={{ display: "grid", gap: 6 }}>
-        <strong style={{ fontSize: 20, lineHeight: 1.25 }}>{title}</strong>
+        <strong className="client-summary-card-text" style={{ fontSize: 20, lineHeight: 1.25 }}>{title}</strong>
         {descriptionNode ?? (
-          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
+          <p className="client-summary-card-text" style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
         )}
       </div>
 
@@ -611,11 +612,11 @@ function SummaryCard({
           fontWeight: 600,
         }}
       >
-        {meta}
+        <span className="client-summary-card-text">{meta}</span>
       </div>
 
       {action ?? (actionHref && actionLabel ? (
-        <div>
+        <div className="client-summary-card-actions">
           <Link
             href={actionHref}
             className={buttonSecondary}
@@ -638,7 +639,7 @@ function PortalAccessEmailSummary({
   portalEmail: string | null;
 }) {
   return (
-    <div style={{ display: "grid", gap: 8, color: "var(--muted)", lineHeight: 1.55 }}>
+    <div className="client-summary-card-text" style={{ display: "grid", gap: 8, color: "var(--muted)", lineHeight: 1.55 }}>
       {hasMismatch ? (
         <>
           <p style={{ margin: 0 }}>
@@ -735,6 +736,7 @@ const warningBoxStyles: CSSProperties = {
   background: "var(--warning-bg)",
   color: "var(--warning-fg)",
   fontWeight: 700,
+  overflowWrap: "anywhere",
 };
 
 

@@ -113,12 +113,17 @@ button {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  max-width: 100%;
+  min-width: 0;
   padding: 12px 16px;
   border-radius: 14px;
   border: 1px solid transparent;
   font-weight: 700;
   line-height: 1;
   text-decoration: none;
+  text-align: center;
+  overflow-wrap: anywhere;
+  white-space: normal;
   cursor: pointer;
   transition:
     background 160ms ease,
@@ -424,6 +429,32 @@ main {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.client-summary-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.client-summary-card > * {
+  min-width: 0;
+}
+
+.client-summary-card-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.client-summary-card-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.client-summary-card-actions form,
+.client-summary-card-actions button,
+.client-summary-card-actions a {
+  max-width: 100%;
+}
+
 .responsive-inline-header {
   display: flex;
   justify-content: space-between;
@@ -648,11 +679,13 @@ main {
   }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1200px) {
   .client-summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
 
+@media (min-width: 1100px) {
   .portal-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
