@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Activity, ClipboardList, Dumbbell, Mail, UserRound, type LucideIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -104,6 +105,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     t(count === 1 ? "common.dayCountOne" : "common.dayCountOther", { count });
 
   const activeRoutine = routines.find((routine) => routine.status === "active") ?? null;
+  const draftRoutineCount = routines.filter((routine) => routine.status === "draft").length;
+  const archivedRoutineCount = routines.filter((routine) => routine.status === "archived").length;
   const latestProgressCheckIn = progressCheckIns[0] ?? null;
   const canAccessCoaching = Boolean(user && hasModuleAccess(user.role, "coaching"));
   const canAccessMemberships = Boolean(user && hasModuleAccess(user.role, "memberships"));
@@ -206,6 +209,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
           <div className="client-summary-grid">
             <SummaryCard
+              icon={portalAccess ? UserRound : Mail}
               eyebrow={t("clients.detail.portalAccess")}
               title={
                 portalAccess
@@ -224,13 +228,19 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                   />
                 ) : undefined
               }
-              meta={portalAccess ? t("common.linked", { date: new Date(portalAccess.linkedAt).toLocaleDateString(locale) }) : t("common.manualSetup")}
-              actionHref={
+              metadata={[
+                portalAccess ? t("common.linked", { date: new Date(portalAccess.linkedAt).toLocaleDateString(locale) }) : t("common.manualSetup"),
+              ]}
+              actions={
                 portalAccess
-                  ? undefined
-                  : `/dashboard/clients/${client.id}/portal-access/new`
+                  ? []
+                  : [
+                      {
+                        href: `/dashboard/clients/${client.id}/portal-access/new`,
+                        label: t("clients.detail.linkPortalUser"),
+                      },
+                    ]
               }
-              actionLabel={portalAccess ? undefined : t("clients.detail.linkPortalUser")}
               action={
                 portalAccess && canResendPortalAccess ? (
                   <div className="client-summary-card-actions client-summary-card-text" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
@@ -255,6 +265,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
             {canAccessCoaching ? (
               <SummaryCard
+                icon={ClipboardList}
                 eyebrow={t("clients.detail.onboardingSnapshot")}
                 title={onboarding ? onboarding.goal : onboardingError ? t("clients.detail.onboardingUnavailable") : t("clients.detail.noOnboardingYet")}
                 description={
@@ -262,34 +273,64 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                     ? `${t("common.daysPerWeek", { count: onboarding.availableDays })} · ${onboarding.experienceLevel}`
                     : onboardingError ?? t("clients.detail.onboardingDescription")
                 }
-                meta={onboarding ? `${onboarding.weightKg} kg · ${onboarding.heightCm} cm` : t("common.planningSetup")}
-                actionHref={`/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`}
-                actionLabel={onboarding ? t("clients.detail.editOnboarding") : t("clients.detail.createOnboarding")}
+                metadata={
+                  onboarding
+                    ? [
+                        t("common.daysPerWeek", { count: onboarding.availableDays }),
+                        `${onboarding.weightKg} kg`,
+                        `${onboarding.heightCm} cm`,
+                      ]
+                    : [t("common.planningSetup")]
+                }
+                actions={[
+                  {
+                    href: `/dashboard/clients/${client.id}/onboarding/${onboarding ? "edit" : "new"}`,
+                    label: onboarding ? t("clients.detail.editOnboarding") : t("clients.detail.createOnboarding"),
+                  },
+                ]}
               />
             ) : null}
 
             {canAccessCoaching ? (
               <SummaryCard
+                icon={Dumbbell}
                 eyebrow={t("clients.detail.activeRoutine")}
-                title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutine")}
+                title={activeRoutine ? activeRoutine.title : routinesError ? t("clients.detail.routinesUnavailable") : t("clients.detail.noActiveRoutineAssigned")}
                 description={
                   activeRoutine
-                    ? formatDayCount(activeRoutine.dayCount)
-                    : routinesError ?? t("clients.detail.routinesDescription")
+                    ? t("clients.detail.activeRoutineAssigned")
+                    : routinesError ?? t("clients.detail.routinesWithoutActiveDescription")
                 }
-                meta={activeRoutine ? t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }) : t("common.trainingPlan")}
-                actionHref={
+                metadata={
                   activeRoutine
-                    ? `/dashboard/coaching/routines/${activeRoutine.id}`
-                    : `/dashboard/coaching/routines/new?clientId=${client.id}`
+                    ? [
+                        formatDayCount(activeRoutine.dayCount),
+                        t("common.updatedOn", { date: new Date(activeRoutine.updatedAt).toLocaleDateString(locale) }),
+                        draftRoutineCount > 0 ? t("clients.detail.draftRoutinesAvailable", { count: draftRoutineCount }) : "",
+                      ].filter(Boolean)
+                    : [
+                        draftRoutineCount > 0 ? t("clients.detail.draftRoutinesAvailable", { count: draftRoutineCount }) : t("clients.detail.noDraftRoutines"),
+                        archivedRoutineCount > 0 ? t("clients.detail.archivedRoutinesAvailable", { count: archivedRoutineCount }) : "",
+                      ].filter(Boolean)
                 }
-                actionLabel={activeRoutine ? t("clients.detail.viewRoutine") : t("clients.detail.createRoutine")}
+                actions={[
+                  {
+                    href: `${baseClientPath}?tab=coaching`,
+                    label: t("clients.detail.viewRoutines"),
+                  },
+                  {
+                    href: `/dashboard/coaching/routines/new?clientId=${client.id}`,
+                    label: t("clients.detail.createRoutine"),
+                    variant: activeRoutine ? "secondary" : "primary",
+                  },
+                ]}
                 status={activeRoutine ? <StatusChip label={t("common.status.active")} tone="success" /> : undefined}
               />
             ) : null}
 
             {canAccessCoaching ? (
               <SummaryCard
+                icon={Activity}
                 eyebrow={t("clients.detail.latestProgress")}
                 title={
                   latestProgressCheckIn
@@ -305,19 +346,31 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                       : t("clients.detail.noPhotosAttached")
                     : progressCheckInsError ?? t("clients.detail.progressCheckinsHelper")
                 }
-                meta={
+                metadata={[
                   latestProgressCheckIn
                     ? latestProgressCheckIn.weightKg
                       ? `${latestProgressCheckIn.weightKg} kg`
                       : t("clients.detail.weightNotRecorded")
-                    : t("common.progressTracking")
-                }
-                actionHref={
+                    : t("common.progressTracking"),
                   latestProgressCheckIn
-                    ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
-                    : `/dashboard/clients/${client.id}/progress-checkins/new`
-                }
-                actionLabel={latestProgressCheckIn ? t("clients.detail.openLatestCheckin") : t("clients.detail.createFirstCheckin")}
+                    ? latestProgressCheckIn.photoTypes.length > 0
+                      ? t("clients.detail.photosAttached", { count: latestProgressCheckIn.photoTypes.length })
+                      : t("clients.detail.noPhotosAttached")
+                    : "",
+                ].filter(Boolean)}
+                actions={[
+                  {
+                    href: latestProgressCheckIn
+                      ? `/dashboard/clients/${client.id}/progress-checkins/${latestProgressCheckIn.id}/edit`
+                      : `/dashboard/clients/${client.id}/progress-checkins/new`,
+                    label: latestProgressCheckIn ? t("clients.detail.openLatestCheckin") : t("clients.detail.createFirstCheckin"),
+                  },
+                  {
+                    href: `/dashboard/clients/${client.id}/progress-checkins/new`,
+                    label: t("coaching.progress.newCheckin"),
+                    variant: "secondary",
+                  },
+                ]}
               />
             ) : null}
           </div>
@@ -548,22 +601,22 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
 function SummaryCard({
   action,
-  actionHref,
-  actionLabel,
+  actions = [],
   description,
   descriptionNode,
   eyebrow,
-  meta,
+  icon: Icon,
+  metadata,
   status,
   title,
 }: {
   action?: ReactNode;
-  actionHref?: string;
-  actionLabel?: string;
+  actions?: { href: string; label: string; variant?: "primary" | "secondary" }[];
   description?: string;
   descriptionNode?: ReactNode;
   eyebrow: string;
-  meta: string;
+  icon: LucideIcon;
+  metadata: string[];
   status?: ReactNode;
   title: string;
 }) {
@@ -572,29 +625,50 @@ function SummaryCard({
       className="client-summary-card"
       style={{
         display: "grid",
-        gap: 12,
+        gap: 16,
+        alignContent: "start",
         borderRadius: 18,
-        border: "1px solid var(--border)",
-        background: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid rgba(255, 255, 255, 0.11)",
+        background: "linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.022))",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-        <span
-          style={{
-            color: "var(--muted)",
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-          }}
-        >
-          {eyebrow}
-        </span>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              flex: "0 0 auto",
+              borderRadius: 12,
+              color: "var(--accent-strong)",
+              background: "rgba(181, 232, 197, 0.11)",
+              border: "1px solid rgba(181, 232, 197, 0.18)",
+            }}
+          >
+            <Icon size={18} strokeWidth={2.1} />
+          </span>
+          <span
+            className="client-summary-card-text"
+            style={{
+              color: "var(--muted)",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+            }}
+          >
+            {eyebrow}
+          </span>
+        </div>
         {status}
       </div>
 
       <div style={{ display: "grid", gap: 6 }}>
-        <strong className="client-summary-card-text" style={{ fontSize: 20, lineHeight: 1.25 }}>{title}</strong>
+        <strong className="client-summary-card-text" style={{ fontSize: 21, lineHeight: 1.2 }}>{title}</strong>
         {descriptionNode ?? (
           <p className="client-summary-card-text" style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
         )}
@@ -602,27 +676,45 @@ function SummaryCard({
 
       <div
         style={{
-          padding: "9px 11px",
-          borderRadius: 12,
-          background: "rgba(255, 255, 255, 0.04)",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          paddingTop: 12,
+          borderTop: "1px solid var(--border)",
           color: "var(--muted)",
           fontSize: 13,
           fontWeight: 600,
         }}
       >
-        <span className="client-summary-card-text">{meta}</span>
+        {metadata.map((item) => (
+          <span
+            key={item}
+            className="client-summary-card-text"
+            style={{
+              minWidth: 0,
+              padding: "7px 9px",
+              borderRadius: 999,
+              background: "rgba(255, 255, 255, 0.045)",
+              border: "1px solid rgba(255, 255, 255, 0.07)",
+            }}
+          >
+            {item}
+          </span>
+        ))}
       </div>
 
-      {action ?? (actionHref && actionLabel ? (
-        <div className="client-summary-card-actions">
+      <div className="client-summary-card-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignSelf: "end" }}>
+        {action}
+        {actions.map((summaryAction) => (
           <Link
-            href={actionHref}
-            className={buttonSecondary}
+            key={`${summaryAction.href}-${summaryAction.label}`}
+            href={summaryAction.href}
+            className={summaryAction.variant === "primary" ? buttonPrimary : buttonSecondary}
           >
-            {actionLabel}
+            {summaryAction.label}
           </Link>
-        </div>
-      ) : null)}
+        ))}
+      </div>
     </article>
   );
 }
