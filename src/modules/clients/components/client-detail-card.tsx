@@ -117,7 +117,7 @@ function DetailItem({
       >
         {label}
       </span>
-      <strong style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{value}</strong>
+      <strong style={{ whiteSpace: "pre-wrap", lineHeight: 1.5, overflowWrap: "anywhere" }}>{value}</strong>
     </div>
   );
 }

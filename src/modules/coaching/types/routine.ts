@@ -115,6 +115,30 @@ export type RoutineMutationState = {
   fieldErrors?: Partial<Record<keyof RoutineFormValues, string>>;
 };
 
+export type RoutineTextImportExercise = {
+  exerciseName: string;
+  exerciseId: string;
+  setsText: string;
+  repsText: string;
+  restSeconds: string;
+  notes: string;
+};
+
+export type RoutineTextImportDay = {
+  dayIndex: number;
+  title: string;
+  exercises: RoutineTextImportExercise[];
+};
+
+export type RoutineTextImportValues = RoutineFormValues & {
+  days: RoutineTextImportDay[];
+};
+
+export type RoutineTextImportMutationState = {
+  error?: string;
+  fieldErrors?: Partial<Record<keyof RoutineFormValues | "routineText" | "days", string>>;
+};
+
 export type RoutineDayMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof RoutineDayFormValues, string>>;

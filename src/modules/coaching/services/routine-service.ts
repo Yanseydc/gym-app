@@ -18,6 +18,7 @@ import type {
   RoutineExerciseFormValues,
   RoutineExerciseOption,
   RoutineFormValues,
+  RoutineTextImportValues,
 } from "@/modules/coaching/types";
 import { restMinutesToSeconds } from "@/modules/coaching/utils/rest-time";
 
@@ -570,6 +571,132 @@ export async function createRoutineRecord(
     }, scope))
     .select("id")
     .single();
+}
+
+export async function createRoutineFromTextRecord(
+  supabase: AppSupabaseClient,
+  coachProfileId: string,
+  values: RoutineTextImportValues,
+) {
+  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError || !scope) {
+    return { data: null, error: { message: scopeError ?? "Unable to resolve gym scope." } };
+  }
+
+  let clientQuery = supabase.from("clients").select("id").eq("id", values.clientId);
+  clientQuery = applyGymScope(clientQuery, scope);
+  const { data: clientData, error: clientError } = await clientQuery.maybeSingle();
+
+  if (clientError) {
+    return { data: null, error: { message: clientError.message } };
+  }
+
+  if (!clientData) {
+    return { data: null, error: { message: "Selected client is not available." } };
+  }
+
+  const exerciseIds = [
+    ...new Set(values.days.flatMap((day) => day.exercises.map((exercise) => exercise.exerciseId))),
+  ];
+
+  let exerciseQuery = supabase
+    .from("exercise_library")
+    .select("id, gym_id")
+    .in("id", exerciseIds)
+    .eq("is_active", true);
+
+  if (!scope.isSuperAdmin) {
+    exerciseQuery = exerciseQuery.or(`gym_id.is.null,gym_id.eq.${scope.gymId}`);
+  }
+
+  const { data: exerciseData, error: exerciseError } = await exerciseQuery;
+
+  if (exerciseError) {
+    return { data: null, error: { message: exerciseError.message } };
+  }
+
+  const availableExerciseIds = new Set((exerciseData ?? []).map((exercise) => String(exercise.id)));
+  const missingExercise = exerciseIds.find((exerciseId) => !availableExerciseIds.has(exerciseId));
+
+  if (missingExercise) {
+    return { data: null, error: { message: "Resolve every exercise before saving the routine." } };
+  }
+
+  const createdAt = new Date().toISOString();
+  const { data: routineData, error: routineError } = await supabase
+    .from("client_routines")
+    .insert(withGymId({
+      ...normalizeRoutinePayload({
+        ...values,
+        status: values.status === "active" ? "draft" : values.status,
+      }),
+      coach_profile_id: coachProfileId,
+      created_at: createdAt,
+    }, scope))
+    .select("id")
+    .single();
+
+  if (routineError || !routineData) {
+    return {
+      data: null,
+      error: { message: routineError?.message ?? "Unable to create routine." },
+    };
+  }
+
+  const routineId = String(routineData.id);
+
+  try {
+    for (const day of values.days) {
+      const { data: dayData, error: dayError } = await supabase
+        .from("client_routine_days")
+        .insert({
+          client_routine_id: routineId,
+          day_index: day.dayIndex,
+          title: day.title.trim(),
+          notes: null,
+          created_at: createdAt,
+        })
+        .select("id")
+        .single();
+
+      if (dayError || !dayData) {
+        throw new Error(dayError?.message ?? "Unable to create routine day.");
+      }
+
+      const routineDayId = String(dayData.id);
+      const exerciseRows = day.exercises.map((exercise, index) => ({
+        client_routine_day_id: routineDayId,
+        exercise_id: exercise.exerciseId,
+        sort_order: index + 1,
+        sets_text: exercise.setsText.trim(),
+        reps_text: exercise.repsText.trim(),
+        target_weight_text: null,
+        rest_seconds: exercise.restSeconds === "" ? null : Number(exercise.restSeconds),
+        notes: exercise.notes.trim() || null,
+        created_at: createdAt,
+      }));
+
+      const { error: exerciseInsertError } = await supabase
+        .from("client_routine_exercises")
+        .insert(exerciseRows);
+
+      if (exerciseInsertError) {
+        throw new Error(exerciseInsertError.message);
+      }
+    }
+  } catch (error) {
+    await supabase.from("client_routines").delete().eq("id", routineId);
+    return {
+      data: null,
+      error: { message: error instanceof Error ? error.message : "Unable to import routine." },
+    };
+  }
+
+  return {
+    data: { id: routineId },
+    error: null,
+  };
 }
 
 export async function updateRoutineRecord(

@@ -52,6 +52,10 @@ export type {
   RoutineExerciseOption,
   RoutineFormValues,
   RoutineMutationState,
+  RoutineTextImportDay,
+  RoutineTextImportExercise,
+  RoutineTextImportMutationState,
+  RoutineTextImportValues,
 } from "@/modules/coaching/types/routine";
 export type {
   RoutineTemplate,

@@ -1,9 +1,13 @@
 import Link from "next/link";
 
 import { getAdminText } from "@/lib/i18n/admin";
-import { RoutineForm } from "@/modules/coaching/components/routine-form";
+import { RoutineCreateFlow } from "@/modules/coaching/components/routine-create-flow";
+import { createRoutineFromText } from "@/modules/coaching/services/create-routine-from-text";
 import { createRoutine } from "@/modules/coaching/services/create-routine";
-import { getRoutineClientOptionsForPage } from "@/modules/coaching/services/routine-service";
+import {
+  getRoutineClientOptionsForPage,
+  getRoutineExerciseOptionsForPage,
+} from "@/modules/coaching/services/routine-service";
 import type { RoutineFormValues } from "@/modules/coaching/types";
 
 type NewRoutinePageProps = {
@@ -15,7 +19,14 @@ type NewRoutinePageProps = {
 export default async function NewRoutinePage({ searchParams }: NewRoutinePageProps) {
   const { t } = await getAdminText();
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const { data: clients, error } = await getRoutineClientOptionsForPage();
+  const [
+    { data: clients, error: clientsError },
+    { data: exercises, error: exercisesError },
+  ] = await Promise.all([
+    getRoutineClientOptionsForPage(),
+    getRoutineExerciseOptionsForPage(),
+  ]);
+  const error = clientsError ?? exercisesError;
 
   const defaultValues: RoutineFormValues = {
     clientId: resolvedSearchParams.clientId ?? "",
@@ -72,11 +83,12 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
 
       <div className="coaching-form-layout">
         <section className="coaching-form-shell">
-          <RoutineForm
-            action={createRoutine}
+          <RoutineCreateFlow
+            createAction={createRoutine}
+            importAction={createRoutineFromText}
             clients={clients}
             defaultValues={defaultValues}
-            submitLabel={t("clients.detail.createRoutine")}
+            exercises={exercises}
             lockClient={Boolean(resolvedSearchParams.clientId)}
           />
         </section>
