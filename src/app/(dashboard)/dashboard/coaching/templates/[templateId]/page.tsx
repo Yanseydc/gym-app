@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { getText } from "@/lib/i18n";
-import { buttonSecondary } from "@/lib/ui";
 import { RoutineTemplateApplyForm } from "@/modules/coaching/components/routine-template-apply-form";
 import { RoutineTemplateDetailCard } from "@/modules/coaching/components/routine-template-detail-card";
 import { applyRoutineTemplate } from "@/modules/coaching/services/apply-routine-template";
@@ -18,6 +18,7 @@ type RoutineTemplateDetailPageProps = {
 export default async function RoutineTemplateDetailPage({
   params,
 }: RoutineTemplateDetailPageProps) {
+  const { t: adminT } = await getAdminText();
   const t = await getText("coaching");
   const { templateId } = await params;
   const [
@@ -31,13 +32,7 @@ export default async function RoutineTemplateDetailPage({
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href="/dashboard/coaching/templates"
-          className={buttonSecondary}
-          style={{ width: "fit-content" }}
-        >
-          {t.templates.backToTemplates}
-        </Link>
+        <BackNavigation href="/dashboard/coaching/templates" label={t.templates.backToTemplates} />
         <p
           style={{
             margin: 0,
@@ -59,22 +54,23 @@ export default async function RoutineTemplateDetailPage({
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
+      <BackNavigation
         href="/dashboard/coaching/templates"
-        className={buttonSecondary}
-        style={{ width: "fit-content" }}
-      >
-        {t.templates.backToTemplates}
-      </Link>
+        label={t.templates.backToTemplates}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: adminT("nav.coaching") },
+          { href: "/dashboard/coaching/templates", label: t.templates.title },
+          { label: template.title },
+        ]}
+      />
 
       <section
+        className="premium-panel feature-panel"
         style={{
           display: "grid",
           gap: 16,
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
         >
         <div>

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { PortalAccessForm } from "@/modules/coaching/components/portal-access-form";
 import { createPortalAccess } from "@/modules/coaching/services/create-portal-access";
@@ -25,9 +25,7 @@ export default async function NewPortalAccessPage({ params }: NewPortalAccessPag
   if (error || portalAccessError) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClient")}
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}`} label={t("common.backToClient")} />
         <p
           style={{
             margin: 0,
@@ -50,9 +48,7 @@ export default async function NewPortalAccessPage({ params }: NewPortalAccessPag
   if (portalAccess) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClient")}
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}`} label={t("common.backToClient")} />
         <p
           style={{
             margin: 0,
@@ -70,9 +66,15 @@ export default async function NewPortalAccessPage({ params }: NewPortalAccessPag
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        {t("common.backToClient")}
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${clientId}`}
+        label={t("common.backToClient")}
+        breadcrumbs={[
+          { href: "/dashboard/clients", label: t("nav.clients") },
+          { href: `/dashboard/clients/${clientId}`, label: `${client.firstName} ${client.lastName}` },
+          { label: t("clients.detail.invitePortal") },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t("clients.detail.invitePortal")}</h1>
@@ -84,11 +86,10 @@ export default async function NewPortalAccessPage({ params }: NewPortalAccessPag
       </header>
 
       <section
+        className="premium-panel feature-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <PortalAccessForm

@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
-import { buttonSecondary } from "@/lib/ui";
 import { PaymentEditForm } from "@/modules/payments/components/payment-edit-form";
 import { getPaymentForPage } from "@/modules/payments/services/payment-service";
 import { updatePayment } from "@/modules/payments/services/update-payment";
@@ -21,9 +20,7 @@ export default async function EditPaymentPage({ params }: EditPaymentPageProps) 
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
-          {t.backToPayments}
-        </Link>
+        <BackNavigation href="/dashboard/payments" label={t.backToPayments} />
         <p
           style={{
             margin: 0,
@@ -45,11 +42,7 @@ export default async function EditPaymentPage({ params }: EditPaymentPageProps) 
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <div>
-        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
-          {t.backToPayments}
-        </Link>
-      </div>
+      <BackNavigation href="/dashboard/payments" label={t.backToPayments} />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.editPayment}</h1>
@@ -59,11 +52,10 @@ export default async function EditPaymentPage({ params }: EditPaymentPageProps) 
       </header>
 
       <section
+        className="premium-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <PaymentEditForm action={updatePayment.bind(null, payment.id)} payment={payment} />

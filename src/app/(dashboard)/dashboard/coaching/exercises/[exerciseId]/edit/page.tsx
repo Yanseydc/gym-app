@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { getText } from "@/lib/i18n";
-import { buttonSecondary } from "@/lib/ui";
 import { ExerciseForm } from "@/modules/coaching/components/exercise-form";
 import { ExerciseGalleryManager } from "@/modules/coaching/components/exercise-gallery-manager";
 import { createExerciseMedia } from "@/modules/coaching/services/create-exercise-media";
@@ -20,6 +20,7 @@ type EditExercisePageProps = {
 };
 
 export default async function EditExercisePage({ params }: EditExercisePageProps) {
+  const { t: adminT } = await getAdminText();
   const t = await getText("exercises");
   const common = await getText("common");
   const { exerciseId } = await params;
@@ -31,13 +32,7 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href="/dashboard/coaching/exercises"
-          className={buttonSecondary}
-          style={{ width: "fit-content" }}
-        >
-          {t.backToExerciseLibrary}
-        </Link>
+        <BackNavigation href="/dashboard/coaching/exercises" label={t.backToExerciseLibrary} />
         <p
           style={{
             margin: 0,
@@ -60,13 +55,7 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
   if (!exercise.canEdit) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href="/dashboard/coaching/exercises"
-          className={buttonSecondary}
-          style={{ width: "fit-content" }}
-        >
-          {t.backToExerciseLibrary}
-        </Link>
+        <BackNavigation href="/dashboard/coaching/exercises" label={t.backToExerciseLibrary} />
         <p
           style={{
             margin: 0,
@@ -100,13 +89,15 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
+      <BackNavigation
         href="/dashboard/coaching/exercises"
-        className={buttonSecondary}
-        style={{ width: "fit-content" }}
-      >
-        {t.backToExerciseLibrary}
-      </Link>
+        label={t.backToExerciseLibrary}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: adminT("nav.coaching") },
+          { href: "/dashboard/coaching/exercises", label: t.title },
+          { label: exercise.name },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.editExercise}</h1>
@@ -116,11 +107,10 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
       </header>
 
       <section
+        className="premium-panel feature-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <ExerciseForm
@@ -131,11 +121,10 @@ export default async function EditExercisePage({ params }: EditExercisePageProps
       </section>
 
       <section
+        className="premium-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         {galleryError ? (

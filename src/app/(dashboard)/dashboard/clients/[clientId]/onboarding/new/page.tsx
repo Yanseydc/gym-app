@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { OnboardingForm } from "@/modules/coaching/components/onboarding-form";
 import { createOnboarding } from "@/modules/coaching/services/create-onboarding";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
@@ -13,6 +14,7 @@ type NewOnboardingPageProps = {
 };
 
 export default async function NewOnboardingPage({ params }: NewOnboardingPageProps) {
+  const { t } = await getAdminText();
   const { clientId } = await params;
   const [{ data: client, error }, { data: onboarding, error: onboardingError }] = await Promise.all([
     getClientForPage(clientId),
@@ -22,9 +24,7 @@ export default async function NewOnboardingPage({ params }: NewOnboardingPagePro
   if (error || onboardingError) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to client
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}?tab=coaching`} label={t("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -47,9 +47,7 @@ export default async function NewOnboardingPage({ params }: NewOnboardingPagePro
   if (onboarding) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back to client
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}?tab=coaching`} label={t("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -67,9 +65,15 @@ export default async function NewOnboardingPage({ params }: NewOnboardingPagePro
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        Back to client
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${clientId}?tab=coaching`}
+        label={t("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: t("nav.coaching") },
+          { href: `/dashboard/clients/${clientId}?tab=coaching`, label: `${client.firstName} ${client.lastName}` },
+          { label: t("clients.detail.createOnboarding") },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>Create coaching onboarding</h1>
@@ -79,11 +83,10 @@ export default async function NewOnboardingPage({ params }: NewOnboardingPagePro
       </header>
 
       <section
+        className="premium-panel feature-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <OnboardingForm

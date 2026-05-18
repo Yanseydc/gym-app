@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
 import { MembershipAssignmentList } from "@/modules/memberships/components/membership-assignment-list";
 import { MembershipPlanDetailCard } from "@/modules/memberships/components/membership-plan-detail-card";
@@ -29,12 +29,7 @@ export default async function MembershipDetailPage({
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href="/dashboard/memberships"
-          style={{ color: "var(--muted)", fontWeight: 600 }}
-        >
-          {t.backToMemberships}
-        </Link>
+        <BackNavigation href="/dashboard/memberships" label={t.backToMemberships} />
         <p
           style={{
             margin: 0,
@@ -56,9 +51,7 @@ export default async function MembershipDetailPage({
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href="/dashboard/memberships" style={{ color: "var(--muted)", fontWeight: 600 }}>
-        {t.backToMemberships}
-      </Link>
+      <BackNavigation href="/dashboard/memberships" label={t.backToMemberships} />
 
       <MembershipPlanDetailCard plan={plan} />
 

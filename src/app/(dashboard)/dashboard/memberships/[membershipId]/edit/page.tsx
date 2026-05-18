@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
 import { MembershipPlanForm } from "@/modules/memberships/components/membership-plan-form";
 import { getMembershipPlanForPage } from "@/modules/memberships/services/membership-service";
@@ -23,12 +23,7 @@ export default async function EditMembershipPlanPage({
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href="/dashboard/memberships"
-          style={{ color: "var(--muted)", fontWeight: 600 }}
-        >
-          {t.backToMemberships}
-        </Link>
+        <BackNavigation href="/dashboard/memberships" label={t.backToMemberships} />
         <p
           style={{
             margin: 0,
@@ -58,12 +53,7 @@ export default async function EditMembershipPlanPage({
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
-        href={`/dashboard/memberships/${plan.id}`}
-        style={{ color: "var(--muted)", fontWeight: 600 }}
-      >
-        {t.backToPlan}
-      </Link>
+      <BackNavigation href={`/dashboard/memberships/${plan.id}`} label={t.backToPlan} />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.editPlan}</h1>
@@ -73,11 +63,10 @@ export default async function EditMembershipPlanPage({
       </header>
 
       <section
+        className="premium-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <MembershipPlanForm

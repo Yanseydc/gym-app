@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineBuilder } from "@/modules/coaching/components/routine-builder";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
@@ -34,9 +34,7 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/coaching/exercises" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.back")}
-        </Link>
+        <BackNavigation href="/dashboard/coaching/exercises" label={t("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -67,12 +65,15 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
-        href={`/dashboard/coaching/routines/${routine.id}`}
-        style={{ color: "var(--muted)", fontWeight: 600 }}
-      >
-        {t("coaching.routines.backToRoutine")}
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${routine.clientId}?tab=coaching`}
+        label={t("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: t("nav.coaching") },
+          { href: `/dashboard/coaching/routines/${routine.id}`, label: routine.title },
+          { label: t("coaching.routines.edit") },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: 0 }}>{t("coaching.routines.editTitle")}</h1>
@@ -94,13 +95,12 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
       ) : null}
 
       <section
+        className="premium-panel feature-panel"
         style={{
           display: "grid",
           gap: 16,
           padding: 22,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <h2 style={{ margin: 0, fontSize: 18 }}>{t("coaching.routines.infoTitle")}</h2>

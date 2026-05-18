@@ -1,7 +1,5 @@
-import Link from "next/link";
-
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
-import { buttonSecondary } from "@/lib/ui";
 import { PaymentForm } from "@/modules/payments/components/payment-form";
 import { createPayment } from "@/modules/payments/services/create-payment";
 import { getPaymentFormOptionsForPage } from "@/modules/payments/services/payment-service";
@@ -20,11 +18,7 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <div>
-        <Link href="/dashboard/payments" className={buttonSecondary} style={{ width: "fit-content" }}>
-          {t.backToPayments}
-        </Link>
-      </div>
+      <BackNavigation href="/dashboard/payments" label={t.backToPayments} />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.registerPayment}</h1>
@@ -48,11 +42,10 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
       ) : null}
 
       <section
+        className="premium-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <PaymentForm

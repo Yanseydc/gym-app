@@ -2,14 +2,18 @@
   color-scheme: dark;
   --background: #141714;
   --foreground: #f4eee6;
-  --surface: #1a1f1b;
-  --surface-alt: #232924;
-  --surface-soft: #1f2520;
+  --surface: #1d231f;
+  --surface-alt: #272e28;
+  --surface-soft: #232a25;
   --input: #101411;
-  --border: rgba(228, 213, 191, 0.12);
-  --border-strong: rgba(228, 213, 191, 0.2);
+  --border: rgba(235, 222, 202, 0.145);
+  --border-strong: rgba(235, 222, 202, 0.25);
   --accent: #d16c43;
   --accent-strong: #f0976e;
+  --accent-training: #f0976e;
+  --accent-onboarding: #8fc7ff;
+  --accent-progress: #77d6a3;
+  --accent-portal: #d7bdff;
   --muted: #aaa395;
   --success: #58b37c;
   --success-bg: rgba(88, 179, 124, 0.14);
@@ -20,7 +24,8 @@
   --neutral-badge-bg: rgba(226, 213, 193, 0.1);
   --neutral-badge-fg: #d6c7b8;
   --radius: 16px;
-  --shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+  --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.18);
   font-family: var(--font-sans, "Segoe UI", sans-serif);
 }
 
@@ -257,9 +262,98 @@ main {
 .dashboard-content {
   padding: 18px;
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(22, 27, 23, 0.96), rgba(18, 22, 19, 0.94));
+  background: linear-gradient(180deg, rgba(27, 33, 28, 0.97), rgba(19, 24, 20, 0.96));
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
   min-width: 0;
+}
+
+.app-back-navigation {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.app-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+}
+
+.app-back-link:hover {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.app-back-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
+}
+
+.app-breadcrumbs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.app-breadcrumb-item {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-breadcrumb-item a {
+  color: color-mix(in srgb, var(--foreground) 74%, var(--muted) 26%);
+}
+
+.app-breadcrumb-item span {
+  overflow-wrap: anywhere;
+}
+
+.premium-panel {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.046), rgba(255, 255, 255, 0.022)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.feature-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--feature-accent, var(--accent));
+  opacity: 0.8;
 }
 
 .portal-shell-grid {
@@ -524,7 +618,10 @@ main {
   padding: 16px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+    var(--surface);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.13);
 }
 
 .clients-form-shell {
@@ -533,7 +630,10 @@ main {
   padding: 18px;
   border-radius: 20px;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .coaching-form-layout {
@@ -547,7 +647,10 @@ main {
   padding: 20px;
   border-radius: 24px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.02)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .coaching-support-panel {
@@ -556,7 +659,8 @@ main {
   padding: 18px;
   border-radius: 22px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
 .coaching-photo-grid {

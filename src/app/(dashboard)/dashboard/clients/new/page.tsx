@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { ClientForm } from "@/modules/clients/components/client-form";
 import { createClient } from "@/modules/clients/services/create-client";
@@ -9,11 +8,14 @@ export default async function NewClientPage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <div>
-        <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClients")}
-        </Link>
-      </div>
+      <BackNavigation
+        href="/dashboard/clients"
+        label={t("common.backToClients")}
+        breadcrumbs={[
+          { href: "/dashboard/clients", label: t("nav.clients") },
+          { label: t("clients.createTitle") },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t("clients.createTitle")}</h1>

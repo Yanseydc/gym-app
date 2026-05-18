@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { getText } from "@/lib/i18n";
-import { buttonSecondary } from "@/lib/ui";
 import { OnboardingForm } from "@/modules/coaching/components/onboarding-form";
 import { getOnboardingForPage } from "@/modules/coaching/services/onboarding-service";
 import { updateOnboarding } from "@/modules/coaching/services/update-onboarding";
@@ -16,6 +16,7 @@ type EditOnboardingPageProps = {
 };
 
 export default async function EditOnboardingPage({ params }: EditOnboardingPageProps) {
+  const { t: adminT } = await getAdminText();
   const t = await getText("coaching");
   const common = await getText("common");
   const { clientId } = await params;
@@ -27,13 +28,7 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
   if (error || onboardingError) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link
-          href={`/dashboard/clients/${clientId}`}
-          className={buttonSecondary}
-          style={{ width: "fit-content" }}
-        >
-          {t.templates.onboarding.backToClient}
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}?tab=coaching`} label={adminT("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -66,13 +61,15 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
-        href={`/dashboard/clients/${clientId}`}
-        className={buttonSecondary}
-        style={{ width: "fit-content" }}
-      >
-        {t.templates.onboarding.backToClient}
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${clientId}?tab=coaching`}
+        label={adminT("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: adminT("nav.coaching") },
+          { href: `/dashboard/clients/${clientId}?tab=coaching`, label: `${client.firstName} ${client.lastName}` },
+          { label: t.templates.onboarding.editTitle },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.templates.onboarding.editTitle}</h1>
@@ -84,11 +81,10 @@ export default async function EditOnboardingPage({ params }: EditOnboardingPageP
       </header>
 
       <section
+        className="premium-panel feature-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <OnboardingForm

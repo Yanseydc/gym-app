@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { ClientForm } from "@/modules/clients/components/client-form";
 import { getClientForPage } from "@/modules/clients/services/client-service";
@@ -21,9 +21,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClients")}
-        </Link>
+        <BackNavigation href="/dashboard/clients" label={t("common.backToClients")} />
         <p
           style={{
             margin: 0,
@@ -55,12 +53,15 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
+      <BackNavigation
         href={`/dashboard/clients/${client.id}`}
-        style={{ color: "var(--muted)", fontWeight: 600 }}
-      >
-        {t("common.backToClient")}
-      </Link>
+        label={t("common.backToClient")}
+        breadcrumbs={[
+          { href: "/dashboard/clients", label: t("nav.clients") },
+          { href: `/dashboard/clients/${client.id}`, label: `${client.firstName} ${client.lastName}` },
+          { label: t("clients.editTitle") },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t("clients.editTitle")}</h1>

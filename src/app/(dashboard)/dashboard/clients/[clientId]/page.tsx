@@ -3,6 +3,7 @@ import { Activity, ClipboardList, Dumbbell, Mail, UserRound, type LucideIcon } f
 import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { hasModuleAccess } from "@/lib/auth/permissions";
 import { getAdminText } from "@/lib/i18n/admin";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui";
@@ -79,9 +80,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/clients" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClients")}
-        </Link>
+        <BackNavigation href="/dashboard/clients" label={t("common.backToClients")} />
         <p
           style={{
             margin: 0,
@@ -165,9 +164,14 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
   return (
     <div className="client-detail-page">
-      <Link href="/dashboard/clients" className={buttonSecondary} style={{ width: "fit-content" }}>
-        {t("common.backToClients")}
-      </Link>
+      <BackNavigation
+        href="/dashboard/clients"
+        label={t("common.backToClients")}
+        breadcrumbs={[
+          { href: "/dashboard/clients", label: t("nav.clients") },
+          { label: `${client.firstName} ${client.lastName}` },
+        ]}
+      />
 
       <nav aria-label="Client detail sections" className="client-tabs-nav">
         {tabs.map((tab) => {

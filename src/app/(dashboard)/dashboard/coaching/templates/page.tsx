@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
 import { RoutineTemplateList } from "@/modules/coaching/components/routine-template-list";
 import { getRoutineTemplatesForPage } from "@/modules/coaching/services/routine-template-service";
@@ -10,6 +9,8 @@ export default async function RoutineTemplatesPage() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
+      <BackNavigation href="/dashboard/coaching/exercises" label={t.templates.backToCoaching} />
+
       <header
         style={{
           display: "flex",
@@ -25,18 +26,6 @@ export default async function RoutineTemplatesPage() {
             {t.templates.description}
           </p>
         </div>
-
-        <Link
-          href="/dashboard/coaching/exercises"
-          style={{
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "var(--surface-alt)",
-            fontWeight: 700,
-          }}
-        >
-          {t.templates.backToCoaching}
-        </Link>
       </header>
 
       {error ? (

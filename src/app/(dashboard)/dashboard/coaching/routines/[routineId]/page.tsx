@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineDetailCard } from "@/modules/coaching/components/routine-detail-card";
 import { getRoutineForPage } from "@/modules/coaching/services/routine-service";
 
@@ -11,15 +12,14 @@ type RoutineDetailPageProps = {
 };
 
 export default async function RoutineDetailPage({ params }: RoutineDetailPageProps) {
+  const { t } = await getAdminText();
   const { routineId } = await params;
   const { data: routine, error } = await getRoutineForPage(routineId);
 
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href="/dashboard/coaching/exercises" style={{ color: "var(--muted)", fontWeight: 600 }}>
-          Back
-        </Link>
+        <BackNavigation href="/dashboard/coaching/exercises" label={t("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -41,12 +41,15 @@ export default async function RoutineDetailPage({ params }: RoutineDetailPagePro
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link
-        href={`/dashboard/clients/${routine.clientId}`}
-        style={{ color: "var(--muted)", fontWeight: 600 }}
-      >
-        Back to client
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${routine.clientId}?tab=coaching`}
+        label={t("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: t("nav.coaching") },
+          { href: `/dashboard/clients/${routine.clientId}?tab=coaching`, label: routine.clientName },
+          { label: routine.title },
+        ]}
+      />
 
       <RoutineDetailCard routine={routine} showEditLink />
     </div>

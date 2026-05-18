@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { ProgressCheckInForm } from "@/modules/coaching/components/progress-checkin-form";
 import { getProgressCheckInForPage } from "@/modules/coaching/services/progress-checkin-service";
@@ -26,9 +26,7 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
   if (error || checkInError) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {t("common.backToClient")}
-        </Link>
+        <BackNavigation href={`/dashboard/clients/${clientId}?tab=coaching`} label={t("common.backToCoaching")} />
         <p
           style={{
             margin: 0,
@@ -57,18 +55,23 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href={`/dashboard/clients/${clientId}`} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        {t("common.backToClient")}
-      </Link>
+      <BackNavigation
+        href={`/dashboard/clients/${clientId}?tab=coaching`}
+        label={t("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: t("nav.coaching") },
+          { href: `/dashboard/clients/${clientId}?tab=coaching`, label: `${client.firstName} ${client.lastName}` },
+          { label: t("coaching.progress.edit") },
+        ]}
+      />
 
       <header
+        className="premium-panel feature-panel"
         style={{
           display: "grid",
           gap: 10,
           padding: 20,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "linear-gradient(180deg, rgba(30, 36, 31, 0.98), rgba(22, 27, 24, 0.95))",
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
@@ -76,7 +79,7 @@ export default async function EditProgressCheckInPage({ params }: EditProgressCh
         </span>
         <h1 style={{ margin: 0 }}>{t("coaching.progress.edit")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-          Update notes, weight and photos for {client.firstName} {client.lastName}.
+          {t("clients.detail.editProgressDescription", { name: `${client.firstName} ${client.lastName}` })}
         </p>
       </header>
 

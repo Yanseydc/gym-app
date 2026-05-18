@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
 import { RoutineCreateFlow } from "@/modules/coaching/components/routine-create-flow";
 import { createRoutineFromText } from "@/modules/coaching/services/create-routine-from-text";
@@ -36,26 +35,28 @@ export default async function NewRoutinePage({ searchParams }: NewRoutinePagePro
     startsOn: "",
     endsOn: "",
   };
+  const returnHref = resolvedSearchParams.clientId
+    ? `/dashboard/clients/${resolvedSearchParams.clientId}?tab=coaching`
+    : "/dashboard/coaching/exercises";
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <div>
-        <Link
-          href={resolvedSearchParams.clientId ? `/dashboard/clients/${resolvedSearchParams.clientId}` : "/dashboard/coaching/exercises"}
-          style={{ color: "var(--muted)", fontWeight: 600 }}
-        >
-          {t("common.back")}
-        </Link>
-      </div>
+      <BackNavigation
+        href={returnHref}
+        label={t("common.backToCoaching")}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: t("nav.coaching") },
+          { label: t("coaching.createPage.createTitle") },
+        ]}
+      />
 
       <header
+        className="premium-panel feature-panel"
         style={{
           display: "grid",
           gap: 10,
           padding: 20,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "linear-gradient(180deg, rgba(30, 36, 31, 0.98), rgba(22, 27, 24, 0.95))",
         }}
       >
         <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>

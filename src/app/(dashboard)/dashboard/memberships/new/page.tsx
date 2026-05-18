@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getText } from "@/lib/i18n";
 import { MembershipPlanForm } from "@/modules/memberships/components/membership-plan-form";
 import { createMembershipPlan } from "@/modules/memberships/services/create-membership-plan";
@@ -13,14 +12,7 @@ async function NewMembershipPlanPageContent({ tPromise }: { tPromise: ReturnType
   const t = await tPromise;
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <div>
-        <Link
-          href="/dashboard/memberships"
-          style={{ color: "var(--muted)", fontWeight: 600 }}
-        >
-          {t.backToMemberships}
-        </Link>
-      </div>
+      <BackNavigation href="/dashboard/memberships" label={t.backToMemberships} />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.createPlan}</h1>
@@ -30,11 +22,10 @@ async function NewMembershipPlanPageContent({ tPromise }: { tPromise: ReturnType
       </header>
 
       <section
+        className="premium-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <MembershipPlanForm

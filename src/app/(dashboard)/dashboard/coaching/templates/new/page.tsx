@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackNavigation } from "@/components/navigation/back-navigation";
+import { getAdminText } from "@/lib/i18n/admin";
 import { getText } from "@/lib/i18n";
 import { RoutineTemplateForm } from "@/modules/coaching/components/routine-template-form";
 import { createRoutineTemplate } from "@/modules/coaching/services/create-routine-template";
@@ -17,6 +18,7 @@ type NewRoutineTemplatePageProps = {
 export default async function NewRoutineTemplatePage({
   searchParams,
 }: NewRoutineTemplatePageProps) {
+  const { t: adminT } = await getAdminText();
   const t = await getText("coaching");
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const routineId = resolvedSearchParams.routineId ?? "";
@@ -31,9 +33,7 @@ export default async function NewRoutineTemplatePage({
   if (error) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        <Link href={returnPath} style={{ color: "var(--muted)", fontWeight: 600 }}>
-          {(await getText("common")).back}
-        </Link>
+        <BackNavigation href={returnPath} label={(await getText("common")).back} />
         <p
           style={{
             margin: 0,
@@ -60,9 +60,15 @@ export default async function NewRoutineTemplatePage({
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      <Link href={returnPath} style={{ color: "var(--muted)", fontWeight: 600 }}>
-        {t.templates.backToRoutine}
-      </Link>
+      <BackNavigation
+        href={returnPath}
+        label={t.templates.backToRoutine}
+        breadcrumbs={[
+          { href: "/dashboard/coaching/exercises", label: adminT("nav.coaching") },
+          { href: returnPath, label: routine.title },
+          { label: t.templates.saveAsTemplate },
+        ]}
+      />
 
       <header>
         <h1 style={{ margin: "0 0 8px" }}>{t.templates.saveAsTemplate}</h1>
@@ -72,11 +78,10 @@ export default async function NewRoutineTemplatePage({
       </header>
 
       <section
+        className="premium-panel feature-panel"
         style={{
           padding: 24,
           borderRadius: 24,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
         }}
       >
         <RoutineTemplateForm
