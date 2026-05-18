@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 
-import { buttonGhost, buttonPrimary, buttonSecondary, input } from "@/lib/ui";
+import { buttonPrimary, buttonSecondary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { parseRoutineText, matchExerciseByName } from "@/modules/coaching/utils/routine-text-import";
@@ -44,6 +44,13 @@ Press militar | 3x10 | descanso 75s | notas: Mantener core firme
 Día 2: Jalón
 Remo con barra | 4x8 | descanso 90s | notas: Pausa arriba`;
 
+const formatTemplateText = `Rutina: <titulo de la rutina>
+Día 1: <titulo del dia>
+<nombre del ejercicio> | <series>x<reps> | descanso <segundos>s | notas: <notas>
+
+Día 2: <titulo del dia>
+<nombre del ejercicio> | <series>x<reps> | descanso <segundos>s | notas: <notas>`;
+
 export function RoutineCreateFlow({
   createAction,
   importAction,
@@ -56,20 +63,10 @@ export function RoutineCreateFlow({
   const [mode, setMode] = useState<"manual" | "import">("manual");
 
   return (
-    <div style={{ display: "grid", gap: 18 }}>
+    <div style={workspaceStyles}>
       <div
         aria-label={t("coaching.createPage.creationMode")}
-        style={{
-          display: "inline-flex",
-          gap: 4,
-          width: "fit-content",
-          maxWidth: "100%",
-          padding: 4,
-          borderRadius: 12,
-          border: "1px solid var(--border)",
-          background: "var(--surface)",
-          overflowX: "auto",
-        }}
+        style={tabListStyles}
       >
         <ModeButton active={mode === "manual"} onClick={() => setMode("manual")}>
           {t("coaching.createPage.manualMode")}
@@ -80,13 +77,23 @@ export function RoutineCreateFlow({
       </div>
 
       {mode === "manual" ? (
-        <RoutineForm
-          action={createAction}
-          clients={clients}
-          defaultValues={defaultValues}
-          submitLabel={t("coaching.routines.saveRoutine")}
-          lockClient={lockClient}
-        />
+        <div style={modePanelStyles}>
+          <div style={sectionHeaderStyles}>
+            <strong style={{ fontSize: 18 }}>{t("coaching.createPage.manualMode")}</strong>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>
+              {t("coaching.createPage.manualDescription")}
+            </p>
+          </div>
+
+          <RoutineForm
+            action={createAction}
+            clients={clients}
+            defaultValues={defaultValues}
+            submitLabel={t("coaching.routines.saveRoutine")}
+            lockClient={lockClient}
+            showHeader={false}
+          />
+        </div>
       ) : (
         <RoutineTextImportForm
           action={importAction}
@@ -119,6 +126,7 @@ function RoutineTextImportForm({
   const { t } = useAdminText();
   const [state, formAction, pending] = useActionState(action, initialImportState);
   const [routineText, setRoutineText] = useState("");
+  const [copiedFormat, setCopiedFormat] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [values, setValues] = useState<RoutineTextImportValues>({
     ...defaultValues,
@@ -186,24 +194,33 @@ function RoutineTextImportForm({
     });
   }
 
+  async function copyFormat() {
+    try {
+      await navigator.clipboard.writeText(formatTemplateText);
+      setCopiedFormat(true);
+      window.setTimeout(() => setCopiedFormat(false), 1600);
+    } catch {
+      setRoutineText(formatTemplateText);
+    }
+  }
+
+  function showExample() {
+    setRoutineText(exampleText);
+    setParseErrors([]);
+  }
+
   return (
-    <form action={formAction} style={{ display: "grid", gap: 20 }}>
+    <form action={formAction} style={modePanelStyles}>
       <input type="hidden" name="payload" value={payload} />
 
-      <div
-        style={{
-          display: "grid",
-          gap: 6,
-          paddingBottom: 6,
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
+      <div style={sectionHeaderStyles}>
         <strong style={{ fontSize: 18 }}>{t("coaching.createPage.importFromText")}</strong>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {t("coaching.createPage.importDescription")}
         </p>
       </div>
 
+      <section style={sectionCardStyles}>
       <div style={gridStyles}>
         {!lockClient ? (
           <label style={{ display: "grid", gap: 8 }}>
@@ -212,6 +229,7 @@ function RoutineTextImportForm({
               value={values.clientId}
               onChange={(event) => setValues((current) => ({ ...current, clientId: event.target.value }))}
               className={input}
+              style={lightInputStyles}
             >
               <option value="">{t("payments.form.selectClient")}</option>
               {clients.map((client) => (
@@ -237,6 +255,7 @@ function RoutineTextImportForm({
             value={values.status}
             onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as RoutineFormValues["status"] }))}
             className={input}
+            style={lightInputStyles}
           >
             <option value="draft">{t("common.status.draft")}</option>
             <option value="active">{t("common.status.active")}</option>
@@ -261,18 +280,30 @@ function RoutineTextImportForm({
           error={state.fieldErrors?.endsOn}
         />
       </div>
+      </section>
 
-      <label style={{ display: "grid", gap: 8 }}>
-        <span style={labelStyles}>{t("coaching.createPage.routineText")}</span>
+      <section style={sectionCardStyles}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+          <span style={labelStyles}>{t("coaching.createPage.routineText")}</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" className={buttonSecondary} onClick={copyFormat}>
+              {copiedFormat ? t("coaching.createPage.formatCopied") : t("coaching.createPage.copyFormat")}
+            </button>
+            <button type="button" className={buttonSecondary} onClick={showExample}>
+              {t("coaching.createPage.viewExample")}
+            </button>
+          </div>
+        </div>
+
         <textarea
           value={routineText}
           onChange={(event) => setRoutineText(event.target.value)}
-          rows={9}
+          rows={11}
           className={input}
           placeholder={exampleText}
-          style={{ resize: "vertical", fontFamily: "var(--font-mono, monospace)" }}
+          style={routineTextAreaStyles}
         />
-      </label>
+      </section>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button type="button" className={buttonSecondary} onClick={parseText}>
@@ -335,10 +366,10 @@ function RoutineTextImportForm({
                     style={{
                       display: "grid",
                       gap: 12,
-                      padding: 12,
-                      borderRadius: 14,
-                      border: "1px solid var(--border)",
-                      background: "rgba(255,255,255,0.025)",
+                      padding: 14,
+                      borderRadius: 16,
+                      border: "1px solid rgba(80, 60, 43, 0.14)",
+                      background: "rgba(255, 252, 244, 0.62)",
                     }}
                   >
                     <div style={exerciseGridStyles}>
@@ -353,6 +384,7 @@ function RoutineTextImportForm({
                           value={exercise.exerciseId}
                           onChange={(event) => updateExercise(dayIndex, exerciseIndex, { exerciseId: event.target.value })}
                           className={input}
+                          style={lightInputStyles}
                         >
                           <option value="">{t("coaching.createPage.notFound")}</option>
                           {exercises.map((option) => (
@@ -383,7 +415,7 @@ function RoutineTextImportForm({
                     {!exercise.exerciseId ? (
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={missingBadgeStyles}>{t("coaching.createPage.notFound")}</span>
-                        <Link href="/dashboard/coaching/exercises/new" className={buttonGhost}>
+                        <Link href="/dashboard/coaching/exercises/new" className={buttonSecondary}>
                           {t("coaching.createPage.createExerciseLater")}
                         </Link>
                       </div>
@@ -396,7 +428,7 @@ function RoutineTextImportForm({
                         onChange={(event) => updateExercise(dayIndex, exerciseIndex, { notes: event.target.value })}
                         rows={2}
                         className={input}
-                        style={{ resize: "vertical" }}
+                        style={{ ...lightInputStyles, resize: "vertical" }}
                       />
                     </label>
                   </div>
@@ -436,14 +468,18 @@ function ModeButton({
       type="button"
       onClick={onClick}
       style={{
-        border: "none",
-        borderRadius: 8,
-        padding: "8px 12px",
-        color: active ? "var(--background)" : "var(--foreground)",
-        background: active ? "var(--primary)" : "transparent",
-        fontWeight: 700,
+        border: active ? "1px solid rgba(245, 204, 169, 0.7)" : "1px solid transparent",
+        borderRadius: 12,
+        padding: "11px 14px",
+        color: active ? "#161713" : "color-mix(in srgb, var(--foreground) 78%, var(--muted) 22%)",
+        background: active
+          ? "linear-gradient(180deg, #f4ddc9, #e8c4aa)"
+          : "rgba(255, 255, 255, 0.045)",
+        boxShadow: active ? "0 10px 24px rgba(0, 0, 0, 0.18)" : "none",
+        fontWeight: 800,
         cursor: "pointer",
         whiteSpace: "nowrap",
+        transition: "background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 120ms ease",
       }}
     >
       {children}
@@ -472,6 +508,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={input}
+        style={lightInputStyles}
       />
       {error ? <FieldError message={error} /> : null}
     </label>
@@ -498,13 +535,83 @@ const labelStyles: CSSProperties = {
   fontWeight: 600,
 };
 
+const workspaceStyles: CSSProperties = {
+  display: "grid",
+  gap: 18,
+  padding: 10,
+  borderRadius: 26,
+  border: "1px solid rgba(236, 220, 197, 0.16)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.026))",
+  boxShadow: "0 22px 46px rgba(0, 0, 0, 0.18)",
+};
+
+const tabListStyles: CSSProperties = {
+  display: "inline-flex",
+  gap: 8,
+  width: "fit-content",
+  maxWidth: "100%",
+  padding: 6,
+  borderRadius: 18,
+  border: "1px solid rgba(236, 220, 197, 0.16)",
+  background: "rgba(12, 15, 12, 0.42)",
+  overflowX: "auto",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045)",
+};
+
+const modePanelStyles: CSSProperties = {
+  display: "grid",
+  gap: 18,
+  padding: 20,
+  borderRadius: 22,
+  border: "1px solid rgba(88, 62, 42, 0.16)",
+  background: "linear-gradient(180deg, #312c25, #282620)",
+  color: "#f8efe4",
+  boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
+};
+
+const sectionHeaderStyles: CSSProperties = {
+  display: "grid",
+  gap: 6,
+  paddingBottom: 14,
+  borderBottom: "1px solid rgba(236, 220, 197, 0.16)",
+};
+
+const sectionCardStyles: CSSProperties = {
+  display: "grid",
+  gap: 14,
+  padding: 16,
+  borderRadius: 18,
+  border: "1px solid rgba(80, 60, 43, 0.16)",
+  background: "linear-gradient(180deg, rgba(255, 252, 244, 0.82), rgba(241, 227, 210, 0.76))",
+  color: "#201a15",
+  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.12)",
+};
+
+const routineTextAreaStyles: CSSProperties = {
+  minHeight: 280,
+  resize: "vertical",
+  fontFamily: "var(--font-mono, monospace)",
+  lineHeight: 1.65,
+  background: "rgba(255, 252, 244, 0.88)",
+  color: "#201a15",
+  borderColor: "rgba(80, 60, 43, 0.18)",
+};
+
+const lightInputStyles: CSSProperties = {
+  background: "rgba(255, 252, 244, 0.82)",
+  color: "#201a15",
+  borderColor: "rgba(80, 60, 43, 0.18)",
+};
+
 const cardStyles: CSSProperties = {
   display: "grid",
   gap: 14,
   padding: 16,
   borderRadius: 18,
-  border: "1px solid var(--border)",
-  background: "var(--surface)",
+  border: "1px solid rgba(80, 60, 43, 0.16)",
+  background: "linear-gradient(180deg, rgba(255, 252, 244, 0.82), rgba(241, 227, 210, 0.76))",
+  color: "#201a15",
+  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.12)",
 };
 
 const errorBoxStyles: CSSProperties = {
