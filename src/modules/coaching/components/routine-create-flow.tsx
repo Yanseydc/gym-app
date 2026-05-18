@@ -84,7 +84,7 @@ export function RoutineCreateFlow({
           action={createAction}
           clients={clients}
           defaultValues={defaultValues}
-          submitLabel={t("clients.detail.createRoutine")}
+          submitLabel={t("coaching.routines.saveRoutine")}
           lockClient={lockClient}
         />
       ) : (

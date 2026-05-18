@@ -101,7 +101,8 @@
       "email": "Email",
       "status": "Status",
       "notes": "Notes",
-      "submitCreate": "Create client"
+      "submitCreate": "Save client",
+      "saveClient": "Save client"
     },
     "detail": {
       "hero": "Client overview",
@@ -200,6 +201,7 @@
       "latestSnapshot": "Client ready for coaching",
       "latestDescription": "Latest onboarding snapshot used for coaching planning.",
       "create": "Create onboarding",
+      "saveOnboarding": "Save onboarding",
       "edit": "Edit onboarding",
       "weight": "Weight",
       "height": "Height",
@@ -215,6 +217,7 @@
       "title": "Progress check-ins",
       "description": "Capture progress snapshots with notes and front, side, back photos.",
       "newCheckin": "New check-in",
+      "saveCheckin": "Save check-in",
       "empty": "No progress check-ins recorded yet.",
       "createFirst": "Create first check-in",
       "edit": "Edit",
@@ -321,7 +324,7 @@
       "importPreview": "Preview",
       "previewSummary": "{days} day(s), {exercises} exercise(s)",
       "importReady": "Everything is ready to save. The routine will be created when you confirm.",
-      "confirmImport": "Confirm and import routine",
+      "confirmImport": "Save routine",
       "exerciseMatch": "Library match",
       "notFound": "Not found",
       "createExerciseLater": "Create exercise",
@@ -357,7 +360,8 @@
       "startDate": "Start date",
       "notes": "Notes",
       "assigning": "Assigning...",
-      "assign": "Assign membership"
+      "assign": "Assign membership",
+      "saveMembership": "Save membership"
     }
   },
   "payments": {
@@ -368,6 +372,7 @@
     "membership": "Membership",
     "notLinked": "Not linked",
     "edit": "Edit payment",
+    "savePayment": "Save payment",
     "form": {
       "client": "Client",
       "selectClient": "Select a client",
@@ -391,6 +396,7 @@
     "notes": "Notes",
     "placeholder": "Optional reception notes",
     "registering": "Registering...",
-    "register": "Register check-in"
+    "register": "Register check-in",
+    "saveCheckin": "Save check-in"
   }
 }

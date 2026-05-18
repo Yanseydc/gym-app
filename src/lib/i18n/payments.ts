@@ -5,6 +5,7 @@ export const paymentsText = {
     newPayment: "New payment",
     backToPayments: "Back to payments",
     registerPayment: "Register payment",
+    savePayment: "Save payment",
     registerDescription:
       "Record a manual payment for a client and optionally link it to a membership.",
     editPayment: "Edit payment",
@@ -52,6 +53,7 @@ export const paymentsText = {
     newPayment: "Nuevo pago",
     backToPayments: "Volver a pagos",
     registerPayment: "Registrar pago",
+    savePayment: "Guardar pago",
     registerDescription:
       "Registra un pago manual para un cliente y, si hace falta, relaciónalo con una membresía.",
     editPayment: "Editar pago",

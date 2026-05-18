@@ -73,7 +73,7 @@ export default async function NewProgressCheckInPage({ params }: NewProgressChec
       <section className="coaching-form-shell">
         <ProgressCheckInForm
           action={createProgressCheckIn.bind(null, clientId)}
-          submitLabel={t("coaching.progress.newCheckin")}
+          submitLabel={t("coaching.progress.saveCheckin")}
         />
       </section>
     </div>

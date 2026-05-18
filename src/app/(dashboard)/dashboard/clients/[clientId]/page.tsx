@@ -565,7 +565,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
                     totalPaid: membership.totalPaid,
                     remainingBalance: membership.remainingBalance,
                   })).filter((membership) => membership.remainingBalance > 0)}
-                  submitLabel={t("clients.detail.registerPayment")}
+                  submitLabel={t("payments.savePayment")}
                   defaultValues={{
                     clientId: client.id,
                     paymentMethod: "cash",

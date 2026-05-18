@@ -101,7 +101,8 @@
       "email": "Correo",
       "status": "Estado",
       "notes": "Notas",
-      "submitCreate": "Crear cliente"
+      "submitCreate": "Guardar cliente",
+      "saveClient": "Guardar cliente"
     },
     "detail": {
       "hero": "Resumen del cliente",
@@ -200,6 +201,7 @@
       "latestSnapshot": "Cliente listo para coaching",
       "latestDescription": "Último snapshot de onboarding usado para planificar el coaching.",
       "create": "Crear onboarding",
+      "saveOnboarding": "Guardar onboarding",
       "edit": "Editar onboarding",
       "weight": "Peso",
       "height": "Estatura",
@@ -215,6 +217,7 @@
       "title": "Check-ins de progreso",
       "description": "Captura snapshots de progreso con notas y fotos frente, lado y espalda.",
       "newCheckin": "Nuevo check-in",
+      "saveCheckin": "Guardar check-in",
       "empty": "Todavía no hay check-ins de progreso registrados.",
       "createFirst": "Crear primer check-in",
       "edit": "Editar",
@@ -321,7 +324,7 @@
       "importPreview": "Vista previa",
       "previewSummary": "{days} día(s), {exercises} ejercicio(s)",
       "importReady": "Todo está listo para guardar. La rutina se creará cuando confirmes.",
-      "confirmImport": "Confirmar e importar rutina",
+      "confirmImport": "Guardar rutina",
       "exerciseMatch": "Coincidencia en biblioteca",
       "notFound": "No encontrado",
       "createExerciseLater": "Crear ejercicio",
@@ -357,7 +360,8 @@
       "startDate": "Fecha de inicio",
       "notes": "Notas",
       "assigning": "Asignando...",
-      "assign": "Asignar membresía"
+      "assign": "Asignar membresía",
+      "saveMembership": "Guardar membresía"
     }
   },
   "payments": {
@@ -368,6 +372,7 @@
     "membership": "Membresía",
     "notLinked": "Sin vincular",
     "edit": "Editar pago",
+    "savePayment": "Guardar pago",
     "form": {
       "client": "Cliente",
       "selectClient": "Selecciona un cliente",
@@ -391,6 +396,7 @@
     "notes": "Notas",
     "placeholder": "Notas opcionales de recepción",
     "registering": "Registrando...",
-    "register": "Registrar check-in"
+    "register": "Registrar check-in",
+    "saveCheckin": "Guardar check-in"
   }
 }

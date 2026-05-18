@@ -52,7 +52,7 @@ export default async function NewPaymentPage({ searchParams }: NewPaymentPagePro
           action={createPayment.bind(null, null)}
           clients={clients}
           memberships={memberships}
-          submitLabel={t.registerPayment}
+          submitLabel={t.savePayment}
           defaultValues={{ clientId: selectedClientId }}
         />
       </section>

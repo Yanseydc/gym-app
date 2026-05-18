@@ -119,7 +119,7 @@ export function MembershipAssignmentForm({
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? t("memberships.form.assigning") : t("memberships.form.assign")}
+        {pending ? t("common.saving") : t("memberships.form.saveMembership")}
       </button>
     </form>
   );

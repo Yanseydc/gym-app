@@ -91,7 +91,7 @@ export default async function NewOnboardingPage({ params }: NewOnboardingPagePro
       >
         <OnboardingForm
           action={createOnboarding.bind(null, clientId)}
-          submitLabel="Create onboarding"
+          submitLabel={t("coaching.onboarding.saveOnboarding")}
         />
       </section>
     </div>

@@ -27,7 +27,7 @@ export default async function NewClientPage() {
       <section
         className="clients-form-shell"
       >
-        <ClientForm action={createClient} submitLabel={t("clients.form.submitCreate")} />
+        <ClientForm action={createClient} submitLabel={t("clients.form.saveClient")} />
       </section>
     </div>
   );

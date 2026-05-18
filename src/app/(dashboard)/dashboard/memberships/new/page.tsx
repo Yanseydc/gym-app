@@ -30,7 +30,7 @@ async function NewMembershipPlanPageContent({ tPromise }: { tPromise: ReturnType
       >
         <MembershipPlanForm
           action={createMembershipPlan}
-          submitLabel={t.createPlan}
+          submitLabel={t.saveMembership}
         />
       </section>
     </div>

@@ -54,7 +54,7 @@ export function CheckInForm({ action }: CheckInFormProps) {
         className={buttonPrimary}
         style={{ width: "fit-content" }}
       >
-        {pending ? t("checkins.registering") : t("checkins.register")}
+        {pending ? t("common.saving") : t("checkins.saveCheckin")}
       </button>
     </form>
   );
