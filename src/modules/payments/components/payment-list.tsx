@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 
 import { getText } from "@/lib/i18n";
+import { buttonSecondary, cardSubtle, statusNeutral } from "@/lib/ui";
 import type { Payment } from "@/modules/payments/types";
 
 type PaymentListProps = {
@@ -13,11 +15,10 @@ export async function PaymentList({ payments, showClient = true }: PaymentListPr
   if (payments.length === 0) {
     return (
       <article
+        className={cardSubtle}
         style={{
           padding: 18,
           borderRadius: 16,
-          border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.03)",
           color: "var(--muted)",
         }}
       >
@@ -31,27 +32,18 @@ export async function PaymentList({ payments, showClient = true }: PaymentListPr
       {payments.map((payment) => (
         <article
           key={payment.id}
+          className={cardSubtle}
         style={{
           display: "grid",
           gap: 8,
           padding: 16,
           borderRadius: 16,
-          border: "1px solid var(--border)",
-          background: "rgba(255, 255, 255, 0.03)",
         }}
         >
           <div className="responsive-inline-header">
             <strong>${payment.amount.toFixed(2)}</strong>
             <span
-              style={{
-                padding: "6px 10px",
-                borderRadius: 999,
-                background: "var(--surface-alt)",
-                border: "1px solid var(--border)",
-                fontSize: 13,
-                fontWeight: 700,
-                textTransform: "capitalize",
-              }}
+              className={statusNeutral}
             >
               {payment.paymentMethod}
             </span>
@@ -71,8 +63,9 @@ export async function PaymentList({ payments, showClient = true }: PaymentListPr
             <span>{t.membership}: {payment.membershipLabel ?? t.notLinked}</span>
           </div>
 
-          <div>
-            <Link href={`/dashboard/payments/${payment.id}/edit`} style={{ fontWeight: 700 }}>
+          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+            <Link href={`/dashboard/payments/${payment.id}/edit`} className={buttonSecondary}>
+              <Pencil size={15} aria-hidden="true" />
               {t.editLink}
             </Link>
           </div>

@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 
-import { buttonPrimary, buttonSecondary, input } from "@/lib/ui";
+import { buttonPrimary, buttonSecondary, fieldError, formError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { parseRoutineText, matchExerciseByName } from "@/modules/coaching/utils/routine-text-import";
@@ -320,7 +320,7 @@ function RoutineTextImportForm({
       </div>
 
       {parseErrors.length > 0 ? (
-        <div style={errorBoxStyles}>
+        <div className={formError}>
           <strong>{t("coaching.createPage.importCouldNotParse")}</strong>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
             {parseErrors.map((error) => (
@@ -439,8 +439,8 @@ function RoutineTextImportForm({
         </section>
       ) : null}
 
-      {state.error ? <p style={errorBoxStyles}>{state.error}</p> : null}
-      {state.fieldErrors?.days ? <p style={errorBoxStyles}>{state.fieldErrors.days}</p> : null}
+      {state.error ? <p className={formError}>{state.error}</p> : null}
+      {state.fieldErrors?.days ? <p className={formError}>{state.fieldErrors.days}</p> : null}
 
       <button
         type="submit"
@@ -516,7 +516,7 @@ function Field({
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
+  return <span className={fieldError}>{message}</span>;
 }
 
 const gridStyles: CSSProperties = {
@@ -612,14 +612,6 @@ const cardStyles: CSSProperties = {
   background: "linear-gradient(180deg, rgba(255, 252, 244, 0.82), rgba(241, 227, 210, 0.76))",
   color: "#201a15",
   boxShadow: "0 12px 24px rgba(0, 0, 0, 0.12)",
-};
-
-const errorBoxStyles: CSSProperties = {
-  margin: 0,
-  padding: "12px 14px",
-  borderRadius: 12,
-  background: "var(--danger-bg)",
-  color: "var(--danger-fg)",
 };
 
 const missingBadgeStyles: CSSProperties = {

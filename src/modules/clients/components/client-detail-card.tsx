@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 
 import { getAdminText } from "@/lib/i18n/admin";
-import { buttonSecondary } from "@/lib/ui";
+import { buttonSecondary, card, cardSubtle, sectionEyebrow } from "@/lib/ui";
 import type { Client } from "@/modules/clients/types";
 import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
 
@@ -10,27 +11,21 @@ export async function ClientDetailCard({ client }: { client: Client }) {
 
   return (
     <article
+      className={card}
       style={{
         display: "grid",
         gap: 22,
         padding: 20,
         borderRadius: 28,
-        border: "1px solid var(--border-strong)",
-        background: "linear-gradient(180deg, rgba(36, 42, 37, 0.98), rgba(24, 29, 25, 0.95))",
-        boxShadow: "0 20px 44px rgba(0, 0, 0, 0.22)",
       }}
     >
       <div className="responsive-inline-header">
         <div>
           <span
+            className={sectionEyebrow}
             style={{
               display: "inline-block",
               marginBottom: 10,
-              color: "var(--muted)",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
             }}
           >
             {t("clients.detail.hero")}
@@ -46,6 +41,7 @@ export async function ClientDetailCard({ client }: { client: Client }) {
           className={buttonSecondary}
           style={{ boxShadow: "0 10px 24px rgba(0, 0, 0, 0.14)" }}
         >
+          <Pencil size={15} aria-hidden="true" />
           {t("clients.detail.editClient")}
         </Link>
       </div>
@@ -75,12 +71,29 @@ function DetailGrid({
   const notesValue = client.notes || t("common.noNotes");
 
   return (
-    <div className="responsive-meta-grid">
-      <DetailItem label={labels.phone} value={client.phone} />
-      <DetailItem label={labels.email} value={emailValue} />
-      <DetailItem label={labels.created} value={new Date(client.createdAt).toLocaleString(locale)} />
-      <DetailItem label={labels.updated} value={new Date(client.updatedAt).toLocaleString(locale)} />
-      <DetailItem label={labels.notes} value={notesValue} fullWidth />
+    <div style={{ display: "grid", gap: 12 }}>
+      <div className="responsive-meta-grid">
+        <DetailItem label={labels.phone} value={client.phone} />
+        <DetailItem label={labels.email} value={emailValue} />
+        <DetailItem label={labels.notes} value={notesValue} fullWidth />
+      </div>
+
+      <div
+        className={cardSubtle}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px 18px",
+          padding: "10px 12px",
+          borderRadius: 14,
+          color: "var(--muted)",
+          fontSize: 12,
+          lineHeight: 1.45,
+        }}
+      >
+        <span>{labels.created}: {new Date(client.createdAt).toLocaleString(locale)}</span>
+        <span>{labels.updated}: {new Date(client.updatedAt).toLocaleString(locale)}</span>
+      </div>
     </div>
   );
 }
@@ -96,11 +109,10 @@ function DetailItem({
 }) {
   return (
     <div
+      className={cardSubtle}
       style={{
         padding: 16,
         borderRadius: 18,
-        background: "rgba(255, 255, 255, 0.04)",
-        border: "1px solid var(--border)",
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >

@@ -19,8 +19,9 @@
   --success-bg: rgba(88, 179, 124, 0.14);
   --warning-bg: rgba(219, 153, 81, 0.16);
   --warning-fg: #f1bf7b;
-  --danger-bg: rgba(200, 91, 91, 0.16);
-  --danger-fg: #f2a2a2;
+  --danger-bg: rgba(194, 88, 88, 0.115);
+  --danger-fg: #e9a6a0;
+  --danger-border: rgba(229, 145, 137, 0.2);
   --neutral-badge-bg: rgba(226, 213, 193, 0.1);
   --neutral-badge-fg: #d6c7b8;
   --radius: 16px;
@@ -87,6 +88,24 @@ button {
   box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
 }
 
+.ui-field-error {
+  display: block;
+  color: var(--danger-fg);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ui-form-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  line-height: 1.5;
+}
+
 .ui-file-input {
   width: 100%;
   color: var(--foreground);
@@ -135,7 +154,8 @@ button {
     border-color 160ms ease,
     color 160ms ease,
     transform 120ms ease,
-    opacity 160ms ease;
+    opacity 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .ui-button:hover {
@@ -162,6 +182,7 @@ button {
 .ui-button-primary {
   background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, black 22%));
   color: #121513;
+  box-shadow: 0 14px 28px rgba(209, 108, 67, 0.18);
 }
 
 .ui-button-primary:hover {
@@ -169,9 +190,10 @@ button {
 }
 
 .ui-button-secondary {
-  background: var(--surface-alt);
+  background: color-mix(in srgb, var(--surface-alt) 90%, white 10%);
   border-color: var(--border);
   color: var(--foreground);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.1);
 }
 
 .ui-button-secondary:hover {
@@ -182,7 +204,7 @@ button {
 .ui-button-ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--foreground);
+  color: color-mix(in srgb, var(--foreground) 86%, var(--muted) 14%);
 }
 
 .ui-button-ghost:hover {
@@ -190,13 +212,76 @@ button {
 }
 
 .ui-button-danger {
-  background: rgba(200, 91, 91, 0.2);
-  border-color: rgba(200, 91, 91, 0.28);
-  color: #ffb7b7;
+  background: rgba(194, 88, 88, 0.13);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
 }
 
 .ui-button-danger:hover {
-  background: rgba(200, 91, 91, 0.28);
+  background: rgba(194, 88, 88, 0.18);
+}
+
+.ui-card {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-card-subtle {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.1);
+}
+
+.ui-section-header {
+  display: grid;
+  gap: 6px;
+}
+
+.ui-section-eyebrow {
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ui-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.ui-status-success {
+  background: var(--success-bg);
+  border-color: rgba(88, 179, 124, 0.22);
+  color: var(--success);
+}
+
+.ui-status-warning {
+  background: var(--warning-bg);
+  border-color: rgba(241, 191, 123, 0.22);
+  color: var(--warning-fg);
+}
+
+.ui-status-neutral {
+  background: var(--neutral-badge-bg);
+  border-color: rgba(226, 213, 193, 0.12);
+  color: var(--neutral-badge-fg);
+}
+
+.ui-status-danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-fg);
 }
 
 a {

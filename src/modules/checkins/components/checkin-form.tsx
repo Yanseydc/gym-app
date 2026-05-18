@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, input } from "@/lib/ui";
+import { buttonPrimary, fieldError, formError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useCheckInForm } from "@/modules/checkins/hooks/use-checkin-form";
 import type { CheckInMutationState } from "@/modules/checkins/types";
@@ -30,20 +30,12 @@ export function CheckInForm({ action }: CheckInFormProps) {
           style={{ resize: "vertical" }}
         />
         {state.fieldErrors?.notes ? (
-          <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{state.fieldErrors.notes}</span>
+          <span className={fieldError}>{state.fieldErrors.notes}</span>
         ) : null}
       </label>
 
       {state.error ? (
-        <p
-          style={{
-            margin: 0,
-            padding: "12px 14px",
-            borderRadius: 12,
-            background: "var(--danger-bg)",
-            color: "var(--danger-fg)",
-          }}
-        >
+        <p className={formError}>
           {state.error}
         </p>
       ) : null}

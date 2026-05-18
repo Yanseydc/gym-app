@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, input } from "@/lib/ui";
+import { buttonPrimary, fieldError, formError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useClientMembershipForm } from "@/modules/memberships/hooks/use-client-membership-form";
 import type {
@@ -100,15 +100,7 @@ export function MembershipAssignmentForm({
       </label>
 
       {state.error ? (
-        <p
-          style={{
-            margin: 0,
-            padding: "12px 14px",
-            borderRadius: 12,
-            background: "var(--danger-bg)",
-            color: "var(--danger-fg)",
-          }}
-        >
+        <p className={formError}>
           {state.error}
         </p>
       ) : null}
@@ -126,7 +118,7 @@ export function MembershipAssignmentForm({
 }
 
 function FieldError({ message }: { message: string }) {
-  return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
+  return <span className={fieldError}>{message}</span>;
 }
 
 const gridStyles: CSSProperties = {

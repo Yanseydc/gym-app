@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Ban } from "lucide-react";
 
 import { getAdminText } from "@/lib/i18n/admin";
-import { buttonGhost } from "@/lib/ui";
+import { buttonDanger, cardSubtle, statusSuccess, statusWarning } from "@/lib/ui";
 import { cancelClientMembership } from "@/modules/memberships/services/cancel-client-membership";
 import type { ClientMembership } from "@/modules/memberships/types";
 import { MembershipStatusBadge } from "@/modules/memberships/components/membership-status-badge";
@@ -19,11 +20,10 @@ export async function ClientMembershipHistory({
   if (memberships.length === 0) {
     return (
       <article
+        className={cardSubtle}
         style={{
           padding: 18,
           borderRadius: 16,
-          border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.03)",
           color: "var(--muted)",
         }}
       >
@@ -37,13 +37,12 @@ export async function ClientMembershipHistory({
       {memberships.map((membership) => (
         <article
           key={membership.id}
+          className={cardSubtle}
         style={{
           display: "grid",
           gap: 10,
           padding: 16,
           borderRadius: 16,
-          border: "1px solid var(--border)",
-          background: "rgba(255, 255, 255, 0.03)",
         }}
         >
           <div className="responsive-inline-header">
@@ -87,8 +86,9 @@ export async function ClientMembershipHistory({
             <form action={cancelClientMembership.bind(null, clientId, membership.id)}>
               <button
                 type="submit"
-                className={buttonGhost}
+                className={buttonDanger}
               >
+                <Ban size={15} aria-hidden="true" />
                 {t("memberships.cancel")}
               </button>
             </form>
@@ -120,18 +120,7 @@ function BalanceBadge({
   const isPending = remainingBalance > 0;
 
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        width: "fit-content",
-        padding: "6px 10px",
-        borderRadius: 999,
-        fontSize: 13,
-        fontWeight: 700,
-        background: isPending ? "var(--warning-bg)" : "var(--success-bg)",
-        color: isPending ? "var(--warning-fg)" : "var(--success)",
-      }}
-    >
+    <span className={isPending ? statusWarning : statusSuccess}>
       {isPending ? `${dueLabel}: $${remainingBalance.toFixed(2)}` : paidLabel}
     </span>
   );
@@ -140,10 +129,10 @@ function BalanceBadge({
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div
+      className={cardSubtle}
       style={{
         padding: 14,
         borderRadius: 14,
-        background: "rgba(255, 255, 255, 0.04)",
       }}
     >
       <span style={{ display: "block", marginBottom: 6, color: "var(--muted)" }}>{label}</span>

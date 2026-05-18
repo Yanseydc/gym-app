@@ -2,8 +2,19 @@
 
 import { useEffect, useMemo, useState, useActionState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { Ban, CalendarPlus, CircleDollarSign, RefreshCw } from "lucide-react";
 
-import { buttonDanger, buttonSecondary, input } from "@/lib/ui";
+import {
+  buttonDanger,
+  buttonSecondary,
+  cardSubtle,
+  formError,
+  input,
+  statusDanger,
+  statusNeutral,
+  statusSuccess,
+  statusWarning,
+} from "@/lib/ui";
 import {
   cancelMembershipFromDashboard,
   extendMembership,
@@ -105,7 +116,7 @@ export function MembershipOperationsDashboard({
 
           <div style={{ display: "grid", gap: 10 }}>
             {visibleMemberships.map((membership) => (
-            <article key={membership.id} style={cardStyles}>
+            <article key={membership.id} className={cardSubtle} style={cardStyles}>
               {(() => {
                 const canPay = membership.remainingBalance > 0;
                 const canRenew =
@@ -135,20 +146,24 @@ export function MembershipOperationsDashboard({
 
               <div style={actionsStyles}>
                 <button type="button" className={buttonSecondary} disabled={!canPay} onClick={() => setAction({ type: "payment", membership })}>
+                  <CircleDollarSign size={15} aria-hidden="true" />
                   Registrar pago
                 </button>
                 {canRenew ? (
                   <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "renew", membership })}>
+                    <RefreshCw size={15} aria-hidden="true" />
                     Renovar
                   </button>
                 ) : null}
                 {canExtend ? (
                   <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "extend", membership })}>
+                    <CalendarPlus size={15} aria-hidden="true" />
                     Extender
                   </button>
                 ) : null}
                 {canCancel ? (
                   <button type="button" className={buttonDanger} onClick={() => setAction({ type: "cancel", membership })}>
+                    <Ban size={15} aria-hidden="true" />
                     Cancelar
                   </button>
                 ) : null}
@@ -250,7 +265,7 @@ function MembershipActionModal({
           <p style={noticeStyles}>La membresía quedará cancelada y no contará como activa.</p>
         ) : null}
 
-        {state.error ? <p style={errorStyles}>{state.error}</p> : null}
+        {state.error ? <p className={formError}>{state.error}</p> : null}
         {state.success ? <p style={successStyles}>{state.success}</p> : null}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
@@ -279,10 +294,10 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
 
 function StatusBadge({ status }: { status: MembershipOperationalStatus }) {
   const tone = status === "expired" ? "danger" : status === "expiring" ? "warning" : status === "active" ? "success" : "neutral";
-  const palette = getTonePalette(tone);
+  const badgeClass = getToneClass(tone);
   const label = status === "expired" ? "Vencida" : status === "expiring" ? "Por vencer" : status === "active" ? "Activa" : "Cancelada";
 
-  return <span style={{ ...badgeStyles, background: palette.background, color: palette.color }}>{label}</span>;
+  return <span className={badgeClass}>{label}</span>;
 }
 
 function FilterButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
@@ -299,6 +314,13 @@ function FilterButton({ active, children, onClick }: { active: boolean; children
       {children}
     </button>
   );
+}
+
+function getToneClass(tone: "danger" | "warning" | "success" | "neutral") {
+  if (tone === "danger") return statusDanger;
+  if (tone === "warning") return statusWarning;
+  if (tone === "success") return statusSuccess;
+  return statusNeutral;
 }
 
 function getTonePalette(tone: "danger" | "warning" | "success" | "neutral") {
@@ -327,14 +349,12 @@ const controlsStyles: CSSProperties = { display: "flex", gap: 12, alignItems: "f
 const filterStyles: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap" };
 const statStyles: CSSProperties = { display: "grid", gap: 6, padding: 16, borderRadius: 16, border: "1px solid var(--border)" };
 const emptyStyles: CSSProperties = { padding: 18, borderRadius: 16, border: "1px dashed var(--border)", color: "var(--muted)" };
-const cardStyles: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 12, padding: 16, borderRadius: 16, border: "1px solid var(--border)", background: "var(--surface)" };
+const cardStyles: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 12, padding: 16, borderRadius: 16 };
 const actionsStyles: CSSProperties = { gridColumn: "1 / -1", display: "flex", gap: 8, flexWrap: "wrap" };
-const badgeStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, fontSize: 12, fontWeight: 800 };
 const balanceStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, border: "1px solid var(--border)", color: "var(--muted)", fontSize: 12, fontWeight: 700 };
 const activeConflictStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)", fontSize: 12, fontWeight: 800 };
 const helperStyles: CSSProperties = { alignSelf: "center", color: "var(--muted)", fontSize: 13, fontWeight: 600 };
 const overlayStyles: CSSProperties = { position: "fixed", inset: 0, zIndex: 60, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,0.58)" };
 const modalStyles: CSSProperties = { width: "min(100%, 420px)", display: "grid", gap: 16, padding: 20, borderRadius: 18, border: "1px solid var(--border)", background: "var(--surface)" };
 const noticeStyles: CSSProperties = { margin: 0, color: "var(--muted)", lineHeight: 1.5 };
-const errorStyles: CSSProperties = { margin: 0, padding: 10, borderRadius: 12, background: "var(--danger-bg)", color: "var(--danger-fg)" };
 const successStyles: CSSProperties = { margin: 0, padding: 10, borderRadius: 12, background: "var(--success-bg)", color: "var(--success)" };

@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
-import { buttonDanger, buttonSecondary, input } from "@/lib/ui";
+import { buttonDanger, buttonSecondary, formError, input, statusDanger } from "@/lib/ui";
 import type { ClientMergeCandidate, ClientMergeMutationState } from "@/modules/clients/types";
 
 type ClientMergePanelProps = {
@@ -126,7 +126,7 @@ export function ClientMergePanel({ action, candidates }: ClientMergePanelProps) 
                           {candidate.email ?? "Sin correo"}
                         </span>
                       </span>
-                      {candidate.isEmailDuplicate ? <span style={badgeStyles}>Duplicado</span> : null}
+                      {candidate.isEmailDuplicate ? <span className={statusDanger}>Duplicado</span> : null}
                     </button>
                   ))
                 )}
@@ -146,7 +146,7 @@ export function ClientMergePanel({ action, candidates }: ClientMergePanelProps) 
                 </section>
               ) : null}
 
-              {state.error ? <p style={errorStyles}>{state.error}</p> : null}
+              {state.error ? <p className={formError}>{state.error}</p> : null}
               {state.success ? <p style={successStyles}>{state.success}</p> : null}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
@@ -257,16 +257,6 @@ const selectedStyles: CSSProperties = {
   background: "var(--surface-alt)",
 };
 
-const badgeStyles: CSSProperties = {
-  flex: "0 0 auto",
-  padding: "4px 8px",
-  borderRadius: 999,
-  border: "1px solid var(--border)",
-  color: "var(--muted)",
-  fontSize: 12,
-  fontWeight: 700,
-};
-
 const countChipStyles: CSSProperties = {
   padding: "4px 8px",
   borderRadius: 999,
@@ -274,14 +264,6 @@ const countChipStyles: CSSProperties = {
   color: "var(--muted)",
   fontSize: 12,
   fontWeight: 700,
-};
-
-const errorStyles: CSSProperties = {
-  margin: 0,
-  padding: "10px 12px",
-  borderRadius: 12,
-  background: "var(--danger-bg)",
-  color: "var(--danger-fg)",
 };
 
 const successStyles: CSSProperties = {
