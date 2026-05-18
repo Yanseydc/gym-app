@@ -1,7 +1,7 @@
 "use client";
 
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
-import { statusDanger, statusNeutral, statusSuccess, statusWarning } from "@/lib/ui";
+import { statusArchived, statusDanger, statusSuccess, statusWarning } from "@/lib/ui";
 import type { MembershipStatus } from "@/modules/memberships/types";
 
 export function MembershipStatusBadge({ status }: { status: MembershipStatus }) {
@@ -14,7 +14,7 @@ export function MembershipStatusBadge({ status }: { status: MembershipStatus }) 
         : status === "partial"
           ? statusWarning
       : status === "expired"
-        ? statusNeutral
+        ? statusArchived
         : statusDanger;
 
   return (

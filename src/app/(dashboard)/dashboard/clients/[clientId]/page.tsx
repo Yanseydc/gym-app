@@ -6,7 +6,13 @@ import type { CSSProperties, ReactNode } from "react";
 import { BackNavigation } from "@/components/navigation/back-navigation";
 import { hasModuleAccess } from "@/lib/auth/permissions";
 import { getAdminText } from "@/lib/i18n/admin";
-import { buttonPrimary, buttonSecondary } from "@/lib/ui";
+import {
+  buttonPrimary,
+  buttonSecondary,
+  cardSubtle,
+  statusNeutral,
+  statusSuccess,
+} from "@/lib/ui";
 import { ClientDetailCard } from "@/modules/clients/components/client-detail-card";
 import { ClientMergePanel } from "@/modules/clients/components/client-merge-panel";
 import { getClientForPage, getClientMergeCandidatesForPage } from "@/modules/clients/services/client-service";
@@ -626,14 +632,12 @@ function SummaryCard({
 }) {
   return (
     <article
-      className="client-summary-card"
+      className={`client-summary-card ${cardSubtle}`}
       style={{
         display: "grid",
-        gap: 16,
+        gap: 12,
         alignContent: "start",
-        borderRadius: 18,
-        border: "1px solid rgba(255, 255, 255, 0.11)",
-        background: "linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.022))",
+        borderRadius: 16,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
@@ -648,9 +652,9 @@ function SummaryCard({
               height: 34,
               flex: "0 0 auto",
               borderRadius: 12,
-              color: "var(--accent-strong)",
-              background: "rgba(181, 232, 197, 0.11)",
-              border: "1px solid rgba(181, 232, 197, 0.18)",
+              color: "var(--foreground)",
+              background: "var(--surface-interactive)",
+              border: "1px solid var(--border)",
             }}
           >
             <Icon size={18} strokeWidth={2.1} />
@@ -672,9 +676,9 @@ function SummaryCard({
       </div>
 
       <div style={{ display: "grid", gap: 6 }}>
-        <strong className="client-summary-card-text" style={{ fontSize: 21, lineHeight: 1.2 }}>{title}</strong>
+        <strong className="client-summary-card-text" style={{ fontSize: 18, lineHeight: 1.25 }}>{title}</strong>
         {descriptionNode ?? (
-          <p className="client-summary-card-text" style={{ margin: 0, color: "var(--muted)", lineHeight: 1.55 }}>{description}</p>
+          <p className="client-summary-card-text" style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5, fontSize: 14 }}>{description}</p>
         )}
       </div>
 
@@ -683,10 +687,10 @@ function SummaryCard({
           display: "flex",
           flexWrap: "wrap",
           gap: 8,
-          paddingTop: 12,
+          paddingTop: 10,
           borderTop: "1px solid var(--border)",
           color: "var(--muted)",
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: 600,
         }}
       >
@@ -696,10 +700,10 @@ function SummaryCard({
             className="client-summary-card-text"
             style={{
               minWidth: 0,
-              padding: "7px 9px",
+              padding: "5px 8px",
               borderRadius: 999,
-              background: "rgba(255, 255, 255, 0.045)",
-              border: "1px solid rgba(255, 255, 255, 0.07)",
+              background: "rgba(255, 255, 255, 0.025)",
+              border: "1px solid var(--border)",
             }}
           >
             {item}
@@ -841,24 +845,5 @@ function StatusChip({
   label: string;
   tone: "neutral" | "success";
 }) {
-  const palette =
-    tone === "success"
-      ? { background: "var(--success-bg)", color: "var(--success)" }
-      : { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" };
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "6px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 700,
-        ...palette,
-      }}
-    >
-      {label}
-    </span>
-  );
+  return <span className={tone === "success" ? statusSuccess : statusNeutral}>{label}</span>;
 }

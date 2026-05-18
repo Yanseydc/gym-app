@@ -3,14 +3,15 @@ import { RecentClientsPanel } from "@/modules/dashboard/components/recent-client
 import { RecentPaymentsPanel } from "@/modules/dashboard/components/recent-payments-panel";
 import { getDashboardSnapshot } from "@/modules/dashboard/services/dashboard-service";
 import { getAdminText } from "@/lib/i18n/admin";
+import { formError } from "@/lib/ui";
 
 export default async function DashboardPage() {
   const { t } = await getAdminText();
   const { metrics, recentPayments, recentClients, errors } = await getDashboardSnapshot();
 
   return (
-    <div style={{ display: "grid", gap: 24 }}>
-      <header style={{ marginBottom: 24 }}>
+    <div style={{ display: "grid", gap: 20 }}>
+      <header>
         <h1 style={{ margin: "0 0 8px" }}>{t("dashboard.title")}</h1>
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {t("dashboard.description")}
@@ -19,13 +20,10 @@ export default async function DashboardPage() {
 
       {errors.length > 0 ? (
         <div
+          className={formError}
           style={{
             display: "grid",
             gap: 8,
-            padding: 16,
-            borderRadius: 16,
-            background: "#fff2f2",
-            color: "#8a1c1c",
           }}
         >
           {errors.map((error) => (
@@ -37,8 +35,8 @@ export default async function DashboardPage() {
       <div
         style={{
           display: "grid",
-          gap: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 10,
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
         }}
       >
         <KpiCard label={t("dashboard.activeClients")} value={String(metrics.activeClients)} tone="success" />
@@ -59,7 +57,7 @@ export default async function DashboardPage() {
       <div
         style={{
           display: "grid",
-          gap: 24,
+          gap: 16,
           gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
         }}
       >

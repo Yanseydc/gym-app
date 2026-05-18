@@ -7,22 +7,33 @@ type KpiCardProps = {
 export function KpiCard({ label, value, tone = "default" }: KpiCardProps) {
   const accent =
     tone === "success"
-      ? "#1f6b42"
+      ? "var(--success)"
       : tone === "warning"
-        ? "#7a5a2f"
-        : "var(--accent-strong)";
+        ? "var(--warning-fg)"
+        : "var(--foreground)";
+  const rail =
+    tone === "success"
+      ? "var(--success)"
+      : tone === "warning"
+        ? "var(--warning-fg)"
+        : "var(--accent-info)";
 
   return (
     <article
       style={{
-        padding: 20,
-        borderRadius: "var(--radius)",
+        display: "grid",
+        gap: 6,
+        padding: "14px 15px",
+        borderRadius: 14,
         border: "1px solid var(--border)",
-        background: "var(--surface)",
+        background: "var(--surface-row)",
+        boxShadow: "none",
+        boxSizing: "border-box",
+        borderLeft: `3px solid ${rail}`,
       }}
     >
-      <p style={{ marginTop: 0, marginBottom: 8, color: "var(--muted)" }}>{label}</p>
-      <strong style={{ display: "block", fontSize: 28, color: accent }}>{value}</strong>
+      <p style={{ margin: 0, color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>{label}</p>
+      <strong style={{ display: "block", fontSize: 25, lineHeight: 1.1, color: accent }}>{value}</strong>
     </article>
   );
 }

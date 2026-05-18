@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getText } from "@/lib/i18n";
+import { card, cardSubtle } from "@/lib/ui";
 import type { MembershipPlan } from "@/modules/memberships/types";
 
 export async function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan }) {
@@ -8,13 +9,12 @@ export async function MembershipPlanDetailCard({ plan }: { plan: MembershipPlan 
   const common = await getText("common");
   return (
     <article
+      className={card}
       style={{
         display: "grid",
-        gap: 20,
-        padding: 24,
-        borderRadius: 24,
-        border: "1px solid var(--border)",
-        background: "var(--surface)",
+        gap: 18,
+        padding: 20,
+        borderRadius: 20,
       }}
     >
       <div
@@ -73,10 +73,10 @@ function DetailItem({
 }) {
   return (
     <div
+      className={cardSubtle}
       style={{
-        padding: 16,
-        borderRadius: 16,
-        background: "rgba(239, 229, 212, 0.5)",
+        padding: 13,
+        borderRadius: 14,
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >

@@ -32,7 +32,7 @@ export default async function NewExercisePage() {
           borderRadius: 24,
         }}
       >
-        <ExerciseForm action={createExercise} submitLabel={t.createExercise} />
+        <ExerciseForm action={createExercise} submitLabel={t.saveExercise} />
       </section>
     </div>
   );

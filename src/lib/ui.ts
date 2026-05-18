@@ -14,6 +14,12 @@ export const card = "ui-card";
 
 export const cardSubtle = "ui-card-subtle";
 
+export const cardElevated = "ui-card-elevated";
+
+export const infoRow = "ui-info-row";
+
+export const metaChip = "ui-meta-chip";
+
 export const sectionHeader = "ui-section-header";
 
 export const sectionEyebrow = "ui-section-eyebrow";
@@ -31,3 +37,9 @@ export const statusWarning = "ui-status-badge ui-status-warning";
 export const statusNeutral = "ui-status-badge ui-status-neutral";
 
 export const statusDanger = "ui-status-badge ui-status-danger";
+
+export const statusDraft = "ui-status-badge ui-status-draft";
+
+export const statusArchived = "ui-status-badge ui-status-archived";
+
+export const statusInactive = "ui-status-badge ui-status-inactive";

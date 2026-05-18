@@ -3,7 +3,15 @@
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 
-import { buttonDanger, buttonSecondary } from "@/lib/ui";
+import {
+  buttonDanger,
+  buttonSecondary,
+  infoRow,
+  metaChip,
+  statusInactive,
+  statusNeutral,
+  statusSuccess,
+} from "@/lib/ui";
 import { deactivateExercise } from "@/modules/coaching/services/deactivate-exercise";
 import { duplicateExercise } from "@/modules/coaching/services/duplicate-exercise";
 import type { ExerciseLibraryItem } from "@/modules/coaching/types";
@@ -86,7 +94,7 @@ export function ExerciseListClient({ exercises, text }: ExerciseListClientProps)
           padding: 4,
           borderRadius: 12,
           border: "1px solid var(--border)",
-          background: "var(--surface)",
+          background: "var(--surface-row)",
           overflowX: "auto",
         }}
       >
@@ -103,11 +111,10 @@ export function ExerciseListClient({ exercises, text }: ExerciseListClientProps)
 
       {filteredExercises.length === 0 ? (
         <article
+          className={infoRow}
           style={{
-            padding: 20,
-            borderRadius: "var(--radius)",
-            border: "1px dashed var(--border)",
-            background: "var(--surface)",
+            padding: 14,
+            borderRadius: 12,
             color: "var(--muted)",
           }}
         >
@@ -118,16 +125,12 @@ export function ExerciseListClient({ exercises, text }: ExerciseListClientProps)
           {filteredExercises.map((exercise) => (
             <article
               key={exercise.id}
+              className={infoRow}
               style={{
                 display: "grid",
-                gap: 10,
-                padding: "14px 16px",
+                gap: 9,
+                padding: "12px 14px",
                 borderRadius: 14,
-                border: "1px solid var(--border)",
-                background:
-                  exercise.source === "system"
-                    ? "linear-gradient(90deg, rgba(255,255,255,0.035), var(--surface) 42%)"
-                    : "var(--surface)",
               }}
             >
               <div
@@ -139,8 +142,8 @@ export function ExerciseListClient({ exercises, text }: ExerciseListClientProps)
                   alignItems: "flex-start",
                 }}
               >
-                <div style={{ display: "grid", gap: 8, minWidth: 0, flex: "1 1 320px" }}>
-                  <strong style={{ fontSize: 18 }}>{exercise.name}</strong>
+                <div style={{ display: "grid", gap: 6, minWidth: 0, flex: "1 1 320px" }}>
+                  <strong style={{ fontSize: 16 }}>{exercise.name}</strong>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <SourcePill
                       source={exercise.source}
@@ -190,7 +193,7 @@ export function ExerciseListClient({ exercises, text }: ExerciseListClientProps)
                 </div>
               </div>
 
-              <div style={{ color: "var(--muted)", display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ color: "var(--muted)", display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <MetaChip value={exercise.primaryMuscle || text.noPrimaryMuscle} />
                 <MetaChip value={exercise.equipment || text.noEquipment} />
                 <MetaChip value={exercise.difficulty || text.noDifficulty} />
@@ -248,7 +251,7 @@ function FilterButton({
         padding: "8px 12px",
         borderRadius: 10,
         border: "0",
-        background: active ? "var(--surface-alt)" : "transparent",
+        background: active ? "var(--surface-interactive)" : "transparent",
         color: active ? "var(--foreground)" : "var(--muted)",
         fontWeight: 700,
         cursor: "pointer",
@@ -344,36 +347,14 @@ function SourcePill({
   gymLabel: string;
 }) {
   return (
-    <span
-      style={{
-        padding: "4px 8px",
-        borderRadius: 999,
-        background: source === "system" ? "rgba(255, 255, 255, 0.04)" : "var(--neutral-badge-bg)",
-        border: "1px solid var(--border)",
-        color: "var(--muted)",
-        fontSize: 12,
-        fontWeight: 700,
-      }}
-    >
+    <span className={source === "system" ? statusNeutral : metaChip}>
       {source === "system" ? systemLabel : gymLabel}
     </span>
   );
 }
 
 function MetaChip({ value }: { value: string }) {
-  return (
-    <span
-      style={{
-        padding: "4px 8px",
-        borderRadius: 999,
-        background: "rgba(255, 255, 255, 0.03)",
-        border: "1px solid var(--border)",
-        fontSize: 12,
-      }}
-    >
-      {value}
-    </span>
-  );
+  return <span className={metaChip}>{value}</span>;
 }
 
 function StatusPill({
@@ -386,16 +367,7 @@ function StatusPill({
   inactiveLabel: string;
 }) {
   return (
-    <span
-      style={{
-        padding: "4px 8px",
-        borderRadius: 999,
-        background: isActive ? "var(--success-bg)" : "var(--neutral-badge-bg)",
-        color: isActive ? "var(--success)" : "var(--neutral-badge-fg)",
-        fontSize: 12,
-        fontWeight: 700,
-      }}
-    >
+    <span className={isActive ? statusSuccess : statusInactive}>
       {isActive ? activeLabel : inactiveLabel}
     </span>
   );

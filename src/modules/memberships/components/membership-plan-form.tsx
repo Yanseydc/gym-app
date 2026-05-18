@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { getTextForLocale } from "@/lib/i18n";
-import { buttonPrimary, fieldError, formError, input } from "@/lib/ui";
+import { buttonPrimary, fieldError, formError, input, infoRow } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useMembershipPlanForm } from "@/modules/memberships/hooks/use-membership-plan-form";
 import type {
@@ -79,13 +79,13 @@ export function MembershipPlanForm({
       </label>
 
       <label
+        className={infoRow}
         style={{
           display: "flex",
           gap: 12,
           alignItems: "center",
           padding: 16,
           borderRadius: 16,
-          background: "rgba(239, 229, 212, 0.45)",
         }}
       >
         <input

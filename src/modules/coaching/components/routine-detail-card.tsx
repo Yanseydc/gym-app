@@ -2,7 +2,17 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { getAdminText } from "@/lib/i18n/admin";
-import { buttonSecondary } from "@/lib/ui";
+import {
+  buttonSecondary,
+  card,
+  cardSubtle,
+  infoRow,
+  metaChip,
+  sectionEyebrow,
+  statusArchived,
+  statusDraft,
+  statusSuccess,
+} from "@/lib/ui";
 import { ArchiveRoutineButton } from "@/modules/coaching/components/archive-routine-button";
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
@@ -20,11 +30,10 @@ export async function RoutineSummaryList({
   if (routines.length === 0) {
     return (
       <article
+        className={cardSubtle}
         style={{
-          padding: 18,
+          padding: 14,
           borderRadius: 18,
-          border: "1px dashed var(--border)",
-          background: "rgba(255, 255, 255, 0.02)",
           color: "var(--muted)",
         }}
       >
@@ -40,14 +49,12 @@ export async function RoutineSummaryList({
     <div style={{ display: "grid", gap: 12 }}>
       {activeRoutine ? (
         <article
+          className={card}
           style={{
             display: "grid",
-            gap: 14,
-            padding: 18,
-            borderRadius: 22,
-            border: "1px solid rgba(127, 210, 160, 0.4)",
-            background: "linear-gradient(180deg, rgba(39, 53, 45, 0.96), rgba(24, 30, 27, 0.98))",
-            boxShadow: "0 18px 36px rgba(0, 0, 0, 0.18)",
+            gap: 12,
+            padding: 16,
+            borderRadius: 18,
             position: "relative",
             overflow: "hidden",
           }}
@@ -58,7 +65,7 @@ export async function RoutineSummaryList({
               position: "absolute",
               inset: "0 auto 0 0",
               width: 4,
-              background: "linear-gradient(180deg, #3b9f68, #7fd2a0)",
+              background: "var(--success)",
             }}
           />
           <div className="responsive-inline-header" style={{ position: "relative", zIndex: 1 }}>
@@ -117,13 +124,12 @@ export async function RoutineSummaryList({
         </article>
       ) : (
         <article
+          className={cardSubtle}
           style={{
             display: "grid",
             gap: 8,
-            padding: 18,
+            padding: 14,
             borderRadius: 18,
-            border: "1px dashed var(--border)",
-            background: "rgba(255, 255, 255, 0.02)",
           }}
         >
           <strong>{t("coaching.routines.noActive")}</strong>
@@ -135,11 +141,10 @@ export async function RoutineSummaryList({
         <h4 style={{ margin: 0, fontSize: 15 }}>{t("clients.detail.previousRoutines")}</h4>
         {archivedRoutines.length === 0 ? (
           <article
+            className={cardSubtle}
             style={{
-              padding: 16,
+              padding: 14,
               borderRadius: 18,
-              border: "1px dashed var(--border)",
-              background: "rgba(255, 255, 255, 0.02)",
               color: "var(--muted)",
             }}
           >
@@ -150,13 +155,12 @@ export async function RoutineSummaryList({
             {archivedRoutines.map((routine) => (
               <article
                 key={routine.id}
+                className={infoRow}
                 style={{
                   display: "grid",
-                  gap: 10,
-                  padding: 14,
-                  borderRadius: 18,
-                  border: "1px solid var(--border)",
-                  background: "rgba(255, 255, 255, 0.03)",
+                  gap: 8,
+                  padding: 12,
+                  borderRadius: 14,
                 }}
               >
                 <div className="responsive-inline-header">
@@ -252,14 +256,12 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
   const { t, locale } = await getAdminText();
   return (
     <article
+      className={card}
       style={{
         display: "grid",
-        gap: 20,
-        padding: 22,
-        borderRadius: 28,
-        border: "1px solid var(--border)",
-        background: "linear-gradient(180deg, rgba(25, 30, 26, 0.98), rgba(20, 24, 21, 0.96))",
-        boxShadow: "0 18px 38px rgba(0, 0, 0, 0.16)",
+        gap: 18,
+        padding: 20,
+        borderRadius: 22,
       }}
     >
       <div
@@ -270,7 +272,7 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
       >
         <div className="responsive-inline-header">
           <div style={{ minWidth: 0, display: "grid", gap: 10 }}>
-            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+            <span className={sectionEyebrow}>
               {t("coaching.routines.overview")}
             </span>
             <div style={{ display: "grid", gap: 8 }}>
@@ -307,16 +309,15 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
         </div>
 
         <div
+          className={cardSubtle}
           style={{
             display: "grid",
             gap: 10,
-            padding: 16,
-            borderRadius: 20,
-            border: "1px solid var(--border)",
-            background: "rgba(255, 255, 255, 0.025)",
+            padding: 14,
+            borderRadius: 16,
           }}
         >
-          <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <span className={sectionEyebrow}>
             {t("coaching.routines.planningNotes")}
           </span>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.65 }}>
@@ -342,41 +343,34 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
 
         {routine.days.length === 0 ? (
           <article
+            className={cardSubtle}
             style={{
-              padding: 20,
-              borderRadius: 20,
-              border: "1px dashed var(--border)",
-              background: "rgba(255, 255, 255, 0.02)",
+              padding: 14,
+              borderRadius: 16,
               color: "var(--muted)",
             }}
           >
             {t("coaching.routines.noDays")}
           </article>
         ) : (
-          <div style={{ display: "grid", gap: 16 }}>
+          <div style={{ display: "grid", gap: 12 }}>
             {routine.days.map((day) => (
               <article
                 key={day.id}
+                className={cardSubtle}
                 style={{
                   display: "grid",
-                  gap: 14,
-                  padding: 18,
-                  borderRadius: 22,
-                  border: "1px solid var(--border)",
-                  background: "rgba(255, 255, 255, 0.03)",
+                  gap: 12,
+                  padding: 14,
+                  borderRadius: 16,
                 }}
               >
                 <div>
                   <span
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      background: "rgba(209, 108, 67, 0.12)",
-                      color: "var(--accent-strong)",
+                      color: "var(--muted)",
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
                     }}
@@ -400,17 +394,16 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
                 {day.exercises.length === 0 ? (
                   <p style={{ margin: 0, color: "var(--muted)" }}>{t("coaching.routines.noExercises")}</p>
                 ) : (
-                  <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ display: "grid", gap: 8 }}>
                     {day.exercises.map((exercise) => (
                       <div
                         key={exercise.id}
+                        className={infoRow}
                         style={{
                           display: "grid",
-                          gap: 12,
-                          padding: 16,
-                          borderRadius: 18,
-                          background: "linear-gradient(180deg, rgba(35, 41, 36, 0.98), rgba(27, 31, 28, 0.96))",
-                          border: "1px solid var(--border)",
+                          gap: 10,
+                          padding: 12,
+                          borderRadius: 14,
                         }}
                       >
                         <div className="responsive-inline-header">
@@ -427,7 +420,7 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
                         <div
                           style={{
                             display: "grid",
-                            gap: 10,
+                            gap: 8,
                             gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                           }}
                         >
@@ -438,16 +431,15 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
                         </div>
                         {exercise.notes ? (
                           <div
+                            className={cardSubtle}
                             style={{
                               display: "grid",
                               gap: 6,
-                              padding: 12,
-                              borderRadius: 14,
-                              border: "1px solid var(--border)",
-                              background: "rgba(255, 255, 255, 0.025)",
+                              padding: 10,
+                              borderRadius: 12,
                             }}
                           >
-                            <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                            <span className={sectionEyebrow}>
                               {t("coaching.routines.exerciseNotes")}
                             </span>
                             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
@@ -471,13 +463,14 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
 function DetailChip({ label, value }: { label: string; value: string }) {
   return (
     <div
+      className={metaChip}
       style={{
         display: "grid",
         gap: 4,
-        padding: "12px 14px",
-        borderRadius: 14,
-        background: "rgba(255, 255, 255, 0.035)",
-        border: "1px solid var(--border)",
+        width: "auto",
+        alignItems: "start",
+        padding: "8px 10px",
+        borderRadius: 12,
       }}
     >
       <span style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
@@ -489,23 +482,15 @@ function DetailChip({ label, value }: { label: string; value: string }) {
 }
 
 function StatusPill({ label, status }: { label: string; status: ClientRoutineSummary["status"] }) {
-  const styles =
+  const badgeClass =
     status === "active"
-      ? { background: "var(--success-bg)", color: "var(--success)" }
+      ? statusSuccess
       : status === "archived"
-        ? { background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)" }
-        : { background: "rgba(78, 132, 189, 0.16)", color: "#8ab9ea" };
+        ? statusArchived
+        : statusDraft;
 
   return (
-    <span
-      style={{
-        padding: "6px 10px",
-        borderRadius: 999,
-        fontSize: 13,
-        fontWeight: 700,
-        ...styles,
-      }}
-    >
+    <span className={badgeClass}>
       {label}
     </span>
   );
@@ -522,11 +507,10 @@ function DetailItem({
 }) {
   return (
     <div
+      className={cardSubtle}
       style={{
-        padding: 16,
-        borderRadius: 18,
-        background: "rgba(255, 255, 255, 0.03)",
-        border: "1px solid var(--border)",
+        padding: 13,
+        borderRadius: 14,
         gridColumn: fullWidth ? "1 / -1" : undefined,
       }}
     >

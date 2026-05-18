@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getText } from "@/lib/i18n";
+import { infoRow, statusInactive, statusSuccess } from "@/lib/ui";
 import type { MembershipPlan } from "@/modules/memberships/types";
 
 type MembershipPlanListProps = {
@@ -13,11 +14,10 @@ export async function MembershipPlanList({ plans }: MembershipPlanListProps) {
   if (plans.length === 0) {
     return (
       <article
+        className={infoRow}
         style={{
-          padding: 20,
-          borderRadius: "var(--radius)",
-          border: "1px dashed var(--border)",
-          background: "var(--surface)",
+          padding: 14,
+          borderRadius: 12,
           color: "var(--muted)",
         }}
       >
@@ -27,18 +27,17 @@ export async function MembershipPlanList({ plans }: MembershipPlanListProps) {
   }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 8 }}>
       {plans.map((plan) => (
         <Link
           key={plan.id}
           href={`/dashboard/memberships/${plan.id}`}
+          className={infoRow}
           style={{
             display: "grid",
-            gap: 10,
-            padding: 18,
-            borderRadius: "var(--radius)",
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
+            gap: 8,
+            padding: "12px 14px",
+            borderRadius: 14,
           }}
         >
           <div
@@ -51,16 +50,7 @@ export async function MembershipPlanList({ plans }: MembershipPlanListProps) {
             }}
           >
             <strong style={{ fontSize: 18 }}>{plan.name}</strong>
-            <span
-              style={{
-                padding: "6px 10px",
-                borderRadius: 999,
-                background: plan.isActive ? "#dff4e8" : "#efe3d3",
-                color: plan.isActive ? "#1f6b42" : "#7a5a2f",
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
+            <span className={plan.isActive ? statusSuccess : statusInactive}>
               {plan.isActive ? common.active : common.inactive}
             </span>
           </div>

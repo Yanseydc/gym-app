@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { getAdminText } from "@/lib/i18n/admin";
+import { card, infoRow } from "@/lib/ui";
+import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
 import type { RecentDashboardClient } from "@/modules/dashboard/types";
 
 type RecentClientsPanelProps = {
@@ -12,18 +14,17 @@ export async function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
 
   return (
     <section
+      className={card}
       style={{
         display: "grid",
-        gap: 16,
-        padding: 24,
-        borderRadius: 24,
-        border: "1px solid var(--border)",
-        background: "var(--surface)",
+        gap: 12,
+        padding: 18,
+        borderRadius: 18,
       }}
     >
       <div>
-        <h2 style={{ margin: "0 0 8px" }}>{t("dashboard.recentClientsTitle")}</h2>
-        <p style={{ margin: 0, color: "var(--muted)" }}>
+        <h2 style={{ margin: "0 0 5px", fontSize: 18 }}>{t("dashboard.recentClientsTitle")}</h2>
+        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14, lineHeight: 1.45 }}>
           {t("dashboard.recentClientsDescription")}
         </p>
       </div>
@@ -31,44 +32,32 @@ export async function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
       {clients.length === 0 ? (
         <EmptyState message={t("dashboard.recentClientsEmpty")} />
       ) : (
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 8 }}>
           {clients.map((client) => (
             <article
               key={client.id}
+              className={infoRow}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 gap: 12,
                 flexWrap: "wrap",
                 alignItems: "center",
-                padding: 16,
-                borderRadius: 16,
-                background: "rgba(239, 229, 212, 0.45)",
+                padding: "11px 12px",
+                borderRadius: 12,
               }}
             >
               <div>
-                <strong style={{ display: "block", marginBottom: 4 }}>
+                <strong style={{ display: "block", marginBottom: 3, fontSize: 15 }}>
                   <Link href={`/dashboard/clients/${client.id}`}>{client.fullName}</Link>
                 </strong>
-                <span style={{ color: "var(--muted)" }}>
+                <span style={{ color: "var(--muted)", fontSize: 13 }}>
                   {t("dashboard.recentClientsAdded", {
                     date: new Date(client.createdAt).toLocaleDateString(locale),
                   })}
                 </span>
               </div>
-              <span
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  background: client.status === "active" ? "#dff4e8" : "#efe3d3",
-                  color: client.status === "active" ? "#1f6b42" : "#7a5a2f",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  textTransform: "capitalize",
-                }}
-              >
-                {t(`common.status.${client.status}`)}
-              </span>
+              <ClientStatusBadge status={client.status} />
             </article>
           ))}
         </div>
@@ -80,10 +69,10 @@ export async function RecentClientsPanel({ clients }: RecentClientsPanelProps) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div
+      className={infoRow}
       style={{
-        padding: 16,
-        borderRadius: 16,
-        border: "1px dashed var(--border)",
+        padding: 14,
+        borderRadius: 12,
         color: "var(--muted)",
       }}
     >
