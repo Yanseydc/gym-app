@@ -62,5 +62,8 @@ export async function assignMembershipToClient(
   revalidatePath(`/dashboard/clients/${clientId}`);
   revalidatePath("/dashboard/memberships");
 
-  return {};
+  return {
+    success:
+      "Membresía asignada correctamente. Está pendiente de pago y el cliente no podrá hacer check-in hasta registrar al menos el pago requerido.",
+  };
 }

@@ -548,6 +548,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
 
             {canAccessPayments ? (
               <UtilityFormPanel
+                id="register-payment"
                 title={t("clients.detail.registerPayment")}
                 description={t("clients.detail.registerPaymentDescription")}
               >
@@ -763,13 +764,16 @@ function UtilityFormPanel({
   children,
   description,
   title,
+  id,
 }: {
   children: ReactNode;
   description: string;
   title: string;
+  id?: string;
 }) {
   return (
     <section
+      id={id}
       style={{
         display: "grid",
         gap: 12,

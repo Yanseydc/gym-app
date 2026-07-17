@@ -105,6 +105,26 @@ export function MembershipAssignmentForm({
         </p>
       ) : null}
 
+      {state.success ? (
+        <p
+          style={{
+            margin: 0,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--warning-bg)",
+            color: "var(--warning-fg)",
+            border: "1px solid color-mix(in srgb, var(--warning-fg) 18%, transparent)",
+            display: "grid",
+            gap: 8,
+          }}
+        >
+          <span>{state.success}</span>
+          <a href="#register-payment" style={{ fontWeight: 600, width: "fit-content" }}>
+            Registrar pago ahora
+          </a>
+        </p>
+      ) : null}
+
       <button
         type="submit"
         disabled={pending || plans.length === 0}

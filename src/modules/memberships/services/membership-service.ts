@@ -424,7 +424,7 @@ export async function assignMembershipToClientRecord(
     .from("client_memberships")
     .select("id, start_date, end_date, status")
     .eq("client_id", clientId)
-    .eq("status", "active")
+    .in("status", ["active", "pending_payment", "partial"])
     .lte("start_date", values.startDate)
     .gte("end_date", values.startDate)
     .limit(1);

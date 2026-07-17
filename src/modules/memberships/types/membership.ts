@@ -68,4 +68,5 @@ export type MembershipPlanMutationState = {
 export type ClientMembershipMutationState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof ClientMembershipFormValues, string>>;
+  success?: string;
 };
