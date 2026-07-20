@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { getTextForLocale } from "@/lib/i18n";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 
@@ -18,30 +19,17 @@ export default function PaymentsError({ error, reset }: PaymentsErrorProps) {
         gap: 16,
         padding: 24,
         borderRadius: 24,
-        border: "1px solid #dba7a7",
-        background: "#fff2f2",
+        border: "1px solid var(--danger-border)",
+        background: "var(--danger-bg)",
       }}
     >
       <div>
         <h1 style={{ margin: "0 0 8px" }}>{t("title")} error</h1>
-        <p style={{ margin: 0, color: "#8a1c1c" }}>{error.message}</p>
+        <p style={{ margin: 0, color: "var(--danger-fg)" }}>{error.message}</p>
       </div>
-      <button
-        type="button"
-        onClick={reset}
-        style={{
-          width: "fit-content",
-          border: 0,
-          padding: "12px 16px",
-          borderRadius: 14,
-          background: "var(--accent)",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
+      <Button variant="primary" onClick={reset} style={{ width: "fit-content" }}>
         {locale === "en" ? "Try again" : "Intentar de nuevo"}
-      </button>
+      </Button>
     </div>
   );
 }

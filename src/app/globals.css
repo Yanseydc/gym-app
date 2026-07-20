@@ -13,6 +13,14 @@
   --border-strong: rgba(235, 222, 202, 0.25);
   --accent: #d16c43;
   --accent-strong: #f0976e;
+  /* Text/icon color placed on top of a solid --accent fill (buttons, active tab). */
+  --accent-foreground: #121513;
+  /* Shared focus outline: a dark gap (separates the ring from the element's own
+     fill, e.g. an orange primary button) plus a solid, high-contrast outer ring.
+     Kept as two solid layers (not a translucent wash) so it stays legible
+     against every surface tone in the app - verified >5:1 against page/card/
+     button backgrounds. */
+  --focus-ring: 0 0 0 2px var(--background), 0 0 0 5px var(--accent-strong);
   --accent-info: #8fc7ff;
   --accent-training: #f0976e;
   --accent-onboarding: #8fc7ff;
@@ -95,7 +103,46 @@ button {
   outline: none;
   border-color: color-mix(in srgb, var(--accent) 82%, white 18%);
   background: color-mix(in srgb, var(--input) 80%, white 20%);
-  box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
+  box-shadow: var(--focus-ring);
+}
+
+.ui-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ui-input-invalid,
+.ui-input-invalid:hover {
+  border-color: var(--danger-fg);
+}
+
+.ui-input-invalid:focus,
+.ui-input-invalid:focus-visible {
+  /* box-shadow intentionally not overridden here: it falls through to the
+     shared .ui-input:focus rule (var(--focus-ring)) so every focus indicator
+     in the app comes from one place. Only the red border is specific to the
+     invalid state. */
+  border-color: var(--danger-fg);
+}
+
+.ui-field {
+  display: grid;
+  gap: 8px;
+}
+
+.ui-field-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.ui-field-required {
+  color: var(--danger-fg);
+}
+
+.ui-field-hint {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .ui-field-error {
@@ -179,7 +226,7 @@ button {
 .ui-button:focus,
 .ui-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(209, 108, 67, 0.18);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-button:disabled,
@@ -189,9 +236,25 @@ button {
   transform: none;
 }
 
+.ui-button-spinner {
+  animation: ui-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-button-spinner {
+    animation-duration: 1.6s;
+  }
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .ui-button-primary {
   background: var(--accent);
-  color: #121513;
+  color: var(--accent-foreground);
   box-shadow: 0 12px 24px rgba(209, 108, 67, 0.16);
 }
 
@@ -247,6 +310,29 @@ button {
   border: 1px solid var(--border-strong);
   background: var(--surface-elevated);
   box-shadow: var(--shadow);
+}
+
+/* Layout utilities for the <Card> component. Scoped to its own classes so the
+   .ui-card / .ui-card-subtle / .ui-card-elevated classes above stay unchanged
+   for existing call sites that already set their own padding/radius inline. */
+.ui-card-radius {
+  border-radius: var(--radius);
+}
+
+.ui-card-pad-none {
+  padding: 0;
+}
+
+.ui-card-pad-sm {
+  padding: 12px 14px;
+}
+
+.ui-card-pad-md {
+  padding: 16px 20px;
+}
+
+.ui-card-pad-lg {
+  padding: 20px 24px;
 }
 
 .ui-info-row {
