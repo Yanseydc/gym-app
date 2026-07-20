@@ -58,6 +58,19 @@ export type ClientMembershipFormValues = {
   membershipPlanId: string;
   startDate: string;
   notes: string;
+  chargeNow: boolean;
+  paymentMethod: string;
+  amount: string;
+  idempotencyKey: string;
+};
+
+export type AssignMembershipWithPaymentResult = {
+  membershipId: string;
+  paymentId: string;
+  status: MembershipStatus;
+  amountPaid: number;
+  totalPaid: number;
+  remainingBalance: number;
 };
 
 export type MembershipPlanMutationState = {

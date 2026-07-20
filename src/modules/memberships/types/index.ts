@@ -1,4 +1,5 @@
 export type {
+  AssignMembershipWithPaymentResult,
   ClientMembership,
   ClientMembershipFormValues,
   ClientMembershipMutationState,

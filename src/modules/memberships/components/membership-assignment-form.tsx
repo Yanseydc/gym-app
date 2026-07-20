@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
 import { buttonPrimary, fieldError, formError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
@@ -26,7 +26,17 @@ const defaultValues: ClientMembershipFormValues = {
   membershipPlanId: "",
   startDate: today,
   notes: "",
+  chargeNow: false,
+  paymentMethod: "",
+  amount: "",
+  idempotencyKey: "",
 };
+
+const paymentMethodOptions = [
+  { value: "cash", label: "Efectivo" },
+  { value: "transfer", label: "Transferencia" },
+  { value: "card", label: "Tarjeta" },
+];
 
 export function MembershipAssignmentForm({
   action,
@@ -35,6 +45,7 @@ export function MembershipAssignmentForm({
 }: MembershipAssignmentFormProps) {
   const { t } = useAdminText();
   const { state, formAction, pending } = useClientMembershipForm(action);
+  const [chargeNow, setChargeNow] = useState(false);
 
   return (
     <form action={formAction} style={{ display: "grid", gap: 20 }}>
@@ -99,6 +110,43 @@ export function MembershipAssignmentForm({
         {state.fieldErrors?.notes ? <FieldError message={state.fieldErrors.notes} /> : null}
       </label>
 
+      <label style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
+        <input
+          type="checkbox"
+          name="chargeNow"
+          checked={chargeNow}
+          onChange={(event) => setChargeNow(event.target.checked)}
+        />
+        Cobrar ahora
+      </label>
+
+      {chargeNow ? (
+        <div style={gridStyles}>
+          <label style={{ display: "grid", gap: 8 }}>
+            <span style={labelStyles}>Método de pago</span>
+            <select name="paymentMethod" defaultValue="" className={input}>
+              <option value="" disabled>
+                Selecciona un método
+              </option>
+              {paymentMethodOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {state.fieldErrors?.paymentMethod ? (
+              <FieldError message={state.fieldErrors.paymentMethod} />
+            ) : null}
+          </label>
+
+          <label style={{ display: "grid", gap: 8 }}>
+            <span style={labelStyles}>Monto</span>
+            <input type="number" name="amount" min="0.01" step="0.01" className={input} />
+            {state.fieldErrors?.amount ? <FieldError message={state.fieldErrors.amount} /> : null}
+          </label>
+        </div>
+      ) : null}
+
       {state.error ? (
         <p className={formError}>
           {state.error}
@@ -119,9 +167,11 @@ export function MembershipAssignmentForm({
           }}
         >
           <span>{state.success}</span>
-          <a href="#register-payment" style={{ fontWeight: 600, width: "fit-content" }}>
-            Registrar pago ahora
-          </a>
+          {chargeNow ? null : (
+            <a href="#register-payment" style={{ fontWeight: 600, width: "fit-content" }}>
+              Registrar pago ahora
+            </a>
+          )}
         </p>
       ) : null}
 

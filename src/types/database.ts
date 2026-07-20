@@ -665,6 +665,25 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      assign_membership_with_payment: {
+        Args: {
+          p_amount: number;
+          p_client_id: string;
+          p_idempotency_key: string;
+          p_membership_plan_id: string;
+          p_notes: string | null;
+          p_payment_method: string;
+          p_start_date: string;
+        };
+        Returns: {
+          amount_paid: number;
+          membership_id: string;
+          payment_id: string;
+          remaining_balance: number;
+          status: string;
+          total_paid: number;
+        }[];
+      };
       can_access_client: {
         Args: {
           target_client_id: string;

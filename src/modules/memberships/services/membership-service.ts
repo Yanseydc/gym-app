@@ -4,6 +4,7 @@ import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope"
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
+  AssignMembershipWithPaymentResult,
   ClientMembership,
   ClientMembershipFormValues,
   ClientMembershipRecord,
@@ -14,6 +15,15 @@ import type {
   MembershipPlanRecord,
   MembershipStatus,
 } from "@/modules/memberships/types";
+
+type AssignMembershipWithPaymentInput = {
+  membershipPlanId: string;
+  startDate: string;
+  notes: string;
+  paymentMethod: string;
+  amount: number;
+  idempotencyKey: string;
+};
 
 type MembershipAccessSummary = {
   membershipId: string | null;
@@ -493,6 +503,50 @@ export async function assignMembershipToClientRecord(
     }, scope))
     .select("id")
     .single();
+}
+
+export async function assignMembershipWithPaymentRecord(
+  supabase: AppSupabaseClient,
+  clientId: string,
+  values: AssignMembershipWithPaymentInput,
+): Promise<{ data: AssignMembershipWithPaymentResult | null; error: string | null }> {
+  const { error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError) {
+    return { data: null, error: scopeError };
+  }
+
+  const { data, error } = await supabase.rpc("assign_membership_with_payment", {
+    p_client_id: clientId,
+    p_membership_plan_id: values.membershipPlanId,
+    p_start_date: values.startDate,
+    p_notes: values.notes.trim() || null,
+    p_payment_method: values.paymentMethod,
+    p_amount: values.amount,
+    p_idempotency_key: values.idempotencyKey,
+  });
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const row = (data ?? [])[0];
+
+  if (!row) {
+    return { data: null, error: "Membership assignment did not return a result." };
+  }
+
+  return {
+    data: {
+      membershipId: row.membership_id,
+      paymentId: row.payment_id,
+      status: row.status as MembershipStatus,
+      amountPaid: Number(row.amount_paid),
+      totalPaid: Number(row.total_paid),
+      remainingBalance: Number(row.remaining_balance),
+    },
+    error: null,
+  };
 }
 
 export async function cancelClientMembershipRecord(
