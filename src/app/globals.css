@@ -29,8 +29,12 @@
   --muted: #aaa395;
   --success: #58b37c;
   --success-bg: rgba(88, 179, 124, 0.14);
+  /* Lifted from the single spot that already hardcoded it (.ui-status-success border-color). */
+  --success-border: rgba(88, 179, 124, 0.22);
   --warning-bg: rgba(219, 153, 81, 0.16);
   --warning-fg: #f1bf7b;
+  /* Lifted from the single spot that already hardcoded it (.ui-status-warning border-color). */
+  --warning-border: rgba(241, 191, 123, 0.22);
   --danger-bg: rgba(194, 88, 88, 0.115);
   --danger-fg: #e9a6a0;
   --danger-border: rgba(229, 145, 137, 0.2);
@@ -161,6 +165,44 @@ button {
   background: var(--danger-bg);
   color: var(--danger-fg);
   line-height: 1.5;
+}
+
+/* <InlineAlert> - same box model as .ui-form-error above, extended with
+   title/action slots and warning/success variants. */
+.ui-inline-alert {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+
+.ui-inline-alert-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.ui-inline-alert-action {
+  margin-top: 4px;
+}
+
+.ui-inline-alert-danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.ui-inline-alert-warning {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.ui-inline-alert-success {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .ui-file-input {
@@ -335,6 +377,46 @@ button {
   padding: 20px 24px;
 }
 
+/* <LoadingState> - matches the box every route-level loading.tsx already
+   used (padding 24 / radius 24 / --border / --surface), plus a spinner. */
+.ui-loading-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+/* <EmptyState> - matches the dashed-border "no results" box already
+   duplicated across list components (clients, checkins, ...). */
+.ui-empty-state {
+  display: grid;
+  gap: 4px;
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.ui-empty-state-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ui-empty-state-description {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.ui-empty-state-action {
+  margin-top: 8px;
+}
+
 .ui-info-row {
   border: 1px solid var(--border);
   background: var(--surface-row);
@@ -380,13 +462,13 @@ button {
 
 .ui-status-success {
   background: var(--success-bg);
-  border-color: rgba(88, 179, 124, 0.22);
+  border-color: var(--success-border);
   color: var(--success);
 }
 
 .ui-status-warning {
   background: var(--warning-bg);
-  border-color: rgba(241, 191, 123, 0.22);
+  border-color: var(--warning-border);
   color: var(--warning-fg);
 }
 

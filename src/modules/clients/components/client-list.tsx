@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import type { Client } from "@/modules/clients/types";
 import { ClientStatusBadge } from "@/modules/clients/components/client-status-badge";
@@ -13,19 +14,7 @@ type ClientListProps = {
 export function ClientList({ clients }: ClientListProps) {
   const { t } = useAdminText();
   if (clients.length === 0) {
-    return (
-      <article
-        style={{
-          padding: 20,
-          borderRadius: "var(--radius)",
-          border: "1px dashed var(--border)",
-          background: "var(--surface)",
-          color: "var(--muted)",
-        }}
-      >
-        {t("clients.empty")}
-      </article>
-    );
+    return <EmptyState title={t("clients.empty")} />;
   }
 
   return (

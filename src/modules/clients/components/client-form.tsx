@@ -2,7 +2,8 @@
 
 import type { CSSProperties } from "react";
 
-import { buttonPrimary, fieldError, formError, input } from "@/lib/ui";
+import { InlineAlert } from "@/components/ui/inline-alert";
+import { buttonPrimary, fieldError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { useClientForm } from "@/modules/clients/hooks/use-client-form";
 import type { ClientFormValues, ClientMutationState } from "@/modules/clients/types";
@@ -89,9 +90,9 @@ export function ClientForm({
       </label>
 
       {state.error ? (
-        <p className={formError}>
+        <InlineAlert variant="danger" urgent>
           {state.error}
-        </p>
+        </InlineAlert>
       ) : null}
 
       <button
