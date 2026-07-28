@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
+import { Dialog } from "@/components/ui/dialog";
 import { buttonDanger, buttonSecondary, formError, input, statusDanger } from "@/lib/ui";
 import type { ClientMergeCandidate, ClientMergeMutationState } from "@/modules/clients/types";
 
@@ -21,6 +22,7 @@ const initialState: ClientMergeMutationState = {
 
 export function ClientMergePanel({ action, candidates }: ClientMergePanelProps) {
   const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedClientId, setSelectedClientId] = useState("");
@@ -76,100 +78,106 @@ export function ClientMergePanel({ action, candidates }: ClientMergePanelProps) 
         </button>
       </article>
 
-      {isOpen ? (
-        <div role="dialog" aria-modal="true" style={overlayStyles}>
-          <div style={modalStyles}>
-            <div style={{ display: "grid", gap: 6 }}>
-              <h2 style={{ margin: 0 }}>Fusionar clientes</h2>
-              <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}>
-                Se moverán todos los datos al cliente actual y el otro será eliminado.
+      <Dialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        title="Fusionar clientes"
+        description="Se moverán todos los datos al cliente actual y el otro será eliminado."
+        initialFocusRef={searchInputRef}
+        closeDisabled={pending}
+      >
+        <form action={formAction} style={{ display: "grid", gap: 14 }}>
+          <input type="hidden" name="duplicateClientId" value={selectedClientId} />
+          <label style={{ display: "grid", gap: 8 }}>
+            <span style={{ fontWeight: 700 }}>Cliente duplicado</span>
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar cliente"
+              className={input}
+            />
+          </label>
+
+          <div style={candidateListStyles}>
+            {filteredCandidates.length === 0 ? (
+              <p style={{ margin: 0, padding: 12, color: "var(--muted)" }}>
+                No se encontraron clientes.
               </p>
-            </div>
-
-            <form action={formAction} style={{ display: "grid", gap: 14 }}>
-              <input type="hidden" name="duplicateClientId" value={selectedClientId} />
-              <label style={{ display: "grid", gap: 8 }}>
-                <span style={{ fontWeight: 700 }}>Cliente duplicado</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar cliente"
-                  className={input}
-                />
-              </label>
-
-              <div style={candidateListStyles}>
-                {filteredCandidates.length === 0 ? (
-                  <p style={{ margin: 0, padding: 12, color: "var(--muted)" }}>
-                    No se encontraron clientes.
-                  </p>
-                ) : (
-                  filteredCandidates.map((candidate) => (
-                    <button
-                      key={candidate.id}
-                      type="button"
-                      onClick={() => setSelectedClientId(candidate.id)}
+            ) : (
+              filteredCandidates.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  onClick={() => setSelectedClientId(candidate.id)}
+                  style={{
+                    ...candidateButtonStyles,
+                    background:
+                      selectedClientId === candidate.id
+                        ? "var(--surface-alt)"
+                        : "transparent",
+                  }}
+                >
+                  <span style={{ minWidth: 0 }}>
+                    <strong style={{ display: "block" }}>
+                      {candidate.firstName} {candidate.lastName}
+                    </strong>
+                    <span
                       style={{
-                        ...candidateButtonStyles,
-                        background:
-                          selectedClientId === candidate.id
-                            ? "var(--surface-alt)"
-                            : "transparent",
+                        display: "block",
+                        color: "var(--muted)",
+                        fontSize: 13,
+                        overflowWrap: "anywhere",
                       }}
                     >
-                      <span style={{ minWidth: 0 }}>
-                        <strong style={{ display: "block" }}>
-                          {candidate.firstName} {candidate.lastName}
-                        </strong>
-                        <span style={{ display: "block", color: "var(--muted)", fontSize: 13 }}>
-                          {candidate.email ?? "Sin correo"}
-                        </span>
-                      </span>
-                      {candidate.isEmailDuplicate ? <span className={statusDanger}>Duplicado</span> : null}
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {selectedClient ? (
-                <section style={selectedStyles}>
-                  <strong>
-                    {selectedClient.firstName} {selectedClient.lastName}
-                  </strong>
-                  <span style={{ color: "var(--muted)" }}>{selectedClient.email ?? "Sin correo"}</span>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <CountChip label="Rutinas" value={selectedClient.counts.routines} />
-                    <CountChip label="Pagos" value={selectedClient.counts.payments} />
-                    <CountChip label="Check-ins" value={selectedClient.counts.checkins} />
-                  </div>
-                </section>
-              ) : null}
-
-              {state.error ? <p className={formError}>{state.error}</p> : null}
-              {state.success ? <p style={successStyles}>{state.success}</p> : null}
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className={buttonSecondary}
-                  onClick={() => setIsOpen(false)}
-                  disabled={pending}
-                >
-                  Cancelar
+                      {candidate.email ?? "Sin correo"}
+                    </span>
+                  </span>
+                  {candidate.isEmailDuplicate ? <span className={statusDanger}>Duplicado</span> : null}
                 </button>
-                <button
-                  type="submit"
-                  className={buttonDanger}
-                  disabled={pending || !selectedClientId}
-                >
-                  {pending ? "Fusionando..." : "Fusionar clientes"}
-                </button>
-              </div>
-            </form>
+              ))
+            )}
           </div>
-        </div>
-      ) : null}
+
+          {selectedClient ? (
+            <section style={selectedStyles}>
+              <strong>
+                {selectedClient.firstName} {selectedClient.lastName}
+              </strong>
+              <span style={{ color: "var(--muted)", overflowWrap: "anywhere" }}>
+                {selectedClient.email ?? "Sin correo"}
+              </span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <CountChip label="Rutinas" value={selectedClient.counts.routines} />
+                <CountChip label="Pagos" value={selectedClient.counts.payments} />
+                <CountChip label="Check-ins" value={selectedClient.counts.checkins} />
+              </div>
+            </section>
+          ) : null}
+
+          {state.error ? <p className={formError}>{state.error}</p> : null}
+          {state.success ? <p style={successStyles}>{state.success}</p> : null}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className={buttonSecondary}
+              onClick={() => setIsOpen(false)}
+              disabled={pending}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className={buttonDanger}
+              disabled={pending || !selectedClientId}
+            >
+              {pending ? "Fusionando..." : "Fusionar clientes"}
+            </button>
+          </div>
+        </form>
+      </Dialog>
     </>
   );
 }
@@ -200,29 +208,6 @@ const warningStyles: CSSProperties = {
   borderRadius: 16,
   border: "1px solid var(--warning-border, var(--border))",
   background: "var(--surface)",
-};
-
-const overlayStyles: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  zIndex: 60,
-  display: "grid",
-  placeItems: "center",
-  padding: 18,
-  background: "rgba(0, 0, 0, 0.58)",
-};
-
-const modalStyles: CSSProperties = {
-  width: "min(100%, 560px)",
-  maxHeight: "min(720px, calc(100vh - 36px))",
-  overflow: "auto",
-  display: "grid",
-  gap: 18,
-  padding: 20,
-  borderRadius: 18,
-  border: "1px solid var(--border)",
-  background: "var(--surface)",
-  boxShadow: "0 22px 70px rgba(0, 0, 0, 0.45)",
 };
 
 const candidateListStyles: CSSProperties = {

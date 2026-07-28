@@ -417,6 +417,129 @@ button {
   margin-top: 8px;
 }
 
+/* <Dialog> (Radix) - overlay/content box model ported 1:1 from the ad-hoc
+   overlayStyles/modalStyles it replaces in client-merge-panel.tsx. */
+.ui-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.58);
+  animation: ui-dialog-fade-in 160ms ease;
+}
+
+.ui-dialog-overlay[data-state="closed"] {
+  animation: ui-dialog-fade-out 160ms ease;
+}
+
+.ui-dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 61;
+  width: min(calc(100% - 36px), 560px);
+  max-height: min(720px, calc(100vh - 36px));
+  overflow: auto;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
+  animation: ui-dialog-content-in 160ms ease;
+}
+
+.ui-dialog-content:focus {
+  outline: none;
+}
+
+.ui-dialog-content[data-state="closed"] {
+  animation: ui-dialog-content-out 120ms ease;
+}
+
+.ui-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ui-dialog-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.ui-dialog-description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ui-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.ui-dialog-close:hover:not(:disabled) {
+  background: var(--surface-alt);
+  color: var(--foreground);
+}
+
+.ui-dialog-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ui-dialog-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@keyframes ui-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-dialog-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+}
+
+@keyframes ui-dialog-content-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-overlay,
+  .ui-dialog-content {
+    animation-duration: 0.01ms;
+  }
+}
+
 .ui-info-row {
   border: 1px solid var(--border);
   background: var(--surface-row);
