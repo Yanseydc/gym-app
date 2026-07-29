@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useActionState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Ban, CalendarPlus, CircleDollarSign, RefreshCw } from "lucide-react";
 
 import { useToast } from "@/components/ui/toast";
@@ -23,6 +23,10 @@ import {
   canRenewMembership,
 } from "@/modules/memberships/lib/membership-operations-permissions";
 import {
+  parseMembershipListFilter,
+  type MembershipListFilter,
+} from "@/modules/memberships/lib/membership-list-filter";
+import {
   cancelMembershipFromDashboard,
   extendMembership,
   registerMembershipPayment,
@@ -34,7 +38,6 @@ import type {
   MembershipOperationMutationState,
 } from "@/modules/memberships/types";
 
-type Filter = "all" | "active" | "expired" | "expiring" | "future";
 type ActionType = "payment" | "renew" | "extend" | "cancel";
 
 const initialState: MembershipOperationMutationState = {};
@@ -45,7 +48,22 @@ export function MembershipOperationsDashboard({
 }: {
   memberships: MembershipOperationItem[];
 }) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const filter = parseMembershipListFilter(searchParams.get("filter"));
+  const setFilter = (next: MembershipListFilter) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (next === "all") {
+      params.delete("filter");
+    } else {
+      params.set("filter", next);
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [action, setAction] = useState<{ type: ActionType; membership: MembershipOperationItem } | null>(null);

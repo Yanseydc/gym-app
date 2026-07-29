@@ -4,6 +4,7 @@ import { RecentPaymentsPanel } from "@/modules/dashboard/components/recent-payme
 import { getDashboardSnapshot } from "@/modules/dashboard/services/dashboard-service";
 import { getAdminText } from "@/lib/i18n/admin";
 import { formError } from "@/lib/ui";
+import { buildMembershipListHref } from "@/modules/memberships/lib/membership-list-filter";
 
 export default async function DashboardPage() {
   const { t } = await getAdminText();
@@ -40,13 +41,28 @@ export default async function DashboardPage() {
         }}
       >
         <KpiCard label={t("dashboard.activeClients")} value={String(metrics.activeClients)} tone="success" />
-        <KpiCard label={t("dashboard.activeMemberships")} value={String(metrics.activeMemberships)} tone="success" />
-        <KpiCard label={t("dashboard.futureMemberships")} value={String(metrics.futureMemberships)} />
-        <KpiCard label={t("dashboard.expiredMemberships")} value={String(metrics.expiredMemberships)} tone="warning" />
+        <KpiCard
+          label={t("dashboard.activeMemberships")}
+          value={String(metrics.activeMemberships)}
+          tone="success"
+          href={buildMembershipListHref("active")}
+        />
+        <KpiCard
+          label={t("dashboard.futureMemberships")}
+          value={String(metrics.futureMemberships)}
+          href={buildMembershipListHref("future")}
+        />
+        <KpiCard
+          label={t("dashboard.expiredMemberships")}
+          value={String(metrics.expiredMemberships)}
+          tone="warning"
+          href={buildMembershipListHref("expired")}
+        />
         <KpiCard
           label={t("dashboard.expiringSoon")}
           value={String(metrics.membershipsExpiringSoon)}
           tone="warning"
+          href={buildMembershipListHref("expiring")}
         />
         <KpiCard label={t("dashboard.incomeToday")} value={`$${metrics.incomeToday.toFixed(2)}`} />
         <KpiCard

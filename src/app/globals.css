@@ -687,6 +687,36 @@ button {
   background: var(--surface-row);
 }
 
+/* <KpiCard href=...> - discreet affordance that the card is a link:
+   subtle lift + stronger border on hover, standard focus ring for
+   keyboard users. Cards without href are unaffected (plain <article>,
+   this class is never applied to them). */
+.ui-kpi-card-link {
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform 120ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ui-kpi-card-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+}
+
+.ui-kpi-card-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-kpi-card-link {
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .ui-kpi-card-link:hover {
+    transform: none;
+  }
+}
+
 .ui-meta-chip {
   display: inline-flex;
   align-items: center;
