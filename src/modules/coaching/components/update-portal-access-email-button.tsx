@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useToast } from "@/components/ui/toast";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui";
 import type { UpdatePortalAccessEmailMutationState } from "@/modules/coaching/types";
 
@@ -24,6 +25,7 @@ export function UpdatePortalAccessEmailButton({
   portalEmail,
 }: UpdatePortalAccessEmailButtonProps) {
   const router = useRouter();
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -31,6 +33,8 @@ export function UpdatePortalAccessEmailButton({
     if (!state.success) {
       return;
     }
+
+    toast.success(state.success);
 
     const timeoutId = window.setTimeout(() => {
       setIsOpen(false);
@@ -40,7 +44,7 @@ export function UpdatePortalAccessEmailButton({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [router, state.success]);
+  }, [router, state.success, toast]);
 
   return (
     <>
@@ -119,21 +123,6 @@ export function UpdatePortalAccessEmailButton({
                 }}
               >
                 {state.error}
-              </p>
-            ) : null}
-
-            {state.success ? (
-              <p
-                style={{
-                  margin: 0,
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  background: "var(--success-bg)",
-                  color: "var(--success)",
-                  fontWeight: 700,
-                }}
-              >
-                {state.success}
               </p>
             ) : null}
 

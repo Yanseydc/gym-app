@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { ToastProvider } from "@/components/ui/toast";
+
 import "./globals.css";
 
 const geist = Geist({
@@ -20,7 +22,9 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es">
-      <body className={geist.variable}>{children}</body>
+      <body className={geist.variable}>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

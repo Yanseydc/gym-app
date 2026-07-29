@@ -540,6 +540,148 @@ button {
   }
 }
 
+/* <ToastProvider> (Radix) - mobile-first: full-width bottom stack by default,
+   fixed-width bottom-right from the 900px breakpoint already used across the
+   dashboard shell. */
+.ui-toast-viewport {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+.ui-toast {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 14px 40px 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow);
+  animation: ui-toast-in 180ms ease;
+}
+
+.ui-toast[data-state="closed"] {
+  animation: ui-toast-out 160ms ease;
+}
+
+.ui-toast[data-swipe="move"] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+
+.ui-toast[data-swipe="cancel"] {
+  transform: translateX(0);
+  transition: transform 200ms ease;
+}
+
+.ui-toast[data-swipe="end"] {
+  animation: ui-toast-swipe-out 100ms ease-out;
+}
+
+.ui-toast-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.ui-toast-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ui-toast-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.ui-toast-close:hover {
+  background: var(--surface-alt);
+  color: var(--foreground);
+}
+
+.ui-toast-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ui-toast-success {
+  border-left: 3px solid var(--success);
+}
+
+.ui-toast-error {
+  border-left: 3px solid var(--danger-fg);
+}
+
+.ui-toast-warning {
+  border-left: 3px solid var(--warning-fg);
+}
+
+.ui-toast-info {
+  border-left: 3px solid var(--neutral-badge-fg);
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes ui-toast-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-toast-swipe-out {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x));
+  }
+  to {
+    transform: translateX(calc(100% + 20px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-toast {
+    animation-duration: 0.01ms;
+  }
+}
+
+@media (min-width: 900px) {
+  .ui-toast-viewport {
+    left: auto;
+    right: 20px;
+    bottom: 20px;
+    width: 360px;
+  }
+}
+
 .ui-info-row {
   border: 1px solid var(--border);
   background: var(--surface-row);
