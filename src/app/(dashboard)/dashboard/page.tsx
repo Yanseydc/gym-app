@@ -41,6 +41,7 @@ export default async function DashboardPage() {
       >
         <KpiCard label={t("dashboard.activeClients")} value={String(metrics.activeClients)} tone="success" />
         <KpiCard label={t("dashboard.activeMemberships")} value={String(metrics.activeMemberships)} tone="success" />
+        <KpiCard label={t("dashboard.futureMemberships")} value={String(metrics.futureMemberships)} />
         <KpiCard label={t("dashboard.expiredMemberships")} value={String(metrics.expiredMemberships)} tone="warning" />
         <KpiCard
           label={t("dashboard.expiringSoon")}

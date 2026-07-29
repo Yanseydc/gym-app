@@ -1,10 +1,10 @@
-// Run with: node --env-file=.env.local $(which npx) tsx --test src/modules/memberships/services/membership-operational-status.test.ts
-// Needs env vars because it imports membership-service.ts, which pulls in
-// the Supabase server client transitively - same as membership-access.test.ts.
+// Run with: npx tsx --test src/modules/memberships/lib/membership-operational-status.test.ts
+// Pure module - no env vars needed (moved from services/, which required
+// --env-file because it pulled in membership-service.ts's Supabase import).
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { getOperationalStatus } from "./membership-service";
+import { getOperationalStatus } from "./membership-lifecycle";
 import { getTodayInAppTimeZone } from "@/lib/date-format";
 
 const TODAY = "2026-07-28";

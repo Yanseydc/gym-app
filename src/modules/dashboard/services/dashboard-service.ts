@@ -1,7 +1,9 @@
 import { cache } from "react";
 
 import { applyGymScope, requireGymScope, type GymScope } from "@/lib/auth/gym-scope";
+import { getTodayInAppTimeZone } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
+import { countMembershipMetrics, getMonthStartFromCivilDate } from "@/modules/dashboard/lib/dashboard-metrics";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
   DashboardMetrics,
@@ -10,24 +12,11 @@ import type {
   RecentDashboardPayment,
 } from "@/modules/dashboard/types";
 
-function toIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function getMonthStart(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setUTCDate(result.getUTCDate() + days);
-  return result;
-}
-
 function emptyMetrics(): DashboardMetrics {
   return {
     activeClients: 0,
     activeMemberships: 0,
+    futureMemberships: 0,
     expiredMemberships: 0,
     membershipsExpiringSoon: 0,
     incomeToday: 0,
@@ -52,56 +41,45 @@ async function getActiveClientsCount(supabase: AppSupabaseClient, scope: GymScop
   return count ?? 0;
 }
 
+/**
+ * A single query for status === "active" client_memberships, minimal
+ * columns only (status/start_date/end_date - no `select("*")`, no
+ * per-bucket queries). Classification happens in JS via
+ * countMembershipMetrics, reusing the exact same rules as the operational
+ * memberships dashboard (getOperationalStatus) so the two can't drift apart.
+ * At the current data volume a single row-fetching query is simpler and
+ * safer than four separate COUNT queries; if a gym's membership volume ever
+ * makes that fetch expensive, a SQL-side aggregation (e.g. a Postgres
+ * function grouping by the same rules) can replace this without changing
+ * DashboardMetrics' shape.
+ */
 async function getMembershipMetrics(supabase: AppSupabaseClient, scope: GymScope) {
-  const today = toIsoDate(new Date());
-  const soonDate = toIsoDate(addDays(new Date(), 7));
+  const today = getTodayInAppTimeZone();
 
-  let activeQuery = supabase
+  let query = supabase
     .from("client_memberships")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "active")
-    .gte("end_date", today);
-  let expiredQuery = supabase
-    .from("client_memberships")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "active")
-    .lt("end_date", today);
-  let soonQuery = supabase
-    .from("client_memberships")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "active")
-    .gte("end_date", today)
-    .lte("end_date", soonDate);
+    .select("status, start_date, end_date")
+    .eq("status", "active");
+  query = applyGymScope(query, scope);
 
-  activeQuery = applyGymScope(activeQuery, scope);
-  expiredQuery = applyGymScope(expiredQuery, scope);
-  soonQuery = applyGymScope(soonQuery, scope);
+  const { data, error } = await query;
 
-  const [activeMembershipsResult, expiredMembershipsResult, expiringSoonResult] =
-    await Promise.all([activeQuery, expiredQuery, soonQuery]);
-
-  if (activeMembershipsResult.error) {
-    throw new Error(activeMembershipsResult.error.message);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  if (expiredMembershipsResult.error) {
-    throw new Error(expiredMembershipsResult.error.message);
-  }
+  const records = (data ?? []).map((record) => ({
+    status: record.status,
+    startDate: record.start_date,
+    endDate: record.end_date,
+  }));
 
-  if (expiringSoonResult.error) {
-    throw new Error(expiringSoonResult.error.message);
-  }
-
-  return {
-    activeMemberships: activeMembershipsResult.count ?? 0,
-    expiredMemberships: expiredMembershipsResult.count ?? 0,
-    membershipsExpiringSoon: expiringSoonResult.count ?? 0,
-  };
+  return countMembershipMetrics(records, today);
 }
 
 async function getIncomeMetrics(supabase: AppSupabaseClient, scope: GymScope) {
-  const monthStart = toIsoDate(getMonthStart(new Date()));
-  const today = toIsoDate(new Date());
+  const today = getTodayInAppTimeZone();
+  const monthStart = getMonthStartFromCivilDate(today);
   let todayQuery = supabase.from("payments").select("amount").eq("payment_date", today);
   let monthQuery = supabase.from("payments").select("amount").gte("payment_date", monthStart);
 
@@ -242,6 +220,7 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
 
   if (membershipMetricsResult.status === "fulfilled") {
     metrics.activeMemberships = membershipMetricsResult.value.activeMemberships;
+    metrics.futureMemberships = membershipMetricsResult.value.futureMemberships;
     metrics.expiredMemberships = membershipMetricsResult.value.expiredMemberships;
     metrics.membershipsExpiringSoon = membershipMetricsResult.value.membershipsExpiringSoon;
   } else {

@@ -3,6 +3,7 @@ import { cache } from "react";
 import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
 import { getTodayInAppTimeZone } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
+import { getOperationalStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
   AssignMembershipWithPaymentResult,
@@ -10,7 +11,6 @@ import type {
   ClientMembershipFormValues,
   ClientMembershipRecord,
   MembershipOperationItem,
-  MembershipOperationalStatus,
   MembershipPlan,
   MembershipPlanFormValues,
   MembershipPlanRecord,
@@ -56,47 +56,6 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
 
   const today = toIsoDate(new Date());
   return endDate < today ? "expired" : "active";
-}
-
-/**
- * Visual/operational classification for the memberships dashboard.
- * Precedence (each rule only applies once every earlier one is ruled out):
- *   1. cancelled - terminal, always wins.
- *   2. future    - startDate is strictly after `today`.
- *   3. expired   - endDate is before `today`.
- *   4. expiring  - endDate falls within the next 6 days.
- *   5. active    - everything else.
- * `today` defaults to getTodayInAppTimeZone() (America/Tijuana) but can be
- * injected for deterministic tests. Informational only - see
- * hasActiveAccessNow/selectAccessRecord for the check-in access decision,
- * and isCurrentActiveMembership for the dashboard's "current membership"
- * grouping - neither is derived from this function.
- */
-export function getOperationalStatus(
-  startDate: string,
-  endDate: string,
-  status: MembershipStatus,
-  today: string = getTodayInAppTimeZone(),
-): MembershipOperationalStatus {
-  if (status === "cancelled") {
-    return "cancelled";
-  }
-
-  if (startDate > today) {
-    return "future";
-  }
-
-  if (endDate < today) {
-    return "expired";
-  }
-
-  const soon = addDays(today, 6);
-
-  if (endDate <= soon) {
-    return "expiring";
-  }
-
-  return "active";
 }
 
 function isCurrentActiveMembership(record: Pick<ClientMembershipRecord, "end_date" | "status">) {

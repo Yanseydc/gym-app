@@ -1,6 +1,7 @@
 export type DashboardMetrics = {
   activeClients: number;
   activeMemberships: number;
+  futureMemberships: number;
   expiredMemberships: number;
   membershipsExpiringSoon: number;
   incomeToday: number;
