@@ -1190,6 +1190,20 @@ main {
   align-items: start;
 }
 
+.membership-operations-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.membership-operations-card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .clients-page {
   display: grid;
   gap: 20px;
@@ -1323,6 +1337,14 @@ main {
   .clients-search-bar {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+  }
+
+  .membership-operations-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .membership-operations-card-meta {
+    justify-content: flex-end;
   }
 
   .clients-form-shell {

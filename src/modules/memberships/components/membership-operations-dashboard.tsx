@@ -178,7 +178,11 @@ export function MembershipOperationsDashboard({
 
           <div style={{ display: "grid", gap: 10 }}>
             {visibleMemberships.map((membership) => (
-            <article key={membership.id} className={cardSubtle} style={cardStyles}>
+            <article
+              key={membership.id}
+              className={`${cardSubtle} membership-operations-card`}
+              style={cardStyles}
+            >
               {(() => {
                 const siblings = (membershipsByClient.get(membership.clientId) ?? []).filter(
                   (sibling) => sibling.id !== membership.id,
@@ -210,7 +214,7 @@ export function MembershipOperationsDashboard({
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end" }}>
+              <div className="membership-operations-card-meta">
                 <StatusBadge status={membership.operationalStatus} />
                 {!membership.isCurrentActiveMembership && membership.hasCurrentActiveMembership ? (
                   <span style={activeConflictStyles}>
@@ -457,7 +461,7 @@ const controlsStyles: CSSProperties = { display: "flex", gap: 12, alignItems: "f
 const filterStyles: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap" };
 const statStyles: CSSProperties = { display: "grid", gap: 6, padding: 16, borderRadius: 16, border: "1px solid var(--border)" };
 const emptyStyles: CSSProperties = { padding: 18, borderRadius: 16, border: "1px dashed var(--border)", color: "var(--muted)" };
-const cardStyles: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 12, padding: 16, borderRadius: 16 };
+const cardStyles: CSSProperties = { padding: 16, borderRadius: 16 };
 const actionsStyles: CSSProperties = { gridColumn: "1 / -1", display: "flex", gap: 8, flexWrap: "wrap" };
 const balanceStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, border: "1px solid var(--border)", color: "var(--muted)", fontSize: 12, fontWeight: 700 };
 const activeConflictStyles: CSSProperties = { padding: "5px 9px", borderRadius: 999, background: "var(--neutral-badge-bg)", color: "var(--neutral-badge-fg)", fontSize: 12, fontWeight: 800 };
