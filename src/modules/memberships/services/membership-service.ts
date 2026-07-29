@@ -58,17 +58,39 @@ function resolveMembershipStatus(endDate: string, baseStatus: MembershipStatus):
   return endDate < today ? "expired" : "active";
 }
 
-function getOperationalStatus(endDate: string, status: MembershipStatus): MembershipOperationalStatus {
+/**
+ * Visual/operational classification for the memberships dashboard.
+ * Precedence (each rule only applies once every earlier one is ruled out):
+ *   1. cancelled - terminal, always wins.
+ *   2. future    - startDate is strictly after `today`.
+ *   3. expired   - endDate is before `today`.
+ *   4. expiring  - endDate falls within the next 6 days.
+ *   5. active    - everything else.
+ * `today` defaults to getTodayInAppTimeZone() (America/Tijuana) but can be
+ * injected for deterministic tests. Informational only - see
+ * hasActiveAccessNow/selectAccessRecord for the check-in access decision,
+ * and isCurrentActiveMembership for the dashboard's "current membership"
+ * grouping - neither is derived from this function.
+ */
+export function getOperationalStatus(
+  startDate: string,
+  endDate: string,
+  status: MembershipStatus,
+  today: string = getTodayInAppTimeZone(),
+): MembershipOperationalStatus {
   if (status === "cancelled") {
     return "cancelled";
   }
 
-  const today = toIsoDate(new Date());
-  const soon = addDays(today, 6);
+  if (startDate > today) {
+    return "future";
+  }
 
   if (endDate < today) {
     return "expired";
   }
+
+  const soon = addDays(today, 6);
 
   if (endDate <= soon) {
     return "expiring";
@@ -191,6 +213,58 @@ export function selectAccessRecord<T extends AccessRecord>(
   const winner = [...pool].sort(compareByRecency)[0];
 
   return { record: winner, isEligible };
+}
+
+/**
+ * The Spanish message shown when a new membership period would occupy the
+ * same space as an existing one - used both when the pre-insert check below
+ * catches it, and when a genuine race loses to the
+ * client_memberships_no_overlapping_active_periods exclusion constraint and
+ * the database rejects the insert instead. Never mentions the table or
+ * constraint by name.
+ */
+export const MEMBERSHIP_PERIOD_CONFLICT_MESSAGE =
+  "Ya existe una membresía para este cliente en ese periodo. Actualiza la página e inténtalo de nuevo.";
+
+const PERIOD_OCCUPYING_STATUSES: readonly MembershipStatus[] = ["active", "pending_payment", "partial"];
+
+/**
+ * Whether [newStartDate, newEndDate] would collide with any of `existing`'s
+ * rows, reproducing the exact semantics of the
+ * client_memberships_no_overlapping_active_periods exclusion constraint
+ * (supabase/migrations/20260717090000_membership_payment_lifecycle.sql):
+ *   - both intervals are inclusive on both ends;
+ *   - only "active", "pending_payment" and "partial" rows occupy their
+ *     period - "cancelled" rows never block, regardless of their dates;
+ *   - overlap test: existing.start_date <= newEndDate && newStartDate <= existing.end_date.
+ * Pure and dependency-free so it can be unit tested without Supabase. Used
+ * as an authoritative pre-insert check in renewClientMembershipRecord - the
+ * database constraint remains the last line of defense for genuinely
+ * concurrent requests that both pass this check before either commits.
+ */
+export function overlapsExistingPeriod(
+  newStartDate: string,
+  newEndDate: string,
+  existing: Pick<ClientMembershipRecord, "status" | "start_date" | "end_date">[],
+): boolean {
+  return existing.some(
+    (record) =>
+      PERIOD_OCCUPYING_STATUSES.includes(record.status) &&
+      record.start_date <= newEndDate &&
+      newStartDate <= record.end_date,
+  );
+}
+
+/**
+ * Whether a Postgres error is the client_memberships_no_overlapping_active_periods
+ * exclusion constraint firing (SQLSTATE 23P01, exclusion_violation) - the
+ * last-line-of-defense case where two requests both passed
+ * overlapsExistingPeriod's pre-insert check before either had committed.
+ * Pure so the mapping from "raw error" to "this specific known case" is
+ * unit-testable without mocking a real Postgrest error end to end.
+ */
+export function isMembershipPeriodConflictError(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "23P01";
 }
 
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
@@ -813,7 +887,32 @@ export async function renewClientMembershipRecord(
     : today;
   const endDate = addDays(startDate, Number(plan.duration_in_days));
 
-  return supabase
+  // Authoritative pre-insert check: does the period we're about to create
+  // collide with any of this client's other active/pending_payment/partial
+  // rows? This is what actually prevents the double-submit/stale-modal
+  // scenario (renewing the same source membership twice recomputes the
+  // exact same period both times) instead of surfacing a raw Postgres
+  // error. The exclusion constraint below remains as the last line of
+  // defense for a genuine race between two concurrent requests that both
+  // reach this point before either has inserted.
+  let overlapQuery = supabase
+    .from("client_memberships")
+    .select("id, status, start_date, end_date")
+    .eq("client_id", membership.client_id)
+    .neq("id", clientMembershipId)
+    .in("status", PERIOD_OCCUPYING_STATUSES);
+  overlapQuery = applyGymScope(overlapQuery, scope);
+  const { data: occupyingPeriods, error: overlapQueryError } = await overlapQuery;
+
+  if (overlapQueryError) {
+    return { data: null, error: overlapQueryError.message };
+  }
+
+  if (overlapsExistingPeriod(startDate, endDate, occupyingPeriods ?? [])) {
+    return { data: null, error: MEMBERSHIP_PERIOD_CONFLICT_MESSAGE };
+  }
+
+  const insertResult = await supabase
     .from("client_memberships")
     .insert(withGymId({
       client_id: String(membership.client_id),
@@ -827,6 +926,12 @@ export async function renewClientMembershipRecord(
     }, scope))
     .select("id")
     .single();
+
+  if (isMembershipPeriodConflictError(insertResult.error)) {
+    return { data: null, error: MEMBERSHIP_PERIOD_CONFLICT_MESSAGE };
+  }
+
+  return insertResult;
 }
 
 export async function listOperationalMemberships(
@@ -935,7 +1040,7 @@ export async function listOperationalMemberships(
         clientName: clientMap.get(record.client_id) ?? "Unknown client",
         hasCurrentActiveMembership: activeMembershipByClient.has(record.client_id),
         isCurrentActiveMembership: activeMembershipByClient.get(record.client_id) === record.id,
-        operationalStatus: getOperationalStatus(record.end_date, membership.status),
+        operationalStatus: getOperationalStatus(record.start_date, record.end_date, membership.status),
       };
     }),
     error: null,

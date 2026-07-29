@@ -3,6 +3,7 @@ import { Ban } from "lucide-react";
 
 import { getAdminText } from "@/lib/i18n/admin";
 import { buttonDanger, cardSubtle, statusSuccess, statusWarning } from "@/lib/ui";
+import { getDisplayLifecycleStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import { cancelClientMembership } from "@/modules/memberships/services/cancel-client-membership";
 import type { ClientMembership } from "@/modules/memberships/types";
 import { MembershipStatusBadge } from "@/modules/memberships/components/membership-status-badge";
@@ -58,7 +59,7 @@ export async function ClientMembershipHistory({
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <MembershipStatusBadge status={getLifecycleStatus(membership)} />
+              <MembershipStatusBadge status={getDisplayLifecycleStatus(membership)} />
               <BalanceBadge
                 dueLabel={t("memberships.remainingBalance")}
                 paidLabel={t("memberships.paidInFull")}
@@ -97,15 +98,6 @@ export async function ClientMembershipHistory({
       ))}
     </div>
   );
-}
-
-function getLifecycleStatus(membership: ClientMembership) {
-  if (membership.status === "cancelled") {
-    return "cancelled";
-  }
-
-  const today = new Date().toISOString().slice(0, 10);
-  return membership.endDate < today ? "expired" : "active";
 }
 
 function BalanceBadge({

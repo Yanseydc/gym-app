@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState, useActionState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Ban, CalendarPlus, CircleDollarSign, RefreshCw } from "lucide-react";
 
+import { useToast } from "@/components/ui/toast";
 import {
   buttonDanger,
   buttonSecondary,
@@ -15,6 +17,11 @@ import {
   statusSuccess,
   statusWarning,
 } from "@/lib/ui";
+import { getTodayInAppTimeZone } from "@/lib/date-format";
+import {
+  canExtendMembership,
+  canRenewMembership,
+} from "@/modules/memberships/lib/membership-operations-permissions";
 import {
   cancelMembershipFromDashboard,
   extendMembership,
@@ -27,7 +34,7 @@ import type {
   MembershipOperationMutationState,
 } from "@/modules/memberships/types";
 
-type Filter = "all" | "active" | "expired" | "expiring";
+type Filter = "all" | "active" | "expired" | "expiring" | "future";
 type ActionType = "payment" | "renew" | "extend" | "cancel";
 
 const initialState: MembershipOperationMutationState = {};
@@ -42,10 +49,23 @@ export function MembershipOperationsDashboard({
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [action, setAction] = useState<{ type: ActionType; membership: MembershipOperationItem } | null>(null);
+  const today = useMemo(() => getTodayInAppTimeZone(), []);
+  const membershipsByClient = useMemo(() => {
+    const map = new Map<string, MembershipOperationItem[]>();
+
+    for (const membership of memberships) {
+      const list = map.get(membership.clientId) ?? [];
+      list.push(membership);
+      map.set(membership.clientId, list);
+    }
+
+    return map;
+  }, [memberships]);
   const stats = useMemo(() => ({
     expired: memberships.filter((membership) => membership.operationalStatus === "expired").length,
     expiring: memberships.filter((membership) => membership.operationalStatus === "expiring").length,
     active: memberships.filter((membership) => membership.operationalStatus === "active").length,
+    future: memberships.filter((membership) => membership.operationalStatus === "future").length,
   }), [memberships]);
   const filteredMemberships = useMemo(() => {
     const normalizedSearch = normalizeSearch(search);
@@ -84,6 +104,7 @@ export function MembershipOperationsDashboard({
         <StatCard label="Vencidas" value={stats.expired} tone="danger" />
         <StatCard label="Por vencer" value={stats.expiring} tone="warning" />
         <StatCard label="Activas" value={stats.active} tone="success" />
+        <StatCard label="Futuras" value={stats.future} tone="neutral" />
       </div>
 
       <div style={controlsStyles}>
@@ -103,6 +124,7 @@ export function MembershipOperationsDashboard({
           <FilterButton active={filter === "active"} onClick={() => setFilter("active")}>Activas</FilterButton>
           <FilterButton active={filter === "expired"} onClick={() => setFilter("expired")}>Vencidas</FilterButton>
           <FilterButton active={filter === "expiring"} onClick={() => setFilter("expiring")}>Por vencer</FilterButton>
+          <FilterButton active={filter === "future"} onClick={() => setFilter("future")}>Futuras</FilterButton>
         </div>
       </div>
 
@@ -118,12 +140,21 @@ export function MembershipOperationsDashboard({
             {visibleMemberships.map((membership) => (
             <article key={membership.id} className={cardSubtle} style={cardStyles}>
               {(() => {
+                const siblings = (membershipsByClient.get(membership.clientId) ?? []).filter(
+                  (sibling) => sibling.id !== membership.id,
+                );
                 const canPay = membership.remainingBalance > 0;
-                const canRenew =
-                  membership.isCurrentActiveMembership ||
-                  (membership.operationalStatus === "expired" && !membership.hasCurrentActiveMembership);
-                const canExtend = membership.isCurrentActiveMembership;
+                const canRenew = canRenewMembership(membership, siblings, today);
+                const canExtend = canExtendMembership(membership, today);
                 const canCancel = membership.isCurrentActiveMembership;
+                const isTemporallyCurrent =
+                  membership.status !== "cancelled" &&
+                  membership.startDate <= today &&
+                  membership.endDate >= today;
+                const hasFutureSibling = siblings.some(
+                  (sibling) => sibling.status !== "cancelled" && sibling.startDate > today,
+                );
+                const renewBlockedByExistingNextPeriod = !canRenew && isTemporallyCurrent && hasFutureSibling;
 
                 return (
                   <>
@@ -170,6 +201,9 @@ export function MembershipOperationsDashboard({
                 {!canRenew && membership.operationalStatus === "expired" && membership.hasCurrentActiveMembership ? (
                   <span style={helperStyles}>Renovación bloqueada por membresía activa.</span>
                 ) : null}
+                {renewBlockedByExistingNextPeriod ? (
+                  <span style={helperStyles}>Ya existe el siguiente periodo para este cliente.</span>
+                ) : null}
               </div>
                   </>
                 );
@@ -212,6 +246,8 @@ function MembershipActionModal({
           ? extendMembership
           : cancelMembershipFromDashboard;
   const [state, formAction, pending] = useActionState(actionFn, initialState);
+  const toast = useToast();
+  const router = useRouter();
   const title =
     action.type === "payment"
       ? "Registrar pago"
@@ -220,6 +256,16 @@ function MembershipActionModal({
         : action.type === "extend"
           ? "Extender membresía"
           : "Cancelar membresía";
+
+  useEffect(() => {
+    if (!state.success) {
+      return;
+    }
+
+    toast.success(state.success);
+    onClose();
+    router.refresh();
+  }, [state.success, toast, onClose, router]);
 
   return (
     <div role="dialog" aria-modal="true" style={overlayStyles}>
@@ -266,13 +312,16 @@ function MembershipActionModal({
         ) : null}
 
         {state.error ? <p className={formError}>{state.error}</p> : null}
-        {state.success ? <p style={successStyles}>{state.success}</p> : null}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
-          <button type="button" className={buttonSecondary} onClick={onClose} disabled={pending}>
+          <button type="button" className={buttonSecondary} onClick={onClose} disabled={pending || Boolean(state.success)}>
             Cerrar
           </button>
-          <button type="submit" className={action.type === "cancel" ? buttonDanger : buttonSecondary} disabled={pending}>
+          <button
+            type="submit"
+            className={action.type === "cancel" ? buttonDanger : buttonSecondary}
+            disabled={pending || Boolean(state.success)}
+          >
             {pending ? "Procesando..." : "Confirmar"}
           </button>
         </div>
@@ -281,7 +330,7 @@ function MembershipActionModal({
   );
 }
 
-function StatCard({ label, value, tone }: { label: string; value: number; tone: "danger" | "warning" | "success" }) {
+function StatCard({ label, value, tone }: { label: string; value: number; tone: "danger" | "warning" | "success" | "neutral" }) {
   const palette = getTonePalette(tone);
 
   return (
@@ -293,9 +342,25 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
 }
 
 function StatusBadge({ status }: { status: MembershipOperationalStatus }) {
-  const tone = status === "expired" ? "danger" : status === "expiring" ? "warning" : status === "active" ? "success" : "neutral";
+  const tone =
+    status === "expired"
+      ? "danger"
+      : status === "expiring"
+        ? "warning"
+        : status === "active"
+          ? "success"
+          : "neutral";
   const badgeClass = getToneClass(tone);
-  const label = status === "expired" ? "Vencida" : status === "expiring" ? "Por vencer" : status === "active" ? "Activa" : "Cancelada";
+  const label =
+    status === "expired"
+      ? "Vencida"
+      : status === "expiring"
+        ? "Por vencer"
+        : status === "active"
+          ? "Activa"
+          : status === "future"
+            ? "Futura"
+            : "Cancelada";
 
   return <span className={badgeClass}>{label}</span>;
 }
@@ -334,7 +399,8 @@ function getUrgencyPriority(status: MembershipOperationalStatus) {
   if (status === "expired") return 0;
   if (status === "expiring") return 1;
   if (status === "active") return 2;
-  return 3;
+  if (status === "future") return 3;
+  return 4;
 }
 
 function normalizeSearch(value: string) {
@@ -357,4 +423,3 @@ const helperStyles: CSSProperties = { alignSelf: "center", color: "var(--muted)"
 const overlayStyles: CSSProperties = { position: "fixed", inset: 0, zIndex: 60, display: "grid", placeItems: "center", padding: 20, background: "rgba(0,0,0,0.58)" };
 const modalStyles: CSSProperties = { width: "min(100%, 420px)", display: "grid", gap: 16, padding: 20, borderRadius: 18, border: "1px solid var(--border)", background: "var(--surface)" };
 const noticeStyles: CSSProperties = { margin: 0, color: "var(--muted)", lineHeight: 1.5 };
-const successStyles: CSSProperties = { margin: 0, padding: 10, borderRadius: 12, background: "var(--success-bg)", color: "var(--success)" };

@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { applyGymScope, requireGymScope, withGymId, type GymScope } from "@/lib/auth/gym-scope";
 import { createClient } from "@/lib/supabase/server";
+import { getDisplayLifecycleStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
   Payment,
@@ -36,15 +37,6 @@ function formatMembershipStatusLabel(status: string) {
   return status
     .replaceAll("_", " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function getLifecycleStatus(baseStatus: string, endDate: string) {
-  if (baseStatus === "cancelled") {
-    return "cancelled";
-  }
-
-  const today = new Date().toISOString().slice(0, 10);
-  return endDate < today ? "expired" : "active";
 }
 
 async function getClientMap(supabase: AppSupabaseClient, clientIds: string[], scope: GymScope) {
@@ -164,7 +156,11 @@ async function getMembershipLabelMap(
     memberships.map((membership) => {
       const startDate = String(membership.start_date);
       const endDate = String(membership.end_date);
-      const lifecycleStatus = getLifecycleStatus(String(membership.status), endDate);
+      const lifecycleStatus = getDisplayLifecycleStatus({
+        status: membership.status,
+        startDate,
+        endDate,
+      });
       const remainingBalance = Math.max(
         0,
         (planNameMap.get(String(membership.membership_plan_id))?.price ?? 0) -

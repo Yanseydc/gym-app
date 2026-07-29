@@ -35,6 +35,7 @@ import { createCheckIn } from "@/modules/checkins/services/create-checkin";
 import { getClientCheckInsForPage } from "@/modules/checkins/services/checkin-service";
 import { ClientMembershipHistory } from "@/modules/memberships/components/client-membership-history";
 import { MembershipAssignmentForm } from "@/modules/memberships/components/membership-assignment-form";
+import { getDisplayLifecycleStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import { assignMembershipToClient } from "@/modules/memberships/services/assign-membership";
 import {
   getActiveMembershipPlansForPage,
@@ -159,14 +160,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
       visible: canAccessOperations,
     },
   ].filter((tab) => tab.visible);
-  const getMembershipLifecycleStatus = (membership: (typeof membershipHistory)[number]) => {
-    if (membership.status === "cancelled") {
-      return "cancelled";
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    return membership.endDate < today ? "expired" : "active";
-  };
+  const getMembershipLifecycleStatus = (membership: (typeof membershipHistory)[number]) =>
+    getDisplayLifecycleStatus(membership);
 
   return (
     <div className="client-detail-page">

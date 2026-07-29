@@ -40,7 +40,7 @@ export type ClientMembership = {
   updatedAt: string;
 };
 
-export type MembershipOperationalStatus = "active" | "expired" | "expiring" | "cancelled";
+export type MembershipOperationalStatus = "active" | "expired" | "expiring" | "future" | "cancelled";
 
 export type MembershipOperationItem = ClientMembership & {
   clientName: string;
