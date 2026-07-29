@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { applyGymScope, requireGymScope, withGymId } from "@/lib/auth/gym-scope";
+import { getTodayInAppTimeZone } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
@@ -82,6 +83,114 @@ function isCurrentActiveMembership(record: Pick<ClientMembershipRecord, "end_dat
   }
 
   return record.status === "active" || record.end_date >= toIsoDate(new Date());
+}
+
+/**
+ * Whether this specific client_memberships row grants live access (check-in,
+ * portal, etc.) right now. This is the single source of truth consumed by
+ * getClientMembershipAccessLookup below, so check-in search and manual
+ * check-in can never disagree.
+ *
+ * Deliberately NOT the same thing as isCurrentActiveMembership above, which
+ * answers a different question - "is this the client's current-period
+ * membership" for renew/extend eligibility and the operational dashboard's
+ * grouping - and intentionally does not gate access (e.g. it doesn't care
+ * about pending payments, and treats a bare `status === "active"` as
+ * sufficient without re-checking end_date). Reusing it here would have kept
+ * the same class of bug: a stale "active" row past its end_date must NOT
+ * grant access.
+ *
+ * Every condition is written out explicitly rather than delegated to
+ * resolveMembershipStatus, so this predicate keeps working even if that
+ * display-status mapping changes later:
+ *   - not cancelled;
+ *   - the stored status must be exactly "active" - matching the existing
+ *     policy already enforced in CheckInClientResultCard/createCheckInRecord:
+ *     pending_payment and partial memberships do NOT grant access, even
+ *     though they are not cancelled either;
+ *   - start_date must have already begun;
+ *   - end_date must not have passed yet.
+ *
+ * `today` must be computed by the caller (see getTodayInAppTimeZone) so every
+ * row in the same lookup is judged against the exact same "today", in the
+ * app's operating time zone rather than UTC.
+ */
+function hasActiveAccessNow(
+  record: Pick<ClientMembershipRecord, "status" | "start_date" | "end_date">,
+  today: string,
+) {
+  if (record.status === "cancelled") {
+    return false;
+  }
+
+  if (record.status !== "active") {
+    return false;
+  }
+
+  return record.start_date <= today && record.end_date >= today;
+}
+
+/**
+ * Deterministic tie-break used whenever more than one client_memberships row
+ * is a candidate:
+ *   - among rows that pass hasActiveAccessNow (normally at most one, since
+ *     the client_memberships_no_overlapping_active_periods DB constraint
+ *     blocks overlapping active/pending_payment/partial periods - but it
+ *     does not guarantee non-overlapping periods can't both be active at
+ *     once, so more than one is possible in theory);
+ *   - or, when none are eligible, among ALL of the client's rows, purely to
+ *     pick which one is "most relevant" to display - that selection is
+ *     informational only and must never be used to grant access.
+ * Furthest-out end_date wins first, then furthest-out start_date, then most
+ * recently created, then id as a final, always-deterministic fallback. Never
+ * depends on the order rows came back from the database.
+ */
+function compareByRecency(
+  a: Pick<ClientMembershipRecord, "id" | "start_date" | "end_date" | "created_at">,
+  b: Pick<ClientMembershipRecord, "id" | "start_date" | "end_date" | "created_at">,
+) {
+  if (a.end_date !== b.end_date) {
+    return a.end_date > b.end_date ? -1 : 1;
+  }
+
+  if (a.start_date !== b.start_date) {
+    return a.start_date > b.start_date ? -1 : 1;
+  }
+
+  if (a.created_at !== b.created_at) {
+    return a.created_at > b.created_at ? -1 : 1;
+  }
+
+  return a.id > b.id ? -1 : a.id < b.id ? 1 : 0;
+}
+
+type AccessRecord = Pick<
+  ClientMembershipRecord,
+  "id" | "status" | "start_date" | "end_date" | "created_at"
+>;
+
+/**
+ * Single source of truth for turning a client's client_memberships rows into
+ * one access decision: grant access if AT LEAST ONE row is currently
+ * eligible (hasActiveAccessNow), never based on which row happens to come
+ * first. When none are eligible, still returns a row - deterministically
+ * chosen via compareByRecency - purely so callers can show a useful label;
+ * `isEligible` is what must gate access, not the mere presence of `record`.
+ */
+export function selectAccessRecord<T extends AccessRecord>(
+  records: T[],
+  today: string,
+): { record: T | null; isEligible: boolean } {
+  if (records.length === 0) {
+    return { record: null, isEligible: false };
+  }
+
+  const eligible = records.filter((record) => hasActiveAccessNow(record, today));
+  const isEligible = eligible.length > 0;
+  const pool = isEligible ? eligible : records;
+  const winner = [...pool].sort(compareByRecency)[0];
+
+  return { record: winner, isEligible };
 }
 
 function mapMembershipPlan(record: MembershipPlanRecord): MembershipPlan {
@@ -216,28 +325,23 @@ export async function getClientMembershipAccessLookup(
     }, new Map<string, number>());
   }
 
-  const grouped = new Map<string, ClientMembership[]>();
+  const recordsByClient = new Map<string, ClientMembershipRecord[]>();
 
   records.forEach((record) => {
     const clientId = String(record.client_id);
-    const list = grouped.get(clientId) ?? [];
-    list.push(
-      mapClientMembership(
-        record,
-        planMap.get(record.membership_plan_id)?.name ?? "Unknown plan",
-        planMap.get(record.membership_plan_id)?.price ?? 0,
-        paymentTotals.get(record.id) ?? 0,
-      ),
-    );
-    grouped.set(clientId, list);
+    const list = recordsByClient.get(clientId) ?? [];
+    list.push(record);
+    recordsByClient.set(clientId, list);
   });
+
+  const today = getTodayInAppTimeZone();
 
   return new Map<string, MembershipAccessSummary>(
     clientIds.map((clientId) => {
-      const memberships = grouped.get(clientId) ?? [];
-      const latestMembership = memberships[0];
+      const clientRecords = recordsByClient.get(clientId) ?? [];
+      const { record: winner, isEligible } = selectAccessRecord(clientRecords, today);
 
-      if (!latestMembership) {
+      if (!winner) {
         return [
           clientId,
           {
@@ -251,15 +355,27 @@ export async function getClientMembershipAccessLookup(
         ];
       }
 
+      const winnerMembership = mapClientMembership(
+        winner,
+        planMap.get(winner.membership_plan_id)?.name ?? "Unknown plan",
+        planMap.get(winner.membership_plan_id)?.price ?? 0,
+        paymentTotals.get(winner.id) ?? 0,
+      );
+
       return [
         clientId,
         {
-          membershipId: latestMembership.id,
-          planName: latestMembership.planName,
-          endDate: latestMembership.endDate,
-          status: latestMembership.status,
-          totalPaid: latestMembership.totalPaid,
-          remainingBalance: latestMembership.remainingBalance,
+          membershipId: winnerMembership.id,
+          planName: winnerMembership.planName,
+          endDate: winnerMembership.endDate,
+          // Forced to "active" when isEligible, rather than trusting
+          // winnerMembership.status (resolveMembershipStatus computes "today"
+          // in UTC, hasActiveAccessNow uses the app's operating time zone) -
+          // this keeps the access decision and the displayed status from
+          // ever disagreeing right at a UTC/local day boundary.
+          status: isEligible ? ("active" as const) : winnerMembership.status,
+          totalPaid: winnerMembership.totalPaid,
+          remainingBalance: winnerMembership.remainingBalance,
         },
       ];
     }),

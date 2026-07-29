@@ -7,6 +7,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat(MEXICO_LOCALE, {
   timeZone: APP_TIME_ZONE,
 });
 
+// en-CA formats as YYYY-MM-DD, matching the `date` columns' string
+// representation, so it can be compared with start_date/end_date directly.
+const isoDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: APP_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function formatDateTimeMexico(value: string) {
   const date = new Date(value);
 
@@ -15,4 +24,12 @@ export function formatDateTimeMexico(value: string) {
   }
 
   return dateTimeFormatter.format(date);
+}
+
+/**
+ * Today's date (YYYY-MM-DD) in the app's operating time zone, not UTC.
+ * Accepts an explicit reference Date for testability.
+ */
+export function getTodayInAppTimeZone(referenceDate: Date = new Date()): string {
+  return isoDateFormatter.format(referenceDate);
 }
