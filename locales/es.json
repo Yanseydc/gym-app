@@ -360,6 +360,66 @@
     "remainingBalance": "Saldo restante",
     "paidInFull": "Pagada por completo",
     "cancel": "Cancelar membresía",
+    "operations": {
+      "stats": {
+        "expired": "Vencidas",
+        "expiring": "Por vencer",
+        "active": "Activas",
+        "future": "Futuras"
+      },
+      "searchLabel": "Buscar cliente",
+      "searchPlaceholder": "Nombre del cliente",
+      "filters": {
+        "all": "Todas",
+        "active": "Activas",
+        "expired": "Vencidas",
+        "expiring": "Por vencer",
+        "future": "Futuras"
+      },
+      "empty": "No hay membresías para este filtro.",
+      "showing": "Mostrando {visible} de {total}",
+      "expires": "vence {date}",
+      "currentMembershipConflict": "Ya tiene una membresía activa",
+      "balance": "Saldo: {amount}",
+      "status": {
+        "expired": "Vencida",
+        "expiring": "Por vencer",
+        "active": "Activa",
+        "future": "Futura",
+        "cancelled": "Cancelada"
+      },
+      "actions": {
+        "registerPayment": "Registrar pago",
+        "renew": "Renovar",
+        "extend": "Extender",
+        "cancel": "Cancelar",
+        "loadMore": "Cargar más",
+        "close": "Cerrar",
+        "processing": "Procesando...",
+        "confirm": "Confirmar"
+      },
+      "renewalBlocked": "Renovación bloqueada por una membresía activa.",
+      "nextPeriodExists": "Ya existe el siguiente periodo para este cliente.",
+      "modal": {
+        "paymentTitle": "Registrar pago",
+        "renewTitle": "Renovar membresía",
+        "extendTitle": "Extender membresía",
+        "cancelTitle": "Cancelar membresía",
+        "amount": "Monto",
+        "extensionDays": "Días a extender",
+        "renewNotice": "Se creará el siguiente periodo con el mismo plan, empezando después de que termine la membresía activa.",
+        "cancelNotice": "La membresía quedará cancelada y no contará como activa."
+      },
+      "feedback": {
+        "invalidAmount": "Ingresa un monto válido.",
+        "paymentSuccess": "Pago registrado correctamente.",
+        "membershipRequired": "Selecciona una membresía.",
+        "renewSuccess": "Membresía renovada correctamente.",
+        "invalidDays": "Ingresa una cantidad válida de días.",
+        "extendSuccess": "Membresía extendida correctamente.",
+        "cancelSuccess": "Membresía cancelada correctamente."
+      }
+    },
     "form": {
       "plan": "Plan de membresía",
       "selectPlan": "Selecciona un plan",

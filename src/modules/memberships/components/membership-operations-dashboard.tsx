@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Ban, CalendarPlus, CircleDollarSign, RefreshCw } from "lucide-react";
 
 import { useToast } from "@/components/ui/toast";
+import { formatCivilDate, getTodayInAppTimeZone } from "@/lib/date-format";
 import {
   buttonDanger,
   buttonSecondary,
@@ -17,7 +18,7 @@ import {
   statusSuccess,
   statusWarning,
 } from "@/lib/ui";
-import { getTodayInAppTimeZone } from "@/lib/date-format";
+import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import {
   canExtendMembership,
   canRenewMembership,
@@ -48,6 +49,7 @@ export function MembershipOperationsDashboard({
 }: {
   memberships: MembershipOperationItem[];
 }) {
+  const { locale, t } = useAdminText();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,6 +70,11 @@ export function MembershipOperationsDashboard({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [action, setAction] = useState<{ type: ActionType; membership: MembershipOperationItem } | null>(null);
   const today = useMemo(() => getTodayInAppTimeZone(), []);
+  const formattingLocale = locale === "es" ? "es-MX" : "en-US";
+  const currencyFormatter = useMemo(
+    () => new Intl.NumberFormat(formattingLocale, { style: "currency", currency: "MXN" }),
+    [formattingLocale],
+  );
   const membershipsByClient = useMemo(() => {
     const map = new Map<string, MembershipOperationItem[]>();
 
@@ -119,39 +126,54 @@ export function MembershipOperationsDashboard({
   return (
     <section style={{ display: "grid", gap: 18 }}>
       <div className="responsive-meta-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-        <StatCard label="Vencidas" value={stats.expired} tone="danger" />
-        <StatCard label="Por vencer" value={stats.expiring} tone="warning" />
-        <StatCard label="Activas" value={stats.active} tone="success" />
-        <StatCard label="Futuras" value={stats.future} tone="neutral" />
+        <StatCard label={t("memberships.operations.stats.expired")} value={stats.expired} tone="danger" />
+        <StatCard label={t("memberships.operations.stats.expiring")} value={stats.expiring} tone="warning" />
+        <StatCard label={t("memberships.operations.stats.active")} value={stats.active} tone="success" />
+        <StatCard label={t("memberships.operations.stats.future")} value={stats.future} tone="neutral" />
       </div>
 
       <div style={controlsStyles}>
         <label style={{ display: "grid", gap: 6, minWidth: 240, flex: "1 1 280px" }}>
-          <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>Buscar cliente</span>
+          <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
+            {t("memberships.operations.searchLabel")}
+          </span>
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nombre del cliente"
+            placeholder={t("memberships.operations.searchPlaceholder")}
             className={input}
           />
         </label>
 
         <div style={filterStyles}>
-          <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>Todas</FilterButton>
-          <FilterButton active={filter === "active"} onClick={() => setFilter("active")}>Activas</FilterButton>
-          <FilterButton active={filter === "expired"} onClick={() => setFilter("expired")}>Vencidas</FilterButton>
-          <FilterButton active={filter === "expiring"} onClick={() => setFilter("expiring")}>Por vencer</FilterButton>
-          <FilterButton active={filter === "future"} onClick={() => setFilter("future")}>Futuras</FilterButton>
+          <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>
+            {t("memberships.operations.filters.all")}
+          </FilterButton>
+          <FilterButton active={filter === "active"} onClick={() => setFilter("active")}>
+            {t("memberships.operations.filters.active")}
+          </FilterButton>
+          <FilterButton active={filter === "expired"} onClick={() => setFilter("expired")}>
+            {t("memberships.operations.filters.expired")}
+          </FilterButton>
+          <FilterButton active={filter === "expiring"} onClick={() => setFilter("expiring")}>
+            {t("memberships.operations.filters.expiring")}
+          </FilterButton>
+          <FilterButton active={filter === "future"} onClick={() => setFilter("future")}>
+            {t("memberships.operations.filters.future")}
+          </FilterButton>
         </div>
       </div>
 
       {filteredMemberships.length === 0 ? (
-        <div style={emptyStyles}>No hay membresías para este filtro.</div>
+        <div style={emptyStyles}>{t("memberships.operations.empty")}</div>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
-            Mostrando {visibleMemberships.length} de {filteredMemberships.length}
+            {t("memberships.operations.showing", {
+              visible: visibleMemberships.length,
+              total: filteredMemberships.length,
+            })}
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
@@ -181,46 +203,55 @@ export function MembershipOperationsDashboard({
                   {membership.clientName}
                 </Link>
                 <div style={{ color: "var(--muted)", marginTop: 4 }}>
-                  {membership.planName} · vence {membership.endDate}
+                  {membership.planName} ·{" "}
+                  {t("memberships.operations.expires", {
+                    date: formatCivilDate(membership.endDate, formattingLocale),
+                  })}
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end" }}>
                 <StatusBadge status={membership.operationalStatus} />
                 {!membership.isCurrentActiveMembership && membership.hasCurrentActiveMembership ? (
-                  <span style={activeConflictStyles}>Ya tiene membresía activa</span>
+                  <span style={activeConflictStyles}>
+                    {t("memberships.operations.currentMembershipConflict")}
+                  </span>
                 ) : null}
-                <span style={balanceStyles}>Saldo: ${membership.remainingBalance.toFixed(2)}</span>
+                <span style={balanceStyles}>
+                  {t("memberships.operations.balance", {
+                    amount: currencyFormatter.format(membership.remainingBalance),
+                  })}
+                </span>
               </div>
 
               <div style={actionsStyles}>
                 <button type="button" className={buttonSecondary} disabled={!canPay} onClick={() => setAction({ type: "payment", membership })}>
                   <CircleDollarSign size={15} aria-hidden="true" />
-                  Registrar pago
+                  {t("memberships.operations.actions.registerPayment")}
                 </button>
                 {canRenew ? (
                   <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "renew", membership })}>
                     <RefreshCw size={15} aria-hidden="true" />
-                    Renovar
+                    {t("memberships.operations.actions.renew")}
                   </button>
                 ) : null}
                 {canExtend ? (
                   <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "extend", membership })}>
                     <CalendarPlus size={15} aria-hidden="true" />
-                    Extender
+                    {t("memberships.operations.actions.extend")}
                   </button>
                 ) : null}
                 {canCancel ? (
                   <button type="button" className={buttonDanger} onClick={() => setAction({ type: "cancel", membership })}>
                     <Ban size={15} aria-hidden="true" />
-                    Cancelar
+                    {t("memberships.operations.actions.cancel")}
                   </button>
                 ) : null}
                 {!canRenew && membership.operationalStatus === "expired" && membership.hasCurrentActiveMembership ? (
-                  <span style={helperStyles}>Renovación bloqueada por membresía activa.</span>
+                  <span style={helperStyles}>{t("memberships.operations.renewalBlocked")}</span>
                 ) : null}
                 {renewBlockedByExistingNextPeriod ? (
-                  <span style={helperStyles}>Ya existe el siguiente periodo para este cliente.</span>
+                  <span style={helperStyles}>{t("memberships.operations.nextPeriodExists")}</span>
                 ) : null}
               </div>
                   </>
@@ -237,7 +268,7 @@ export function MembershipOperationsDashboard({
               style={{ width: "fit-content" }}
               onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
             >
-              Cargar más
+              {t("memberships.operations.actions.loadMore")}
             </button>
           ) : null}
         </div>
@@ -255,6 +286,7 @@ function MembershipActionModal({
   action: { type: ActionType; membership: MembershipOperationItem };
   onClose: () => void;
 }) {
+  const { t } = useAdminText();
   const actionFn =
     action.type === "payment"
       ? registerMembershipPayment
@@ -268,12 +300,12 @@ function MembershipActionModal({
   const router = useRouter();
   const title =
     action.type === "payment"
-      ? "Registrar pago"
+      ? t("memberships.operations.modal.paymentTitle")
       : action.type === "renew"
-        ? "Renovar membresía"
+        ? t("memberships.operations.modal.renewTitle")
         : action.type === "extend"
-          ? "Extender membresía"
-          : "Cancelar membresía";
+          ? t("memberships.operations.modal.extendTitle")
+          : t("memberships.operations.modal.cancelTitle");
 
   useEffect(() => {
     if (!state.success) {
@@ -300,7 +332,7 @@ function MembershipActionModal({
 
         {action.type === "payment" ? (
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={{ fontWeight: 700 }}>Monto</span>
+            <span style={{ fontWeight: 700 }}>{t("memberships.operations.modal.amount")}</span>
             <input
               name="amount"
               type="number"
@@ -314,33 +346,35 @@ function MembershipActionModal({
 
         {action.type === "extend" ? (
           <label style={{ display: "grid", gap: 8 }}>
-            <span style={{ fontWeight: 700 }}>Días a extender</span>
+            <span style={{ fontWeight: 700 }}>{t("memberships.operations.modal.extensionDays")}</span>
             <input name="days" type="number" min="1" defaultValue="7" className={input} />
           </label>
         ) : null}
 
         {action.type === "renew" ? (
           <p style={noticeStyles}>
-            Se creará el siguiente periodo con el mismo plan, empezando después de que termine la membresía activa.
+            {t("memberships.operations.modal.renewNotice")}
           </p>
         ) : null}
 
         {action.type === "cancel" ? (
-          <p style={noticeStyles}>La membresía quedará cancelada y no contará como activa.</p>
+          <p style={noticeStyles}>{t("memberships.operations.modal.cancelNotice")}</p>
         ) : null}
 
         {state.error ? <p className={formError}>{state.error}</p> : null}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
           <button type="button" className={buttonSecondary} onClick={onClose} disabled={pending || Boolean(state.success)}>
-            Cerrar
+            {t("memberships.operations.actions.close")}
           </button>
           <button
             type="submit"
             className={action.type === "cancel" ? buttonDanger : buttonSecondary}
             disabled={pending || Boolean(state.success)}
           >
-            {pending ? "Procesando..." : "Confirmar"}
+            {pending
+              ? t("memberships.operations.actions.processing")
+              : t("memberships.operations.actions.confirm")}
           </button>
         </div>
       </form>
@@ -360,6 +394,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
 }
 
 function StatusBadge({ status }: { status: MembershipOperationalStatus }) {
+  const { t } = useAdminText();
   const tone =
     status === "expired"
       ? "danger"
@@ -369,18 +404,7 @@ function StatusBadge({ status }: { status: MembershipOperationalStatus }) {
           ? "success"
           : "neutral";
   const badgeClass = getToneClass(tone);
-  const label =
-    status === "expired"
-      ? "Vencida"
-      : status === "expiring"
-        ? "Por vencer"
-        : status === "active"
-          ? "Activa"
-          : status === "future"
-            ? "Futura"
-            : "Cancelada";
-
-  return <span className={badgeClass}>{label}</span>;
+  return <span className={badgeClass}>{t(`memberships.operations.status.${status}`)}</span>;
 }
 
 function FilterButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {

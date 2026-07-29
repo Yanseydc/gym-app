@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getAdminText } from "@/lib/i18n/admin";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import {
   cancelClientMembershipRecord,
@@ -19,12 +20,13 @@ export async function registerMembershipPayment(
   _prevState: MembershipOperationMutationState,
   formData: FormData,
 ): Promise<MembershipOperationMutationState> {
+  const { t } = await getAdminText();
   const amount = Number(formData.get("amount"));
   const clientId = String(formData.get("clientId") ?? "");
   const clientMembershipId = String(formData.get("clientMembershipId") ?? "");
 
   if (!clientId || !clientMembershipId || !Number.isFinite(amount) || amount <= 0) {
-    return { error: "Ingresa un monto válido." };
+    return { error: t("memberships.operations.feedback.invalidAmount") };
   }
 
   const supabase = await createSupabaseClient();
@@ -43,17 +45,18 @@ export async function registerMembershipPayment(
   }
 
   refreshMemberships();
-  return { success: "Pago registrado correctamente." };
+  return { success: t("memberships.operations.feedback.paymentSuccess") };
 }
 
 export async function renewMembership(
   _prevState: MembershipOperationMutationState,
   formData: FormData,
 ): Promise<MembershipOperationMutationState> {
+  const { t } = await getAdminText();
   const membershipId = String(formData.get("membershipId") ?? "");
 
   if (!membershipId) {
-    return { error: "Selecciona una membresía." };
+    return { error: t("memberships.operations.feedback.membershipRequired") };
   }
 
   const supabase = await createSupabaseClient();
@@ -64,18 +67,19 @@ export async function renewMembership(
   }
 
   refreshMemberships();
-  return { success: "Membresía renovada correctamente." };
+  return { success: t("memberships.operations.feedback.renewSuccess") };
 }
 
 export async function extendMembership(
   _prevState: MembershipOperationMutationState,
   formData: FormData,
 ): Promise<MembershipOperationMutationState> {
+  const { t } = await getAdminText();
   const membershipId = String(formData.get("membershipId") ?? "");
   const days = Number(formData.get("days"));
 
   if (!membershipId || !Number.isFinite(days) || days <= 0) {
-    return { error: "Ingresa una cantidad válida de días." };
+    return { error: t("memberships.operations.feedback.invalidDays") };
   }
 
   const supabase = await createSupabaseClient();
@@ -86,17 +90,18 @@ export async function extendMembership(
   }
 
   refreshMemberships();
-  return { success: "Membresía extendida correctamente." };
+  return { success: t("memberships.operations.feedback.extendSuccess") };
 }
 
 export async function cancelMembershipFromDashboard(
   _prevState: MembershipOperationMutationState,
   formData: FormData,
 ): Promise<MembershipOperationMutationState> {
+  const { t } = await getAdminText();
   const membershipId = String(formData.get("membershipId") ?? "");
 
   if (!membershipId) {
-    return { error: "Selecciona una membresía." };
+    return { error: t("memberships.operations.feedback.membershipRequired") };
   }
 
   const supabase = await createSupabaseClient();
@@ -107,5 +112,5 @@ export async function cancelMembershipFromDashboard(
   }
 
   refreshMemberships();
-  return { success: "Membresía cancelada correctamente." };
+  return { success: t("memberships.operations.feedback.cancelSuccess") };
 }

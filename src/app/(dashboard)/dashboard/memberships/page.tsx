@@ -81,7 +81,7 @@ export default async function MembershipsPage() {
       )}
 
       <section style={{ display: "grid", gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 20 }}>Planes</h2>
+        <h2 style={{ margin: 0, fontSize: 20 }}>{t.plansTitle}</h2>
         <MembershipPlanList plans={plans} />
       </section>
     </div>
