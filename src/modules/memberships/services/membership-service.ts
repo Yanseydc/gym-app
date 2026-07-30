@@ -721,60 +721,53 @@ export async function cancelClientMembershipRecord(
   return query.select("id").single();
 }
 
-export async function extendClientMembershipRecord(
+export type ExtendMembershipInput = {
+  clientMembershipId: string;
+  days: number;
+  idempotencyKey: string;
+};
+
+export type ExtendMembershipResult = {
+  endDate: string;
+  status: string;
+};
+
+/**
+ * Idempotent membership extension via the extend_membership RPC
+ * (supabase/migrations/20260730090000_extend_membership_idempotency.sql).
+ * Replaces the previous plain extendClientMembershipRecord. Eligibility now
+ * lives in the RPC and matches canExtendMembership
+ * (membership-operations-permissions.ts) exactly - not the old function's
+ * own (looser) isCurrentActiveMembership-based rule. This function only
+ * shapes the call and its result.
+ */
+export async function extendMembershipRecord(
   supabase: AppSupabaseClient,
-  clientMembershipId: string,
-  days: number,
-) {
-  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+  values: ExtendMembershipInput,
+): Promise<{ data: ExtendMembershipResult | null; error: string | null }> {
+  const { error: scopeError } = await requireGymScope(supabase);
 
-  if (scopeError || !scope) {
-    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  if (scopeError) {
+    return { data: null, error: scopeError };
   }
 
-  if (!Number.isFinite(days) || days <= 0) {
-    return { data: null, error: "Enter a valid number of days." };
+  const { data, error } = await supabase.rpc("extend_membership", {
+    p_client_membership_id: values.clientMembershipId,
+    p_days: values.days,
+    p_idempotency_key: values.idempotencyKey,
+  });
+
+  if (error) {
+    return { data: null, error: error.message };
   }
 
-  let membershipQuery = supabase
-    .from("client_memberships")
-    .select("id, end_date, status")
-    .eq("id", clientMembershipId);
-  membershipQuery = applyGymScope(membershipQuery, scope);
-  const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
+  const row = (data ?? [])[0];
 
-  if (membershipError) {
-    return { data: null, error: membershipError.message };
+  if (!row) {
+    return { data: null, error: "extend_membership did not return a result." };
   }
 
-  if (!membership) {
-    return { data: null, error: "Membership not found." };
-  }
-
-  if (membership.status === "cancelled") {
-    return { data: null, error: "Cancelled memberships cannot be extended." };
-  }
-
-  if (!isCurrentActiveMembership(membership)) {
-    return { data: null, error: "Expired memberships cannot be extended. Renew instead." };
-  }
-
-  const baseDate = String(membership.end_date) < toIsoDate(new Date())
-    ? toIsoDate(new Date())
-    : String(membership.end_date);
-  const nextEndDate = addDays(baseDate, days + 1);
-
-  let updateQuery = supabase
-    .from("client_memberships")
-    .update({
-      end_date: nextEndDate,
-      status: "active",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", clientMembershipId);
-  updateQuery = applyGymScope(updateQuery, scope);
-
-  return updateQuery.select("id").single();
+  return { data: { endDate: row.end_date, status: row.status }, error: null };
 }
 
 export async function renewClientMembershipRecord(

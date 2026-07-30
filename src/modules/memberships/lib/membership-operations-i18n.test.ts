@@ -60,6 +60,7 @@ const operationKeys = [
   "memberships.operations.feedback.cancelSuccess",
   "memberships.operations.feedback.invalidRequest",
   "memberships.operations.feedback.paymentFailed",
+  "memberships.operations.feedback.extendFailed",
 ] as const;
 
 function getTranslator(locale: AdminLocale) {

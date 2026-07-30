@@ -27,6 +27,14 @@ const KNOWN_MEMBERSHIP_ERROR_MESSAGES: Record<string, string> = {
     "La membresía seleccionada no está disponible.",
   "Selected membership does not belong to the selected client.":
     "La membresía seleccionada no pertenece al cliente seleccionado.",
+  "Membership not found.":
+    "No se encontró la membresía.",
+  "Cancelled memberships cannot be extended.":
+    "Una membresía cancelada no se puede extender.",
+  "Expired memberships cannot be extended. Renew instead.":
+    "Una membresía vencida no se puede extender. Usa renovar en su lugar.",
+  "This membership has not started yet.":
+    "Esta membresía todavía no comienza.",
 };
 
 export function mapKnownMembershipError(message: string): string | null {
@@ -40,6 +48,10 @@ export function mapKnownMembershipError(message: string): string | null {
 
   if (message.includes("idempotency_key reused with different payment parameters")) {
     return "Esta solicitud ya fue procesada con datos de pago distintos. Recarga la página e inténtalo de nuevo.";
+  }
+
+  if (message.includes("extend_membership: idempotency_key reused with different parameters")) {
+    return "Esta solicitud ya fue procesada con datos distintos de extensión. Recarga la página e inténtalo de nuevo.";
   }
 
   if (message.startsWith("payments: amount") && message.includes("exceeds remaining balance")) {

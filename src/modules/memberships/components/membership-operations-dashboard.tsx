@@ -311,13 +311,13 @@ function MembershipActionModal({
           ? t("memberships.operations.modal.extendTitle")
           : t("memberships.operations.modal.cancelTitle");
 
-  // Only used by action.type === "payment" (registerMembershipPayment is the
-  // only one of the four actions wired for idempotency so far - renew,
-  // extend and cancel are unchanged). Generated once when this modal
-  // mounts, which happens on every open since the modal is conditionally
-  // rendered by its parent - so "on mount" and "on open" are the same
-  // event here. Reused as-is across retries within this same open (the
-  // ref doesn't change between re-renders), and rotated only after a
+  // Used by action.type === "payment" and "extend" (registerMembershipPayment
+  // and extendMembership are the two of the four actions wired for
+  // idempotency so far - renew and cancel are unchanged). Generated once
+  // when this modal mounts, which happens on every open since the modal is
+  // conditionally rendered by its parent - so "on mount" and "on open" are
+  // the same event here. Reused as-is across retries within this same open
+  // (the ref doesn't change between re-renders), and rotated only after a
   // success - which today is immediately followed by onClose() unmounting
   // this component anyway, so the rotation is defensive (correct even if
   // that close-on-success behavior ever changes) rather than load-bearing.
@@ -340,7 +340,7 @@ function MembershipActionModal({
         <input type="hidden" name="clientId" value={action.membership.clientId} />
         <input type="hidden" name="clientMembershipId" value={action.membership.id} />
         <input type="hidden" name="membershipId" value={action.membership.id} />
-        {action.type === "payment" ? (
+        {action.type === "payment" || action.type === "extend" ? (
           <input type="hidden" name="idempotencyKey" value={idempotencyKeyRef.current} />
         ) : null}
         <div>

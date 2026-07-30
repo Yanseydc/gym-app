@@ -590,6 +590,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      idempotent_operations: {
+        Row: {
+          created_at: string;
+          entity_id: string;
+          gym_id: string;
+          id: string;
+          idempotency_key: string;
+          operation_type: string;
+          request_fingerprint: Json;
+          result: Json;
+        };
+        Insert: {
+          created_at?: string;
+          entity_id: string;
+          gym_id: string;
+          id?: string;
+          idempotency_key: string;
+          operation_type: string;
+          request_fingerprint: Json;
+          result: Json;
+        };
+        Update: {
+          created_at?: string;
+          entity_id?: string;
+          gym_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          operation_type?: string;
+          request_fingerprint?: Json;
+          result?: Json;
+        };
+        Relationships: [];
+      };
       payments: {
         Row: {
           amount: number;
@@ -689,6 +722,17 @@ export type Database = {
           target_client_id: string;
         };
         Returns: boolean;
+      };
+      extend_membership: {
+        Args: {
+          p_client_membership_id: string;
+          p_days: number;
+          p_idempotency_key: string;
+        };
+        Returns: {
+          end_date: string;
+          status: string;
+        }[];
       };
       has_any_role: {
         Args: {

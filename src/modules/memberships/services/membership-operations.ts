@@ -8,7 +8,7 @@ import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
 import {
   cancelClientMembershipRecord,
-  extendClientMembershipRecord,
+  extendMembershipRecord,
   renewClientMembershipRecord,
 } from "@/modules/memberships/services/membership-service";
 import type { MembershipOperationMutationState } from "@/modules/memberships/types";
@@ -92,11 +92,22 @@ export async function extendMembership(
     return { error: t("memberships.operations.feedback.invalidDays") };
   }
 
+  const idempotencyKeyResult = z.string().uuid().safeParse(formData.get("idempotencyKey"));
+
+  if (!idempotencyKeyResult.success) {
+    return { error: t("memberships.operations.feedback.invalidRequest") };
+  }
+
   const supabase = await createSupabaseClient();
-  const { error } = await extendClientMembershipRecord(supabase, membershipId, days);
+  const { error } = await extendMembershipRecord(supabase, {
+    clientMembershipId: membershipId,
+    days,
+    idempotencyKey: idempotencyKeyResult.data,
+  });
 
   if (error) {
-    return { error: typeof error === "string" ? error : error.message };
+    // Never forward a raw Postgres/RPC message to the user.
+    return { error: mapKnownMembershipError(error) ?? t("memberships.operations.feedback.extendFailed") };
   }
 
   refreshMemberships();

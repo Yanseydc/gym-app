@@ -144,3 +144,69 @@ test("registerMembershipPayment: a known business error (exceeds balance) still 
   assert.equal(shownEs, "El monto ingresado supera el saldo pendiente de esta membresía. Actualiza la página para ver el saldo actual.");
   assert.equal(shownEn, "El monto ingresado supera el saldo pendiente de esta membresía. Actualiza la página para ver el saldo actual.");
 });
+
+// Mirrors extendMembership's exact fallback expression (membership-operations.ts):
+//   mapKnownMembershipError(error) ?? t("memberships.operations.feedback.extendFailed")
+function resolveExtendErrorMessage(rawMessage: string, locale: "en" | "es") {
+  const fallback = (locale === "es" ? es : en).memberships.operations.feedback.extendFailed;
+  return mapKnownMembershipError(rawMessage) ?? fallback;
+}
+
+test("extend_membership: idempotency_key reused with different parameters", () => {
+  assert.equal(
+    mapKnownMembershipError("extend_membership: idempotency_key reused with different parameters"),
+    "Esta solicitud ya fue procesada con datos distintos de extensión. Recarga la página e inténtalo de nuevo.",
+  );
+});
+
+test("extend_membership: cancelled/future/expired all map to their own specific, safe message", () => {
+  assert.equal(mapKnownMembershipError("Membership not found."), "No se encontró la membresía.");
+  assert.equal(
+    mapKnownMembershipError("Cancelled memberships cannot be extended."),
+    "Una membresía cancelada no se puede extender.",
+  );
+  assert.equal(
+    mapKnownMembershipError("This membership has not started yet."),
+    "Esta membresía todavía no comienza.",
+  );
+  assert.equal(
+    mapKnownMembershipError("Expired memberships cannot be extended. Renew instead."),
+    "Una membresía vencida no se puede extender. Usa renovar en su lugar.",
+  );
+});
+
+test("extendMembership: a known business error (cancelled) resolves to its specific message, not the generic fallback", () => {
+  const raw = "Cancelled memberships cannot be extended.";
+  const shownEs = resolveExtendErrorMessage(raw, "es");
+  const shownEn = resolveExtendErrorMessage(raw, "en");
+
+  assert.notEqual(shownEs, es.memberships.operations.feedback.extendFailed);
+  assert.notEqual(shownEn, en.memberships.operations.feedback.extendFailed);
+  assert.equal(shownEs, "Una membresía cancelada no se puede extender.");
+  assert.equal(shownEn, "Una membresía cancelada no se puede extender.");
+});
+
+test("extendMembership: unknown/unexpected internal messages never reach the user - only the generic, localized fallback does", () => {
+  const unknownRawMessagesForExtend = [
+    "extend_membership: idempotency key conflict could not be resolved",
+    "extend_membership: p_idempotency_key is required",
+    "extend_membership: p_days must be greater than zero",
+    'duplicate key value violates unique constraint "idempotent_operations_idempotency_key_key"',
+    "permission denied for table idempotent_operations",
+    "invalid input syntax for type integer: \"7.5\"",
+  ];
+
+  for (const raw of unknownRawMessagesForExtend) {
+    assert.equal(mapKnownMembershipError(raw), null, `expected no mapping for: ${raw}`);
+
+    for (const locale of ["en", "es"] as const) {
+      const shown = resolveExtendErrorMessage(raw, locale);
+      const fallback = (locale === "es" ? es : en).memberships.operations.feedback.extendFailed;
+
+      assert.equal(shown, fallback, `${locale}: expected the generic fallback for: ${raw}`);
+      assert.equal(shown.includes("idempotent_operations"), false);
+      assert.equal(shown.includes("constraint"), false);
+      assert.equal(shown.includes("extend_membership:"), false);
+    }
+  }
+});
