@@ -1,16 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { getAdminText } from "@/lib/i18n/admin";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
+import { mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
 import {
   cancelClientMembershipRecord,
   extendClientMembershipRecord,
   renewClientMembershipRecord,
 } from "@/modules/memberships/services/membership-service";
 import type { MembershipOperationMutationState } from "@/modules/memberships/types";
-import { createPaymentRecord } from "@/modules/payments/services/payment-service";
+import { registerMembershipPaymentRecord } from "@/modules/payments/services/payment-service";
 
 function refreshMemberships() {
   revalidatePath("/dashboard/memberships");
@@ -29,19 +31,27 @@ export async function registerMembershipPayment(
     return { error: t("memberships.operations.feedback.invalidAmount") };
   }
 
+  // Validated as a UUID (never trusted as opaque text) before it ever
+  // reaches the RPC - matches assign-membership.ts's own idempotencyKey
+  // check. A missing/invalid key never calls the RPC at all.
+  const idempotencyKeyResult = z.string().uuid().safeParse(formData.get("idempotencyKey"));
+
+  if (!idempotencyKeyResult.success) {
+    return { error: t("memberships.operations.feedback.invalidRequest") };
+  }
+
   const supabase = await createSupabaseClient();
-  const { error } = await createPaymentRecord(supabase, {
+  const { error } = await registerMembershipPaymentRecord(supabase, {
     clientId,
     clientMembershipId,
     amount,
     paymentMethod: "cash",
-    paymentDate: new Date().toISOString().slice(0, 10),
-    concept: "Pago de membresía",
-    notes: "",
+    idempotencyKey: idempotencyKeyResult.data,
   });
 
   if (error) {
-    return { error: typeof error === "string" ? error : error.message };
+    // Never forward a raw Postgres/RPC message to the user.
+    return { error: mapKnownMembershipError(error) ?? t("memberships.operations.feedback.paymentFailed") };
   }
 
   refreshMemberships();

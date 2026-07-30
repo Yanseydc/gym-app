@@ -733,6 +733,23 @@ export type Database = {
         };
         Returns: undefined;
       };
+      register_membership_payment: {
+        Args: {
+          p_amount: number;
+          p_client_id: string;
+          p_client_membership_id: string;
+          p_idempotency_key: string;
+          p_payment_method: string;
+        };
+        Returns: {
+          amount: number;
+          client_membership_id: string;
+          membership_status: string;
+          payment_id: string;
+          remaining_balance: number;
+          total_paid: number;
+        }[];
+      };
       reorder_client_routine_days: {
         Args: {
           p_day_ids: string[];

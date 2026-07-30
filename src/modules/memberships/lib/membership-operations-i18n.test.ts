@@ -58,6 +58,8 @@ const operationKeys = [
   "memberships.operations.feedback.invalidDays",
   "memberships.operations.feedback.extendSuccess",
   "memberships.operations.feedback.cancelSuccess",
+  "memberships.operations.feedback.invalidRequest",
+  "memberships.operations.feedback.paymentFailed",
 ] as const;
 
 function getTranslator(locale: AdminLocale) {

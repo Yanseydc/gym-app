@@ -435,7 +435,9 @@
         "renewSuccess": "Membresía renovada correctamente.",
         "invalidDays": "Ingresa una cantidad válida de días.",
         "extendSuccess": "Membresía extendida correctamente.",
-        "cancelSuccess": "Membresía cancelada correctamente."
+        "cancelSuccess": "Membresía cancelada correctamente.",
+        "invalidRequest": "Solicitud inválida. Recarga la página e inténtalo de nuevo.",
+        "paymentFailed": "No se pudo registrar el pago. Inténtalo de nuevo."
       }
     },
     "form": {

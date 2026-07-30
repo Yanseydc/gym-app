@@ -435,7 +435,9 @@
         "renewSuccess": "Membership renewed successfully.",
         "invalidDays": "Enter a valid number of days.",
         "extendSuccess": "Membership extended successfully.",
-        "cancelSuccess": "Membership cancelled successfully."
+        "cancelSuccess": "Membership cancelled successfully.",
+        "invalidRequest": "Invalid request. Reload the page and try again.",
+        "paymentFailed": "We couldn't register the payment. Please try again."
       }
     },
     "form": {

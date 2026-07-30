@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useActionState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useActionState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Ban, CalendarPlus, CircleDollarSign, RefreshCw } from "lucide-react";
@@ -311,11 +311,24 @@ function MembershipActionModal({
           ? t("memberships.operations.modal.extendTitle")
           : t("memberships.operations.modal.cancelTitle");
 
+  // Only used by action.type === "payment" (registerMembershipPayment is the
+  // only one of the four actions wired for idempotency so far - renew,
+  // extend and cancel are unchanged). Generated once when this modal
+  // mounts, which happens on every open since the modal is conditionally
+  // rendered by its parent - so "on mount" and "on open" are the same
+  // event here. Reused as-is across retries within this same open (the
+  // ref doesn't change between re-renders), and rotated only after a
+  // success - which today is immediately followed by onClose() unmounting
+  // this component anyway, so the rotation is defensive (correct even if
+  // that close-on-success behavior ever changes) rather than load-bearing.
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
+
   useEffect(() => {
     if (!state.success) {
       return;
     }
 
+    idempotencyKeyRef.current = crypto.randomUUID();
     toast.success(state.success);
     onClose();
     router.refresh();
@@ -327,6 +340,9 @@ function MembershipActionModal({
         <input type="hidden" name="clientId" value={action.membership.clientId} />
         <input type="hidden" name="clientMembershipId" value={action.membership.id} />
         <input type="hidden" name="membershipId" value={action.membership.id} />
+        {action.type === "payment" ? (
+          <input type="hidden" name="idempotencyKey" value={idempotencyKeyRef.current} />
+        ) : null}
         <div>
           <h2 style={{ margin: "0 0 6px", fontSize: 20 }}>{title}</h2>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.5 }}>

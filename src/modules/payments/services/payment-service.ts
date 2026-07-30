@@ -555,6 +555,51 @@ export async function createPaymentRecord(
   return paymentInsert;
 }
 
+export type RegisterMembershipPaymentInput = {
+  clientId: string;
+  clientMembershipId: string;
+  amount: number;
+  paymentMethod: string;
+  idempotencyKey: string;
+};
+
+/**
+ * Idempotent payment registration for the operational memberships
+ * dashboard's "Registrar pago" action, via the register_membership_payment
+ * RPC (supabase/migrations/20260729120000_register_membership_payment_idempotency.sql).
+ * Reuses the existing payments.idempotency_key unique constraint - same
+ * fast-path/atomic-insert/unique_violation-race pattern already proven by
+ * assign_membership_with_payment.
+ *
+ * Deliberately separate from createPaymentRecord above, which the general
+ * standalone payment form (create-payment.ts) still uses unchanged - this
+ * function only backs the membership-operations modal's payment flow.
+ */
+export async function registerMembershipPaymentRecord(
+  supabase: AppSupabaseClient,
+  values: RegisterMembershipPaymentInput,
+): Promise<{ error: string | null }> {
+  const { error: scopeError } = await requireGymScope(supabase);
+
+  if (scopeError) {
+    return { error: scopeError };
+  }
+
+  const { error } = await supabase.rpc("register_membership_payment", {
+    p_client_id: values.clientId,
+    p_client_membership_id: values.clientMembershipId,
+    p_amount: values.amount,
+    p_payment_method: values.paymentMethod,
+    p_idempotency_key: values.idempotencyKey,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { error: null };
+}
+
 export async function getPaymentById(
   supabase: AppSupabaseClient,
   paymentId: string,

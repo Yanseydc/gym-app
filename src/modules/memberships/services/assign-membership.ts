@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
+import { mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
 import {
   assignMembershipToClientRecord,
   assignMembershipWithPaymentRecord,
@@ -15,33 +16,10 @@ import type {
 import { clientMembershipFormSchema } from "@/modules/memberships/validators/client-membership";
 import { paymentMethodSchema } from "@/modules/payments/validators/payment";
 
-const KNOWN_RPC_ERROR_MESSAGES: Record<string, string> = {
-  "This client already has a membership occupying that period.":
-    "Este cliente ya tiene una membresía que ocupa ese período. Elige otra fecha de inicio o revisa la membresía actual.",
-  "Payment amount exceeds the plan price.":
-    "El monto del pago supera el precio del plan. Verifica el monto ingresado.",
-  "Selected membership plan is not available.":
-    "El plan de membresía seleccionado no está disponible.",
-  "Client not found or not accessible.":
-    "El cliente no fue encontrado o no está disponible.",
-  "Client and membership plan belong to different gyms.":
-    "El cliente y el plan de membresía pertenecen a gimnasios distintos.",
-};
-
+// Unchanged behavior: falls back to the raw message when unmapped, exactly
+// as this function did before mapKnownMembershipError was extracted.
 function mapAssignMembershipWithPaymentError(message: string): string {
-  if (message in KNOWN_RPC_ERROR_MESSAGES) {
-    return KNOWN_RPC_ERROR_MESSAGES[message];
-  }
-
-  if (message.includes("idempotency_key reused with different membership parameters")) {
-    return "Esta solicitud ya fue procesada con datos de membresía distintos. Recarga la página e inténtalo de nuevo.";
-  }
-
-  if (message.includes("idempotency_key reused with different payment parameters")) {
-    return "Esta solicitud ya fue procesada con datos de pago distintos. Recarga la página e inténtalo de nuevo.";
-  }
-
-  return message;
+  return mapKnownMembershipError(message) ?? message;
 }
 
 function getFieldValues(formData: FormData): Record<string, FormDataEntryValue | null> {
