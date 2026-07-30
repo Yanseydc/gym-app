@@ -1,3 +1,4 @@
+import { AttentionRequiredSection } from "@/modules/dashboard/components/attention-required-section";
 import { KpiCard } from "@/modules/dashboard/components/kpi-card";
 import { RecentClientsPanel } from "@/modules/dashboard/components/recent-clients-panel";
 import { RecentPaymentsPanel } from "@/modules/dashboard/components/recent-payments-panel";
@@ -8,7 +9,7 @@ import { buildMembershipListHref } from "@/modules/memberships/lib/membership-li
 
 export default async function DashboardPage() {
   const { t } = await getAdminText();
-  const { metrics, recentPayments, recentClients, errors } = await getDashboardSnapshot();
+  const { metrics, recentPayments, recentClients, attentionRequired, errors } = await getDashboardSnapshot();
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
@@ -70,6 +71,8 @@ export default async function DashboardPage() {
           value={`$${metrics.incomeThisMonth.toFixed(2)}`}
         />
       </div>
+
+      <AttentionRequiredSection attentionRequired={attentionRequired} />
 
       <div
         style={{

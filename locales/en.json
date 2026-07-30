@@ -81,7 +81,25 @@
     "recentClientsAdded": "Added {date}",
     "recentPaymentsTitle": "Recent payments",
     "recentPaymentsDescription": "Latest manual payments registered in the system.",
-    "recentPaymentsEmpty": "No payments registered yet."
+    "recentPaymentsEmpty": "No payments registered yet.",
+    "attention": {
+      "title": "Attention required",
+      "description": "Cases that need immediate follow-up.",
+      "viewAll": "View all",
+      "expiring": {
+        "title": "Memberships expiring soon",
+        "description": "Expiring in the next 6 days.",
+        "empty": "No memberships are expiring soon.",
+        "dueToday": "Expires today",
+        "dueInOneDay": "Expires in 1 day",
+        "dueInDays": "Expires in {count} days"
+      },
+      "pending": {
+        "title": "Pending payments",
+        "description": "Clients with an outstanding balance from a pending or partial payment.",
+        "empty": "No clients have a pending balance."
+      }
+    }
   },
   "clients": {
     "title": "Clients",

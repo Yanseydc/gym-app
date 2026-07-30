@@ -3,9 +3,16 @@ import { cache } from "react";
 import { applyGymScope, requireGymScope, type GymScope } from "@/lib/auth/gym-scope";
 import { getTodayInAppTimeZone } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
+import {
+  selectExpiringMemberships,
+  selectPendingPaymentMemberships,
+  type AttentionMembershipCandidate,
+  type PendingPaymentAttentionCandidate,
+} from "@/modules/dashboard/lib/attention-required";
 import { countMembershipMetrics, getMonthStartFromCivilDate } from "@/modules/dashboard/lib/dashboard-metrics";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
+  AttentionRequiredSnapshot,
   DashboardMetrics,
   DashboardSnapshot,
   RecentDashboardClient,
@@ -21,6 +28,15 @@ function emptyMetrics(): DashboardMetrics {
     membershipsExpiringSoon: 0,
     incomeToday: 0,
     incomeThisMonth: 0,
+  };
+}
+
+function emptyAttentionRequired(): AttentionRequiredSnapshot {
+  return {
+    expiring: [],
+    expiringTotal: 0,
+    pendingPayments: [],
+    pendingPaymentsTotal: 0,
   };
 }
 
@@ -186,6 +202,205 @@ async function getRecentClients(supabase: AppSupabaseClient, scope: GymScope): P
   }));
 }
 
+async function getPlanNamePriceMap(
+  supabase: AppSupabaseClient,
+  scope: GymScope,
+  planIds: string[],
+): Promise<Map<string, { name: string; price: number }>> {
+  if (planIds.length === 0) {
+    return new Map();
+  }
+
+  let query = supabase.from("membership_plans").select("id, name, price").in("id", planIds);
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return new Map(
+    (data ?? []).map((plan) => [String(plan.id), { name: String(plan.name), price: Number(plan.price) }]),
+  );
+}
+
+async function getPaymentTotalsByMembership(
+  supabase: AppSupabaseClient,
+  scope: GymScope,
+  membershipIds: string[],
+): Promise<Map<string, number>> {
+  if (membershipIds.length === 0) {
+    return new Map();
+  }
+
+  let query = supabase
+    .from("payments")
+    .select("client_membership_id, amount")
+    .in("client_membership_id", membershipIds);
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).reduce((map, payment) => {
+    const membershipId = String(payment.client_membership_id);
+    map.set(membershipId, (map.get(membershipId) ?? 0) + Number(payment.amount));
+    return map;
+  }, new Map<string, number>());
+}
+
+async function getClientNameMap(
+  supabase: AppSupabaseClient,
+  scope: GymScope,
+  clientIds: string[],
+): Promise<Map<string, string>> {
+  if (clientIds.length === 0) {
+    return new Map();
+  }
+
+  let query = supabase.from("clients").select("id, first_name, last_name").in("id", clientIds);
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return new Map(
+    (data ?? []).map((client) => [String(client.id), `${String(client.first_name)} ${String(client.last_name)}`]),
+  );
+}
+
+/**
+ * "Atención requerida" data for the dashboard: memberships expiring soon and
+ * memberships with a pending/partial payment balance.
+ *
+ * One base query fetches every non-cancelled client_membership (minimal
+ * columns: id/client/plan/dates/status, gym-scoped). A single row set
+ * naturally contains both candidate pools - the "expiring" and
+ * "pending payment" panels are just two different filters over the same
+ * data - so there's no need for two separate base queries.
+ *
+ * The pending-payment panel ranks by remainingBalance, so it needs that
+ * balance for every pending_payment/partial candidate (not just the final
+ * five) before it can sort and cut - that requires each candidate's plan
+ * price and total paid, fetched via two more queries scoped ONLY to the
+ * pending-payment/partial candidates, never the whole gym.
+ *
+ * Once both panels' final selections (<=5 rows each) are known, one last
+ * pair of queries resolves plan names and client display names for exactly
+ * those rows' ids - the "expiring" panel never touches plan price or
+ * payments, and no panel ever fetches a client/plan name for a row that
+ * won't be shown. The plan-price query above may already cover some of
+ * these plan ids (when a pending-payment candidate's plan also appears in
+ * the expiring selection); re-fetching that overlap here is a few extra
+ * primary-key lookups, not worth extra bookkeeping to dedupe.
+ *
+ * Total round trips: 1 (candidates) -> 2 in parallel (plan price + payments,
+ * scoped to pending-payment candidates) -> 2 in parallel (plan names +
+ * client names, scoped to the final selection) = 4 sequential stages, none
+ * per-row.
+ */
+async function getAttentionRequired(
+  supabase: AppSupabaseClient,
+  scope: GymScope,
+): Promise<AttentionRequiredSnapshot> {
+  const today = getTodayInAppTimeZone();
+
+  let query = supabase
+    .from("client_memberships")
+    .select("id, client_id, membership_plan_id, start_date, end_date, status")
+    .neq("status", "cancelled");
+  query = applyGymScope(query, scope);
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const candidates: AttentionMembershipCandidate[] = (data ?? []).map((record) => ({
+    id: String(record.id),
+    clientId: String(record.client_id),
+    membershipPlanId: String(record.membership_plan_id),
+    startDate: String(record.start_date),
+    endDate: String(record.end_date),
+    status: record.status,
+  }));
+
+  const expiringSelection = selectExpiringMemberships(candidates, today);
+
+  const pendingCandidatesRaw = candidates.filter(
+    (candidate): candidate is AttentionMembershipCandidate & { status: "pending_payment" | "partial" } =>
+      candidate.status === "pending_payment" || candidate.status === "partial",
+  );
+  const pendingPlanIds = [...new Set(pendingCandidatesRaw.map((candidate) => candidate.membershipPlanId))];
+  const pendingMembershipIds = pendingCandidatesRaw.map((candidate) => candidate.id);
+
+  const [pendingPlanMap, paymentTotalsByMembership] = await Promise.all([
+    getPlanNamePriceMap(supabase, scope, pendingPlanIds),
+    getPaymentTotalsByMembership(supabase, scope, pendingMembershipIds),
+  ]);
+
+  const pendingCandidatesWithBalance: PendingPaymentAttentionCandidate[] = pendingCandidatesRaw.map((candidate) => ({
+    id: candidate.id,
+    clientId: candidate.clientId,
+    membershipPlanId: candidate.membershipPlanId,
+    status: candidate.status,
+    remainingBalance: Math.max(
+      0,
+      (pendingPlanMap.get(candidate.membershipPlanId)?.price ?? 0) -
+        (paymentTotalsByMembership.get(candidate.id) ?? 0),
+    ),
+  }));
+
+  const pendingSelection = selectPendingPaymentMemberships(pendingCandidatesWithBalance);
+
+  const finalPlanIds = [
+    ...new Set([
+      ...expiringSelection.items.map((item) => item.membershipPlanId),
+      ...pendingSelection.items.map((item) => item.membershipPlanId),
+    ]),
+  ];
+  const finalClientIds = [
+    ...new Set([
+      ...expiringSelection.items.map((item) => item.clientId),
+      ...pendingSelection.items.map((item) => item.clientId),
+    ]),
+  ];
+
+  const [planNameMap, clientNameMap] = await Promise.all([
+    getPlanNamePriceMap(supabase, scope, finalPlanIds),
+    getClientNameMap(supabase, scope, finalClientIds),
+  ]);
+
+  return {
+    expiring: expiringSelection.items.map((item) => ({
+      id: item.id,
+      clientId: item.clientId,
+      clientName: clientNameMap.get(item.clientId) ?? "Unknown client",
+      planName: planNameMap.get(item.membershipPlanId)?.name ?? "Unknown plan",
+      endDate: item.endDate,
+      daysRemaining: item.daysRemaining,
+    })),
+    expiringTotal: expiringSelection.total,
+    pendingPayments: pendingSelection.items.map((item) => ({
+      id: item.id,
+      clientId: item.clientId,
+      clientName: clientNameMap.get(item.clientId) ?? "Unknown client",
+      planName: planNameMap.get(item.membershipPlanId)?.name ?? "Unknown plan",
+      status: item.status,
+      remainingBalance: item.remainingBalance,
+    })),
+    pendingPaymentsTotal: pendingSelection.total,
+  };
+}
+
 export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> => {
   const supabase = await createClient();
   const { data: scope, error: scopeError } = await requireGymScope(supabase);
@@ -193,24 +408,33 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
   const metrics = emptyMetrics();
   let recentPayments: RecentDashboardPayment[] = [];
   let recentClients: RecentDashboardClient[] = [];
+  let attentionRequired = emptyAttentionRequired();
 
   if (scopeError || !scope) {
     return {
       metrics,
       recentPayments,
       recentClients,
+      attentionRequired,
       errors: [scopeError ?? "Unable to resolve gym scope."],
     };
   }
 
-  const [activeClientsResult, membershipMetricsResult, incomeMetricsResult, recentPaymentsResult, recentClientsResult] =
-    await Promise.allSettled([
-      getActiveClientsCount(supabase, scope),
-      getMembershipMetrics(supabase, scope),
-      getIncomeMetrics(supabase, scope),
-      getRecentPayments(supabase, scope),
-      getRecentClients(supabase, scope),
-    ]);
+  const [
+    activeClientsResult,
+    membershipMetricsResult,
+    incomeMetricsResult,
+    recentPaymentsResult,
+    recentClientsResult,
+    attentionRequiredResult,
+  ] = await Promise.allSettled([
+    getActiveClientsCount(supabase, scope),
+    getMembershipMetrics(supabase, scope),
+    getIncomeMetrics(supabase, scope),
+    getRecentPayments(supabase, scope),
+    getRecentClients(supabase, scope),
+    getAttentionRequired(supabase, scope),
+  ]);
 
   if (activeClientsResult.status === "fulfilled") {
     metrics.activeClients = activeClientsResult.value;
@@ -246,10 +470,17 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
     errors.push(recentClientsResult.reason instanceof Error ? recentClientsResult.reason.message : "Unable to load recent clients.");
   }
 
+  if (attentionRequiredResult.status === "fulfilled") {
+    attentionRequired = attentionRequiredResult.value;
+  } else {
+    errors.push(attentionRequiredResult.reason instanceof Error ? attentionRequiredResult.reason.message : "Unable to load attention required data.");
+  }
+
   return {
     metrics,
     recentPayments,
     recentClients,
+    attentionRequired,
     errors,
   };
 });

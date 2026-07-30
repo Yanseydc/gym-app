@@ -81,7 +81,25 @@
     "recentClientsAdded": "Agregado {date}",
     "recentPaymentsTitle": "Pagos recientes",
     "recentPaymentsDescription": "Últimos pagos manuales registrados en el sistema.",
-    "recentPaymentsEmpty": "Todavía no hay pagos registrados."
+    "recentPaymentsEmpty": "Todavía no hay pagos registrados.",
+    "attention": {
+      "title": "Atención requerida",
+      "description": "Casos que requieren seguimiento inmediato.",
+      "viewAll": "Ver todas",
+      "expiring": {
+        "title": "Membresías por vencer",
+        "description": "Vencen en los próximos 6 días.",
+        "empty": "No hay membresías por vencer.",
+        "dueToday": "Vence hoy",
+        "dueInOneDay": "Vence en 1 día",
+        "dueInDays": "Vence en {count} días"
+      },
+      "pending": {
+        "title": "Pagos pendientes",
+        "description": "Clientes con saldo pendiente por pago parcial o pendiente.",
+        "empty": "Ningún cliente tiene saldo pendiente."
+      }
+    }
   },
   "clients": {
     "title": "Clientes",

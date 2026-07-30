@@ -1,4 +1,7 @@
 export type {
+  AttentionExpiringMembership,
+  AttentionPendingPaymentMembership,
+  AttentionRequiredSnapshot,
   DashboardMetrics,
   DashboardSnapshot,
   RecentDashboardClient,

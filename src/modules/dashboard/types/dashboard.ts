@@ -25,9 +25,35 @@ export type RecentDashboardClient = {
   createdAt: string;
 };
 
+export type AttentionExpiringMembership = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  planName: string;
+  endDate: string;
+  daysRemaining: number;
+};
+
+export type AttentionPendingPaymentMembership = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  planName: string;
+  status: "pending_payment" | "partial";
+  remainingBalance: number;
+};
+
+export type AttentionRequiredSnapshot = {
+  expiring: AttentionExpiringMembership[];
+  expiringTotal: number;
+  pendingPayments: AttentionPendingPaymentMembership[];
+  pendingPaymentsTotal: number;
+};
+
 export type DashboardSnapshot = {
   metrics: DashboardMetrics;
   recentPayments: RecentDashboardPayment[];
   recentClients: RecentDashboardClient[];
+  attentionRequired: AttentionRequiredSnapshot;
   errors: string[];
 };
