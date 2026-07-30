@@ -22,6 +22,8 @@ import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import {
   canExtendMembership,
   canRenewMembership,
+  getMaxExtensionDays,
+  type ExtensionLimit,
 } from "@/modules/memberships/lib/membership-operations-permissions";
 import {
   parseMembershipListFilter,
@@ -68,7 +70,11 @@ export function MembershipOperationsDashboard({
   };
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [action, setAction] = useState<{ type: ActionType; membership: MembershipOperationItem } | null>(null);
+  const [action, setAction] = useState<{
+    type: ActionType;
+    membership: MembershipOperationItem;
+    extensionLimit?: ExtensionLimit | null;
+  } | null>(null);
   const today = useMemo(() => getTodayInAppTimeZone(), []);
   const formattingLocale = locale === "es" ? "es-MX" : "en-US";
   const currencyFormatter = useMemo(
@@ -191,6 +197,8 @@ export function MembershipOperationsDashboard({
                 const canRenew = canRenewMembership(membership, siblings, today);
                 const canExtend = canExtendMembership(membership, today);
                 const canCancel = membership.isCurrentActiveMembership;
+                const extensionLimit = getMaxExtensionDays(membership.endDate, siblings);
+                const extensionBlockedByOverlap = canExtend && extensionLimit !== null && extensionLimit.maxDays <= 0;
                 const isTemporallyCurrent =
                   membership.status !== "cancelled" &&
                   membership.startDate <= today &&
@@ -239,8 +247,12 @@ export function MembershipOperationsDashboard({
                     {t("memberships.operations.actions.renew")}
                   </button>
                 ) : null}
-                {canExtend ? (
-                  <button type="button" className={buttonSecondary} onClick={() => setAction({ type: "extend", membership })}>
+                {canExtend && !extensionBlockedByOverlap ? (
+                  <button
+                    type="button"
+                    className={buttonSecondary}
+                    onClick={() => setAction({ type: "extend", membership, extensionLimit })}
+                  >
                     <CalendarPlus size={15} aria-hidden="true" />
                     {t("memberships.operations.actions.extend")}
                   </button>
@@ -256,6 +268,13 @@ export function MembershipOperationsDashboard({
                 ) : null}
                 {renewBlockedByExistingNextPeriod ? (
                   <span style={helperStyles}>{t("memberships.operations.nextPeriodExists")}</span>
+                ) : null}
+                {extensionBlockedByOverlap && extensionLimit ? (
+                  <span style={helperStyles}>
+                    {t("memberships.operations.extensionBlocked", {
+                      date: formatCivilDate(extensionLimit.nextStartDate, formattingLocale),
+                    })}
+                  </span>
                 ) : null}
               </div>
                   </>
@@ -287,10 +306,11 @@ function MembershipActionModal({
   action,
   onClose,
 }: {
-  action: { type: ActionType; membership: MembershipOperationItem };
+  action: { type: ActionType; membership: MembershipOperationItem; extensionLimit?: ExtensionLimit | null };
   onClose: () => void;
 }) {
-  const { t } = useAdminText();
+  const { locale, t } = useAdminText();
+  const formattingLocale = locale === "es" ? "es-MX" : "en-US";
   const actionFn =
     action.type === "payment"
       ? registerMembershipPayment
@@ -367,8 +387,28 @@ function MembershipActionModal({
         {action.type === "extend" ? (
           <label style={{ display: "grid", gap: 8 }}>
             <span style={{ fontWeight: 700 }}>{t("memberships.operations.modal.extensionDays")}</span>
-            <input name="days" type="number" min="1" defaultValue="7" className={input} />
+            <input
+              name="days"
+              type="number"
+              min="1"
+              max={action.extensionLimit ? action.extensionLimit.maxDays : undefined}
+              defaultValue={action.extensionLimit ? Math.min(7, action.extensionLimit.maxDays) : 7}
+              className={input}
+            />
           </label>
+        ) : null}
+
+        {action.type === "extend" && action.extensionLimit ? (
+          <p style={noticeStyles}>
+            {action.extensionLimit.maxDays === 1
+              ? t("memberships.operations.modal.extensionLimitOne", {
+                  date: formatCivilDate(action.extensionLimit.nextStartDate, formattingLocale),
+                })
+              : t("memberships.operations.modal.extensionLimit", {
+                  days: action.extensionLimit.maxDays,
+                  date: formatCivilDate(action.extensionLimit.nextStartDate, formattingLocale),
+                })}
+          </p>
         ) : null}
 
         {action.type === "renew" ? (

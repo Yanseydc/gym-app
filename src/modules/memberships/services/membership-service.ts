@@ -744,11 +744,11 @@ export type ExtendMembershipResult = {
 export async function extendMembershipRecord(
   supabase: AppSupabaseClient,
   values: ExtendMembershipInput,
-): Promise<{ data: ExtendMembershipResult | null; error: string | null }> {
+): Promise<{ data: ExtendMembershipResult | null; error: string | null; errorCode: string | null }> {
   const { error: scopeError } = await requireGymScope(supabase);
 
   if (scopeError) {
-    return { data: null, error: scopeError };
+    return { data: null, error: scopeError, errorCode: null };
   }
 
   const { data, error } = await supabase.rpc("extend_membership", {
@@ -758,16 +758,21 @@ export async function extendMembershipRecord(
   });
 
   if (error) {
-    return { data: null, error: error.message };
+    // error.code (e.g. "23P01" for the client_memberships_no_overlapping_active_periods
+    // exclusion constraint firing on a residual race) must survive this
+    // boundary - isMembershipPeriodConflictError needs it, and matching on
+    // error.message alone would mean depending on Postgres's exact raw
+    // wording instead of its stable SQLSTATE.
+    return { data: null, error: error.message, errorCode: error.code ?? null };
   }
 
   const row = (data ?? [])[0];
 
   if (!row) {
-    return { data: null, error: "extend_membership did not return a result." };
+    return { data: null, error: "extend_membership did not return a result.", errorCode: null };
   }
 
-  return { data: { endDate: row.end_date, status: row.status }, error: null };
+  return { data: { endDate: row.end_date, status: row.status }, error: null, errorCode: null };
 }
 
 export async function renewClientMembershipRecord(

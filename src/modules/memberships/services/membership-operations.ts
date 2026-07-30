@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { getAdminText } from "@/lib/i18n/admin";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
-import { mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
+import { isExtendOverlapConflict, mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
 import {
   cancelClientMembershipRecord,
   extendMembershipRecord,
@@ -99,13 +99,17 @@ export async function extendMembership(
   }
 
   const supabase = await createSupabaseClient();
-  const { error } = await extendMembershipRecord(supabase, {
+  const { error, errorCode } = await extendMembershipRecord(supabase, {
     clientMembershipId: membershipId,
     days,
     idempotencyKey: idempotencyKeyResult.data,
   });
 
   if (error) {
+    if (isExtendOverlapConflict({ message: error, code: errorCode })) {
+      return { error: t("memberships.operations.feedback.extendOverlap") };
+    }
+
     // Never forward a raw Postgres/RPC message to the user.
     return { error: mapKnownMembershipError(error) ?? t("memberships.operations.feedback.extendFailed") };
   }

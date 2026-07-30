@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 import en from "../../../../locales/en.json";
 import es from "../../../../locales/es.json";
-import { mapKnownMembershipError } from "./membership-error-messages";
+import { isExtendOverlapConflict, mapKnownMembershipError } from "./membership-error-messages";
 
 // Mirrors registerMembershipPayment's exact fallback expression
 // (membership-operations.ts):
@@ -207,6 +207,67 @@ test("extendMembership: unknown/unexpected internal messages never reach the use
       assert.equal(shown.includes("idempotent_operations"), false);
       assert.equal(shown.includes("constraint"), false);
       assert.equal(shown.includes("extend_membership:"), false);
+    }
+  }
+});
+
+// Regression coverage for the real Jesus Dominguez extension incident
+// (2026-07-30): extending his current membership by 7 days computed a new
+// end_date that overlapped his existing future membership by exactly 7
+// days. The RPC's pre-check (20260730150000_extend_membership_overlap_check.sql)
+// now rejects this before the UPDATE with a stable, authored message; a
+// residual concurrent race would instead surface as the
+// client_memberships_no_overlapping_active_periods exclusion constraint
+// firing (SQLSTATE 23P01). Both must resolve to the exact same friendly
+// message.
+test("isExtendOverlapConflict: the RPC pre-check's own message is recognized", () => {
+  assert.equal(
+    isExtendOverlapConflict({ message: "This extension would overlap with an upcoming membership." }),
+    true,
+  );
+});
+
+test("isExtendOverlapConflict: SQLSTATE 23P01 is recognized regardless of the raw message text", () => {
+  assert.equal(
+    isExtendOverlapConflict({
+      message: 'conflicting key value violates exclusion constraint "client_memberships_no_overlapping_active_periods"',
+      code: "23P01",
+    }),
+    true,
+  );
+  // Even a completely different/localized wording must still be caught,
+  // because the check is code-first - this is exactly what "no dependas
+  // únicamente del texto crudo si el código está disponible" means.
+  assert.equal(isExtendOverlapConflict({ message: "some unrelated wording", code: "23P01" }), true);
+});
+
+test("isExtendOverlapConflict: an unrelated error is not misclassified as an overlap conflict", () => {
+  assert.equal(isExtendOverlapConflict({ message: "Cancelled memberships cannot be extended." }), false);
+  assert.equal(isExtendOverlapConflict({ message: "permission denied for table idempotent_operations", code: "42501" }), false);
+  assert.equal(isExtendOverlapConflict({ message: "extend_membership: idempotency key conflict could not be resolved" }), false);
+});
+
+test("both the pre-check and the residual-race 23P01 resolve to the exact same localized, friendly message - never the generic fallback", () => {
+  const preCheckError = { message: "This extension would overlap with an upcoming membership.", code: undefined };
+  const residualRaceError = {
+    message: 'conflicting key value violates exclusion constraint "client_memberships_no_overlapping_active_periods"',
+    code: "23P01",
+  };
+
+  for (const locale of ["en", "es"] as const) {
+    const dict = locale === "es" ? es : en;
+    const expected = dict.memberships.operations.feedback.extendOverlap;
+    const fallback = dict.memberships.operations.feedback.extendFailed;
+
+    assert.notEqual(expected, fallback);
+
+    // Mirrors extendMembership's exact branch (membership-operations.ts):
+    //   if (isExtendOverlapConflict({ message: error, code: errorCode })) return { error: t("...extendOverlap") };
+    for (const raw of [preCheckError, residualRaceError]) {
+      const shown = isExtendOverlapConflict(raw) ? expected : (mapKnownMembershipError(raw.message) ?? fallback);
+      assert.equal(shown, expected, `${locale}: ${raw.message}`);
+      assert.equal(shown.includes("constraint"), false);
+      assert.equal(shown.includes("23P01"), false);
     }
   }
 });

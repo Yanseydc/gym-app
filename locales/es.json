@@ -418,6 +418,7 @@
       },
       "renewalBlocked": "Renovación bloqueada por una membresía activa.",
       "nextPeriodExists": "Ya existe el siguiente periodo para este cliente.",
+      "extensionBlocked": "No se puede extender: la siguiente membresía de este cliente comienza el {date}.",
       "modal": {
         "paymentTitle": "Registrar pago",
         "renewTitle": "Renovar membresía",
@@ -425,6 +426,8 @@
         "cancelTitle": "Cancelar membresía",
         "amount": "Monto",
         "extensionDays": "Días a extender",
+        "extensionLimitOne": "Puedes extender hasta 1 día antes de la siguiente membresía, que comienza el {date}.",
+        "extensionLimit": "Puedes extender hasta {days} días antes de la siguiente membresía, que comienza el {date}.",
         "renewNotice": "Se creará el siguiente periodo con el mismo plan, empezando después de que termine la membresía activa.",
         "cancelNotice": "La membresía quedará cancelada y no contará como activa."
       },
@@ -438,7 +441,8 @@
         "cancelSuccess": "Membresía cancelada correctamente.",
         "invalidRequest": "Solicitud inválida. Recarga la página e inténtalo de nuevo.",
         "paymentFailed": "No se pudo registrar el pago. Inténtalo de nuevo.",
-        "extendFailed": "No se pudo extender la membresía. Inténtalo de nuevo."
+        "extendFailed": "No se pudo extender la membresía. Inténtalo de nuevo.",
+        "extendOverlap": "No se puede extender porque se superpondría con la siguiente membresía."
       }
     },
     "form": {

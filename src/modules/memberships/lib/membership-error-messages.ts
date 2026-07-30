@@ -68,3 +68,27 @@ export function mapKnownMembershipError(message: string): string | null {
 
   return null;
 }
+
+/**
+ * Whether an extend_membership failure represents an overlap conflict -
+ * either the RPC's own authoritative pre-check (a stable, authored message
+ * string, safe to match verbatim - not a raw/unpredictable Postgres
+ * message) or the residual-race case where the
+ * client_memberships_no_overlapping_active_periods exclusion constraint
+ * itself fired (SQLSTATE 23P01). The code check is duplicated here rather
+ * than importing membership-service.ts's own isMembershipPeriodConflictError,
+ * which would pull that file's Supabase dependency chain into this
+ * otherwise dependency-free module - both must always agree that "23P01"
+ * is the one relevant code, so this is documented, not accidental,
+ * duplication.
+ *
+ * Both cases resolve to the exact same friendly message
+ * (memberships.operations.feedback.extendOverlap) at the call site -
+ * intentional: from the user's perspective both mean the same thing.
+ */
+export function isExtendOverlapConflict(error: { message: string; code?: string | null }): boolean {
+  return (
+    error.code === "23P01" ||
+    error.message === "This extension would overlap with an upcoming membership."
+  );
+}

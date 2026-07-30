@@ -418,6 +418,7 @@
       },
       "renewalBlocked": "Renewal blocked by an active membership.",
       "nextPeriodExists": "The next period already exists for this client.",
+      "extensionBlocked": "Can't extend: this client's next membership starts on {date}.",
       "modal": {
         "paymentTitle": "Register payment",
         "renewTitle": "Renew membership",
@@ -425,6 +426,8 @@
         "cancelTitle": "Cancel membership",
         "amount": "Amount",
         "extensionDays": "Days to extend",
+        "extensionLimitOne": "You can extend up to 1 day before the next membership, which starts on {date}.",
+        "extensionLimit": "You can extend up to {days} days before the next membership, which starts on {date}.",
         "renewNotice": "The next period will be created with the same plan, starting after the active membership ends.",
         "cancelNotice": "The membership will be cancelled and will no longer count as active."
       },
@@ -438,7 +441,8 @@
         "cancelSuccess": "Membership cancelled successfully.",
         "invalidRequest": "Invalid request. Reload the page and try again.",
         "paymentFailed": "We couldn't register the payment. Please try again.",
-        "extendFailed": "We couldn't extend the membership. Please try again."
+        "extendFailed": "We couldn't extend the membership. Please try again.",
+        "extendOverlap": "This extension would overlap with the next membership."
       }
     },
     "form": {

@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { canExtendMembership, canRenewMembership } from "./membership-operations-permissions";
+import { canExtendMembership, canRenewMembership, getMaxExtensionDays } from "./membership-operations-permissions";
 
 const TODAY = "2026-07-29";
 
@@ -76,4 +76,63 @@ test("boundary: membership starting today is not future", () => {
   const startsToday = membership({ startDate: TODAY, endDate: "2026-08-28" });
   assert.equal(canExtendMembership(startsToday, TODAY), true);
   assert.equal(canRenewMembership(startsToday, [], TODAY), true);
+});
+
+function occupyingSibling(overrides: Partial<{ status: string; startDate: string }> = {}) {
+  return {
+    status: "active" as const,
+    startDate: "2026-08-16",
+    ...overrides,
+  } as { status: "active" | "cancelled" | "pending_payment" | "partial" | "expired"; startDate: string };
+}
+
+test("the real Jesus Dominguez extension incident: contiguous periods (zero-day gap) -> maxDays is exactly 0", () => {
+  // Real production data: current membership ends 2026-08-15, the client's
+  // future membership (status 'partial') starts the very next day,
+  // 2026-08-16 - no gap at all.
+  const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ status: "partial", startDate: "2026-08-16" })]);
+  assert.deepEqual(limit, { maxDays: 0, nextStartDate: "2026-08-16" });
+});
+
+test("a 5-day gap allows extending up to 5 days, not 6", () => {
+  // end_date 2026-08-15, next occupying membership starts 2026-08-21:
+  // 2026-08-16..2026-08-20 (5 days) are free before it.
+  const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ startDate: "2026-08-21" })]);
+  assert.deepEqual(limit, { maxDays: 5, nextStartDate: "2026-08-21" });
+});
+
+test("multiple upcoming memberships: uses the nearest start date, not just the first in the array", () => {
+  const limit = getMaxExtensionDays("2026-08-15", [
+    occupyingSibling({ startDate: "2026-10-01" }),
+    occupyingSibling({ startDate: "2026-08-21" }),
+    occupyingSibling({ startDate: "2026-09-01" }),
+  ]);
+  assert.deepEqual(limit, { maxDays: 5, nextStartDate: "2026-08-21" });
+});
+
+test("a cancelled upcoming membership does not limit the extension", () => {
+  const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ status: "cancelled", startDate: "2026-08-16" })]);
+  assert.equal(limit, null);
+});
+
+test("pending_payment and partial upcoming memberships both limit the extension, same as active", () => {
+  for (const status of ["pending_payment", "partial"] as const) {
+    const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ status, startDate: "2026-08-16" })]);
+    assert.deepEqual(limit, { maxDays: 0, nextStartDate: "2026-08-16" }, `status=${status}`);
+  }
+});
+
+test("no upcoming occupying membership at all -> null, preserving the existing unlimited-extend behavior", () => {
+  assert.equal(getMaxExtensionDays("2026-08-15", []), null);
+  assert.equal(getMaxExtensionDays("2026-08-15", [occupyingSibling({ status: "cancelled" })]), null);
+});
+
+test("a sibling starting exactly on the current end_date is blocked as maxDays=0, not treated as unlimited", () => {
+  const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ startDate: "2026-08-15" })]);
+  assert.deepEqual(limit, { maxDays: 0, nextStartDate: "2026-08-15" });
+});
+
+test("a sibling already starting before the current end_date (defensive - should never exist under the exclusion constraint, but the extending row can carry a status the constraint doesn't cover) is also blocked as maxDays=0, never negative", () => {
+  const limit = getMaxExtensionDays("2026-08-15", [occupyingSibling({ startDate: "2026-08-01" })]);
+  assert.deepEqual(limit, { maxDays: 0, nextStartDate: "2026-08-01" });
 });

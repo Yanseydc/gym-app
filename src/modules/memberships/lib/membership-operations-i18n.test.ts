@@ -43,12 +43,15 @@ const operationKeys = [
   "memberships.operations.actions.confirm",
   "memberships.operations.renewalBlocked",
   "memberships.operations.nextPeriodExists",
+  "memberships.operations.extensionBlocked",
   "memberships.operations.modal.paymentTitle",
   "memberships.operations.modal.renewTitle",
   "memberships.operations.modal.extendTitle",
   "memberships.operations.modal.cancelTitle",
   "memberships.operations.modal.amount",
   "memberships.operations.modal.extensionDays",
+  "memberships.operations.modal.extensionLimitOne",
+  "memberships.operations.modal.extensionLimit",
   "memberships.operations.modal.renewNotice",
   "memberships.operations.modal.cancelNotice",
   "memberships.operations.feedback.invalidAmount",
@@ -61,6 +64,7 @@ const operationKeys = [
   "memberships.operations.feedback.invalidRequest",
   "memberships.operations.feedback.paymentFailed",
   "memberships.operations.feedback.extendFailed",
+  "memberships.operations.feedback.extendOverlap",
 ] as const;
 
 function getTranslator(locale: AdminLocale) {
@@ -97,4 +101,23 @@ test("civil membership dates are localized without changing the calendar day", (
   assert.equal(formatCivilDate("2026-07-29", "en-US"), "Jul 29, 2026");
   assert.equal(formatCivilDate("2026-07-29", "es-MX"), "29 jul 2026");
   assert.equal(formatCivilDate("invalid", "es-MX"), "invalid");
+});
+
+test("extension-overlap copy interpolates days/date correctly in both languages", () => {
+  assert.equal(
+    getTranslator("en").t("memberships.operations.extensionBlocked", { date: "Aug 16, 2026" }),
+    "Can't extend: this client's next membership starts on Aug 16, 2026.",
+  );
+  assert.equal(
+    getTranslator("es").t("memberships.operations.extensionBlocked", { date: "16 ago 2026" }),
+    "No se puede extender: la siguiente membresía de este cliente comienza el 16 ago 2026.",
+  );
+  assert.equal(
+    getTranslator("en").t("memberships.operations.modal.extensionLimit", { days: 5, date: "Aug 21, 2026" }),
+    "You can extend up to 5 days before the next membership, which starts on Aug 21, 2026.",
+  );
+  assert.equal(
+    getTranslator("es").t("memberships.operations.modal.extensionLimitOne", { date: "16 ago 2026" }),
+    "Puedes extender hasta 1 día antes de la siguiente membresía, que comienza el 16 ago 2026.",
+  );
 });
