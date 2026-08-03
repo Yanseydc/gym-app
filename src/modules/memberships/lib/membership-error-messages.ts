@@ -35,6 +35,12 @@ const KNOWN_MEMBERSHIP_ERROR_MESSAGES: Record<string, string> = {
     "Una membresía vencida no se puede extender. Usa renovar en su lugar.",
   "This membership has not started yet.":
     "Esta membresía todavía no comienza.",
+  "This membership is cancelled and cannot be renewed.":
+    "Una membresía cancelada no se puede renovar.",
+  "This client already has an upcoming membership.":
+    "Ya existe el siguiente periodo para este cliente.",
+  "This client already has an active membership.":
+    "Este cliente ya tiene una membresía activa.",
 };
 
 export function mapKnownMembershipError(message: string): string | null {
@@ -90,5 +96,18 @@ export function isExtendOverlapConflict(error: { message: string; code?: string 
   return (
     error.code === "23P01" ||
     error.message === "This extension would overlap with an upcoming membership."
+  );
+}
+
+/**
+ * Same shape as isExtendOverlapConflict, for renew_membership's own
+ * overlap pre-check message. Kept as a separate function (rather than a
+ * shared helper parameterized by message) so each RPC's exact stable
+ * string stays a single, greppable literal at its call site.
+ */
+export function isRenewOverlapConflict(error: { message: string; code?: string | null }): boolean {
+  return (
+    error.code === "23P01" ||
+    error.message === "This client already has a membership occupying that period."
   );
 }

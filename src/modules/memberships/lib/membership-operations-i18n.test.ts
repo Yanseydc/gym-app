@@ -65,6 +65,8 @@ const operationKeys = [
   "memberships.operations.feedback.paymentFailed",
   "memberships.operations.feedback.extendFailed",
   "memberships.operations.feedback.extendOverlap",
+  "memberships.operations.feedback.renewFailed",
+  "memberships.operations.feedback.renewOverlap",
 ] as const;
 
 function getTranslator(locale: AdminLocale) {

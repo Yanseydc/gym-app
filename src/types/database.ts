@@ -117,6 +117,7 @@ export type Database = {
           id: string;
           membership_plan_id: string;
           notes: string | null;
+          renewed_from_membership_id: string | null;
           start_date: string;
           status: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at: string;
@@ -129,6 +130,7 @@ export type Database = {
           id?: string;
           membership_plan_id: string;
           notes?: string | null;
+          renewed_from_membership_id?: string | null;
           start_date: string;
           status?: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at?: string;
@@ -141,6 +143,7 @@ export type Database = {
           id?: string;
           membership_plan_id?: string;
           notes?: string | null;
+          renewed_from_membership_id?: string | null;
           start_date?: string;
           status?: "active" | "expired" | "cancelled" | "pending_payment" | "partial";
           updated_at?: string;
@@ -792,6 +795,18 @@ export type Database = {
           payment_id: string;
           remaining_balance: number;
           total_paid: number;
+        }[];
+      };
+      renew_membership: {
+        Args: {
+          p_idempotency_key: string;
+          p_source_membership_id: string;
+        };
+        Returns: {
+          end_date: string;
+          membership_id: string;
+          start_date: string;
+          status: string;
         }[];
       };
       reorder_client_routine_days: {

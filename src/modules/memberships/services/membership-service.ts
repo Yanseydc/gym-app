@@ -174,17 +174,6 @@ export function selectAccessRecord<T extends AccessRecord>(
   return { record: winner, isEligible };
 }
 
-/**
- * The Spanish message shown when a new membership period would occupy the
- * same space as an existing one - used both when the pre-insert check below
- * catches it, and when a genuine race loses to the
- * client_memberships_no_overlapping_active_periods exclusion constraint and
- * the database rejects the insert instead. Never mentions the table or
- * constraint by name.
- */
-export const MEMBERSHIP_PERIOD_CONFLICT_MESSAGE =
-  "Ya existe una membresía para este cliente en ese periodo. Actualiza la página e inténtalo de nuevo.";
-
 const PERIOD_OCCUPYING_STATUSES: readonly MembershipStatus[] = ["active", "pending_payment", "partial"];
 
 /**
@@ -775,120 +764,64 @@ export async function extendMembershipRecord(
   return { data: { endDate: row.end_date, status: row.status }, error: null, errorCode: null };
 }
 
+export type RenewMembershipInput = {
+  sourceMembershipId: string;
+  idempotencyKey: string;
+};
+
+export type RenewMembershipResult = {
+  membershipId: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+};
+
+/**
+ * Idempotent membership renewal via the renew_membership RPC
+ * (supabase/migrations/20260801090000_renew_membership_idempotency.sql).
+ * Replaces the previous plain renewClientMembershipRecord, which made 4
+ * sequential, non-atomic PostgREST round-trips and had no idempotency key -
+ * a retry recomputed the exact same (deterministic) period and collided
+ * with the row the first attempt already created, surfacing a confusing
+ * conflict error for an operation that had actually already succeeded.
+ * Eligibility now lives in the RPC and matches canRenewMembership
+ * (membership-operations-permissions.ts) exactly - not the old function's
+ * own (looser) isCurrentActiveMembership-based rule. This function only
+ * shapes the call and its result.
+ */
 export async function renewClientMembershipRecord(
   supabase: AppSupabaseClient,
-  clientMembershipId: string,
-) {
-  const { data: scope, error: scopeError } = await requireGymScope(supabase);
+  values: RenewMembershipInput,
+): Promise<{ data: RenewMembershipResult | null; error: string | null; errorCode: string | null }> {
+  const { error: scopeError } = await requireGymScope(supabase);
 
-  if (scopeError || !scope) {
-    return { data: null, error: scopeError ?? "Unable to resolve gym scope." };
+  if (scopeError) {
+    return { data: null, error: scopeError, errorCode: null };
   }
 
-  let membershipQuery = supabase
-    .from("client_memberships")
-    .select("client_id, membership_plan_id, end_date, status")
-    .eq("id", clientMembershipId);
-  membershipQuery = applyGymScope(membershipQuery, scope);
-  const { data: membership, error: membershipError } = await membershipQuery.maybeSingle();
+  const { data, error } = await supabase.rpc("renew_membership", {
+    p_source_membership_id: values.sourceMembershipId,
+    p_idempotency_key: values.idempotencyKey,
+  });
 
-  if (membershipError) {
-    return { data: null, error: membershipError.message };
+  if (error) {
+    // error.code (e.g. "23P01" for the client_memberships_no_overlapping_active_periods
+    // exclusion constraint firing on a residual race) must survive this
+    // boundary, same reasoning as extendMembershipRecord above.
+    return { data: null, error: error.message, errorCode: error.code ?? null };
   }
 
-  if (!membership) {
-    return { data: null, error: "Membership not found." };
+  const row = (data ?? [])[0];
+
+  if (!row) {
+    return { data: null, error: "renew_membership did not return a result.", errorCode: null };
   }
 
-  let activeQuery = supabase
-    .from("client_memberships")
-    .select("id")
-    .eq("client_id", membership.client_id)
-    .neq("id", clientMembershipId)
-    .neq("status", "cancelled")
-    .gte("end_date", toIsoDate(new Date()))
-    .limit(1);
-  activeQuery = applyGymScope(activeQuery, scope);
-  const { data: activeMemberships, error: activeError } = await activeQuery;
-
-  if (activeError) {
-    return { data: null, error: activeError.message };
-  }
-
-  if (!isCurrentActiveMembership(membership) && (activeMemberships ?? []).length > 0) {
-    return {
-      data: null,
-      error: "Este cliente ya tiene una membresía activa.",
-    };
-  }
-
-  let planQuery = supabase
-    .from("membership_plans")
-    .select("id, duration_in_days")
-    .eq("id", membership.membership_plan_id)
-    .eq("is_active", true);
-  planQuery = applyGymScope(planQuery, scope);
-  const { data: plan, error: planError } = await planQuery.maybeSingle();
-
-  if (planError) {
-    return { data: null, error: planError.message };
-  }
-
-  if (!plan) {
-    return { data: null, error: "Membership plan is not available." };
-  }
-
-  const today = toIsoDate(new Date());
-  const startDate = String(membership.end_date) >= today
-    ? addDays(String(membership.end_date), 2)
-    : today;
-  const endDate = addDays(startDate, Number(plan.duration_in_days));
-
-  // Authoritative pre-insert check: does the period we're about to create
-  // collide with any of this client's other active/pending_payment/partial
-  // rows? This is what actually prevents the double-submit/stale-modal
-  // scenario (renewing the same source membership twice recomputes the
-  // exact same period both times) instead of surfacing a raw Postgres
-  // error. The exclusion constraint below remains as the last line of
-  // defense for a genuine race between two concurrent requests that both
-  // reach this point before either has inserted.
-  let overlapQuery = supabase
-    .from("client_memberships")
-    .select("id, status, start_date, end_date")
-    .eq("client_id", membership.client_id)
-    .neq("id", clientMembershipId)
-    .in("status", PERIOD_OCCUPYING_STATUSES);
-  overlapQuery = applyGymScope(overlapQuery, scope);
-  const { data: occupyingPeriods, error: overlapQueryError } = await overlapQuery;
-
-  if (overlapQueryError) {
-    return { data: null, error: overlapQueryError.message };
-  }
-
-  if (overlapsExistingPeriod(startDate, endDate, occupyingPeriods ?? [])) {
-    return { data: null, error: MEMBERSHIP_PERIOD_CONFLICT_MESSAGE };
-  }
-
-  const insertResult = await supabase
-    .from("client_memberships")
-    .insert(withGymId({
-      client_id: String(membership.client_id),
-      membership_plan_id: String(membership.membership_plan_id),
-      start_date: startDate,
-      end_date: endDate,
-      status: "pending_payment",
-      notes: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }, scope))
-    .select("id")
-    .single();
-
-  if (isMembershipPeriodConflictError(insertResult.error)) {
-    return { data: null, error: MEMBERSHIP_PERIOD_CONFLICT_MESSAGE };
-  }
-
-  return insertResult;
+  return {
+    data: { membershipId: row.membership_id, status: row.status, startDate: row.start_date, endDate: row.end_date },
+    error: null,
+    errorCode: null,
+  };
 }
 
 export async function listOperationalMemberships(

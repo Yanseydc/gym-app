@@ -442,7 +442,9 @@
         "invalidRequest": "Solicitud inválida. Recarga la página e inténtalo de nuevo.",
         "paymentFailed": "No se pudo registrar el pago. Inténtalo de nuevo.",
         "extendFailed": "No se pudo extender la membresía. Inténtalo de nuevo.",
-        "extendOverlap": "No se puede extender porque se superpondría con la siguiente membresía."
+        "extendOverlap": "No se puede extender porque se superpondría con la siguiente membresía.",
+        "renewFailed": "No se pudo renovar la membresía. Inténtalo de nuevo.",
+        "renewOverlap": "No se puede renovar porque se superpondría con una membresía existente."
       }
     },
     "form": {

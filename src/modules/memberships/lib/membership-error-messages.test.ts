@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 import en from "../../../../locales/en.json";
 import es from "../../../../locales/es.json";
-import { isExtendOverlapConflict, mapKnownMembershipError } from "./membership-error-messages";
+import { isExtendOverlapConflict, isRenewOverlapConflict, mapKnownMembershipError } from "./membership-error-messages";
 
 // Mirrors registerMembershipPayment's exact fallback expression
 // (membership-operations.ts):
@@ -265,6 +265,126 @@ test("both the pre-check and the residual-race 23P01 resolve to the exact same l
     //   if (isExtendOverlapConflict({ message: error, code: errorCode })) return { error: t("...extendOverlap") };
     for (const raw of [preCheckError, residualRaceError]) {
       const shown = isExtendOverlapConflict(raw) ? expected : (mapKnownMembershipError(raw.message) ?? fallback);
+      assert.equal(shown, expected, `${locale}: ${raw.message}`);
+      assert.equal(shown.includes("constraint"), false);
+      assert.equal(shown.includes("23P01"), false);
+    }
+  }
+});
+
+function resolveRenewErrorMessage(rawMessage: string, locale: "en" | "es") {
+  const fallback = (locale === "es" ? es : en).memberships.operations.feedback.renewFailed;
+  return mapKnownMembershipError(rawMessage) ?? fallback;
+}
+
+test("renew_membership: idempotency_key reused with different parameters", () => {
+  assert.equal(
+    mapKnownMembershipError("renew_membership: idempotency_key reused with different parameters"),
+    null,
+  );
+  // Deliberately not a mapped, business-specific message - unlike
+  // extend_membership's own reused-key message, this stays as an internal,
+  // unexpected string that must fall through to the generic fallback (see
+  // "unknown/unexpected internal messages" test below).
+});
+
+test("renew_membership: cancelled/future/upcoming-sibling/active-sibling all map to their own specific, safe message", () => {
+  assert.equal(mapKnownMembershipError("Membership not found."), "No se encontró la membresía.");
+  assert.equal(
+    mapKnownMembershipError("This membership is cancelled and cannot be renewed."),
+    "Una membresía cancelada no se puede renovar.",
+  );
+  assert.equal(
+    mapKnownMembershipError("This membership has not started yet."),
+    "Esta membresía todavía no comienza.",
+  );
+  assert.equal(
+    mapKnownMembershipError("This client already has an upcoming membership."),
+    "Ya existe el siguiente periodo para este cliente.",
+  );
+  assert.equal(
+    mapKnownMembershipError("This client already has an active membership."),
+    "Este cliente ya tiene una membresía activa.",
+  );
+});
+
+test("renewMembership: a known business error (cancelled) resolves to its specific message, not the generic fallback", () => {
+  const raw = "This membership is cancelled and cannot be renewed.";
+  const shownEs = resolveRenewErrorMessage(raw, "es");
+  const shownEn = resolveRenewErrorMessage(raw, "en");
+
+  assert.notEqual(shownEs, es.memberships.operations.feedback.renewFailed);
+  assert.notEqual(shownEn, en.memberships.operations.feedback.renewFailed);
+  assert.equal(shownEs, "Una membresía cancelada no se puede renovar.");
+  assert.equal(shownEn, "Una membresía cancelada no se puede renovar.");
+});
+
+test("renewMembership: unknown/unexpected internal messages never reach the user - only the generic, localized fallback does", () => {
+  const unknownRawMessagesForRenew = [
+    "renew_membership: idempotency_key reused with different parameters",
+    "renew_membership: idempotency key conflict could not be resolved",
+    "renew_membership: p_idempotency_key is required",
+    "renew_membership: p_source_membership_id is required",
+    "permission denied for table client_memberships",
+  ];
+
+  for (const raw of unknownRawMessagesForRenew) {
+    for (const locale of ["en", "es"] as const) {
+      const shown = resolveRenewErrorMessage(raw, locale);
+      const fallback = (locale === "es" ? es : en).memberships.operations.feedback.renewFailed;
+
+      assert.equal(shown, fallback, `${locale}: expected the generic fallback for: ${raw}`);
+      assert.equal(shown.includes("renew_membership:"), false);
+    }
+  }
+});
+
+// Mirrors the extend_membership overlap coverage above: renew_membership's
+// own pre-check message and a residual concurrent race hitting
+// client_memberships_no_overlapping_active_periods (SQLSTATE 23P01) must
+// both resolve to the exact same friendly message.
+test("isRenewOverlapConflict: the RPC pre-check's own message is recognized", () => {
+  assert.equal(
+    isRenewOverlapConflict({ message: "This client already has a membership occupying that period." }),
+    true,
+  );
+});
+
+test("isRenewOverlapConflict: SQLSTATE 23P01 is recognized regardless of the raw message text", () => {
+  assert.equal(
+    isRenewOverlapConflict({
+      message: 'conflicting key value violates exclusion constraint "client_memberships_no_overlapping_active_periods"',
+      code: "23P01",
+    }),
+    true,
+  );
+  assert.equal(isRenewOverlapConflict({ message: "some unrelated wording", code: "23P01" }), true);
+});
+
+test("isRenewOverlapConflict: an unrelated error is not misclassified as an overlap conflict", () => {
+  assert.equal(isRenewOverlapConflict({ message: "This membership is cancelled and cannot be renewed." }), false);
+  assert.equal(isRenewOverlapConflict({ message: "This client already has an upcoming membership." }), false);
+  assert.equal(isRenewOverlapConflict({ message: "renew_membership: idempotency key conflict could not be resolved" }), false);
+});
+
+test("both renew's pre-check and the residual-race 23P01 resolve to the exact same localized, friendly message - never the generic fallback", () => {
+  const preCheckError = { message: "This client already has a membership occupying that period.", code: undefined };
+  const residualRaceError = {
+    message: 'conflicting key value violates exclusion constraint "client_memberships_no_overlapping_active_periods"',
+    code: "23P01",
+  };
+
+  for (const locale of ["en", "es"] as const) {
+    const dict = locale === "es" ? es : en;
+    const expected = dict.memberships.operations.feedback.renewOverlap;
+    const fallback = dict.memberships.operations.feedback.renewFailed;
+
+    assert.notEqual(expected, fallback);
+
+    // Mirrors renewMembership's exact branch (membership-operations.ts):
+    //   if (isRenewOverlapConflict({ message: error, code: errorCode })) return { error: t("...renewOverlap") };
+    for (const raw of [preCheckError, residualRaceError]) {
+      const shown = isRenewOverlapConflict(raw) ? expected : (mapKnownMembershipError(raw.message) ?? fallback);
       assert.equal(shown, expected, `${locale}: ${raw.message}`);
       assert.equal(shown.includes("constraint"), false);
       assert.equal(shown.includes("23P01"), false);

@@ -442,7 +442,9 @@
         "invalidRequest": "Invalid request. Reload the page and try again.",
         "paymentFailed": "We couldn't register the payment. Please try again.",
         "extendFailed": "We couldn't extend the membership. Please try again.",
-        "extendOverlap": "This extension would overlap with the next membership."
+        "extendOverlap": "This extension would overlap with the next membership.",
+        "renewFailed": "We couldn't renew the membership. Please try again.",
+        "renewOverlap": "This renewal would overlap with an existing membership."
       }
     },
     "form": {

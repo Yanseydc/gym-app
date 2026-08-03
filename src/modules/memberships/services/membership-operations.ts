@@ -5,7 +5,11 @@ import { z } from "zod";
 
 import { getAdminText } from "@/lib/i18n/admin";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
-import { isExtendOverlapConflict, mapKnownMembershipError } from "@/modules/memberships/lib/membership-error-messages";
+import {
+  isExtendOverlapConflict,
+  isRenewOverlapConflict,
+  mapKnownMembershipError,
+} from "@/modules/memberships/lib/membership-error-messages";
 import {
   cancelClientMembershipRecord,
   extendMembershipRecord,
@@ -69,11 +73,27 @@ export async function renewMembership(
     return { error: t("memberships.operations.feedback.membershipRequired") };
   }
 
+  // Validated as a UUID before it ever reaches the RPC, same convention as
+  // registerMembershipPayment/extendMembership's own idempotencyKey check.
+  const idempotencyKeyResult = z.string().uuid().safeParse(formData.get("idempotencyKey"));
+
+  if (!idempotencyKeyResult.success) {
+    return { error: t("memberships.operations.feedback.invalidRequest") };
+  }
+
   const supabase = await createSupabaseClient();
-  const { error } = await renewClientMembershipRecord(supabase, membershipId);
+  const { error, errorCode } = await renewClientMembershipRecord(supabase, {
+    sourceMembershipId: membershipId,
+    idempotencyKey: idempotencyKeyResult.data,
+  });
 
   if (error) {
-    return { error: typeof error === "string" ? error : error.message };
+    if (isRenewOverlapConflict({ message: error, code: errorCode })) {
+      return { error: t("memberships.operations.feedback.renewOverlap") };
+    }
+
+    // Never forward a raw Postgres/RPC message to the user.
+    return { error: mapKnownMembershipError(error) ?? t("memberships.operations.feedback.renewFailed") };
   }
 
   refreshMemberships();
