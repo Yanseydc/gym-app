@@ -98,10 +98,24 @@ jobs:
       # obtienen datos en tiempo de request, no en build time) - solo
       # necesita que las NEXT_PUBLIC_* pasen la validacion de Zod para
       # poder inlinearlas en el bundle del cliente.
+      #
+      # src/lib/env-server.ts valida NEXT_PUBLIC_APP_URL (z.string().url())
+      # y SUPABASE_SERVICE_ROLE_KEY (z.string().min(1)) en el top level del
+      # modulo, con .parse() ejecutandose al importarlo. La fase "Collecting
+      # page data" de next build importa /dashboard/clients/[clientId]/
+      # portal-access/new para leer su config de ruta, lo cual arrastra esa
+      # importacion y dispara la validacion aunque la Server Action que
+      # realmente usa esas variables (createPortalAccess) nunca se ejecuta
+      # en build time - de ahi el ZodError sin estas dos variables. Los
+      # valores de abajo solo satisfacen ese parse: URL con formato valido
+      # pero inalcanzable, y una cadena que ni siquiera tiene forma de JWT,
+      # para no confundirla nunca con un service-role key real.
       - name: Build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.DUMMY_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.DUMMY_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          SUPABASE_SERVICE_ROLE_KEY: "dummy-service-role-key-for-ci-build-only-not-a-real-jwt"
         run: npm run build
 
   migrations:
