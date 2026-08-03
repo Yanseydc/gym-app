@@ -68,11 +68,11 @@ export function canAccessPath(role: Role, pathname: string): boolean {
     return isPortalRoute(pathname);
   }
 
-  const module = getModuleByPath(pathname);
+  const appModule = getModuleByPath(pathname);
 
-  if (!module) {
+  if (!appModule) {
     return false;
   }
 
-  return hasModuleAccess(role, module);
+  return hasModuleAccess(role, appModule);
 }

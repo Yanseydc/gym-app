@@ -1,0 +1,153 @@
+name: CI
+
+# Etapa 1: pruebas puras + typecheck + lint + build + validacion de
+# migraciones contra Supabase LOCAL unicamente.
+#
+# `npm run lint` estaba roto (exit 2) por una incompatibilidad entre
+# @rushstack/eslint-patch (requerido incondicionalmente por el entry point
+# legado de eslint-config-next) y eslint 9.x - eslint.config.mjs spreadeaba
+# ese export legado directamente en un array de flat config, lo cual nunca
+# fue el uso soportado. Se corrigio reescribiendo eslint.config.mjs para
+# usar FlatCompat (@eslint/eslintrc), el puente oficial que create-next-app
+# genera para este mismo caso - sin bajar de version eslint/eslint-config-next
+# ni tocar ninguna regla.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Cancela corridas anteriores del mismo PR o rama al llegar un nuevo push,
+# para no acumular ejecuciones obsoletas en paralelo.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# Alcance minimo de lectura para todos los jobs. Ningun job de este
+# workflow escribe en el repositorio, despliega ni usa credenciales de
+# Supabase remoto - ver las variables dummy en cada job.
+permissions:
+  contents: read
+
+env:
+  # Node LTS fijado explicitamente (no "latest"), consistente con el
+  # requisito de next@15.x (^18.18 || ^19.8 || >=20).
+  NODE_VERSION: "22"
+  # Valores con formato valido pero deliberadamente falsos - satisfacen la
+  # validacion de Zod en src/lib/env-client.ts (url() / min(1)) sin apuntar
+  # a ningun proyecto real. Nunca son secretos de GitHub: viven en texto
+  # plano en este archivo a proposito, para que quede claro que no lo son.
+  DUMMY_SUPABASE_URL: "http://127.0.0.1:54321"
+  DUMMY_SUPABASE_ANON_KEY: "dummy-anon-key-for-ci-build-and-tests-only"
+
+jobs:
+  fast:
+    name: fast (test + typecheck + lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Las 149 pruebas (12 archivos) son puras o solo necesitan que las
+      # variables NEXT_PUBLIC_SUPABASE_* existan con formato valido - nunca
+      # se conectan a ningun Supabase real. Confirmado leyendo cada archivo
+      # de prueba y ejecutando la suite completa con valores inalcanzables.
+      - name: Run test suite (149 tests, no real Supabase involved)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.DUMMY_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.DUMMY_SUPABASE_ANON_KEY }}
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Doesn't need env vars - eslint never touches Supabase or NEXT_PUBLIC_*.
+      - name: Lint
+        run: npm run lint
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # next build nunca contacta a Supabase (todas las rutas dinamicas
+      # obtienen datos en tiempo de request, no en build time) - solo
+      # necesita que las NEXT_PUBLIC_* pasen la validacion de Zod para
+      # poder inlinearlas en el bundle del cliente.
+      - name: Build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.DUMMY_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.DUMMY_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+  migrations:
+    name: migrations (Supabase local)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Version fijada explicitamente (no "latest") para reproducibilidad -
+      # debe actualizarse a proposito cuando el equipo decida subir de
+      # version, nunca de forma silenciosa entre corridas.
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
+
+      # supabase/config.toml references 7 env(...) placeholders (studio's
+      # openai_api_key, auth.sms.twilio's auth_token, auth.external.apple's
+      # secret, and 4 experimental S3 fields). Verified empirically (env -i,
+      # zero variables of any kind set) that `supabase start` and
+      # `db reset --local` both succeed with exit 0 and no warnings when
+      # none of them are resolvable - every feature that reads one is
+      # either disabled (auth.sms.twilio, auth.external.apple) or tolerates
+      # an empty value (studio, unused experimental S3 fields). None are
+      # set here on purpose: they are genuinely not required, not an
+      # oversight.
+      #
+      # Arranca Postgres 17 + el resto del stack local (definido en
+      # supabase/config.toml, ahora versionado) usando exclusivamente las
+      # credenciales demo que el propio CLI genera - nunca projet ref,
+      # password ni token de ningun proyecto remoto. Ningun comando de este
+      # job usa --linked ni contacta una URL fuera de 127.0.0.1.
+      - name: Start Supabase local stack
+        run: supabase start
+
+      # Aplica las 11 migraciones desde cero, exactamente como en un clon
+      # limpio del repositorio. Si alguna migracion tiene un error real de
+      # SQL, este paso falla aqui - antes de que ese error llegue a
+      # producción.
+      - name: Apply all migrations from a clean state
+        run: supabase db reset --local
+
+      # supabase stop siempre corre, incluso si un paso anterior fallo, para
+      # no dejar contenedores huerfanos en el runner.
+      - name: Stop Supabase local stack
+        if: always()
+        run: supabase stop
