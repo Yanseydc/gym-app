@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { getDisplayLifecycleStatus } from "./membership-lifecycle";
+import { getDisplayLifecycleStatus, hasPendingPaymentBalance, isPendingPaymentStatus } from "./membership-lifecycle";
 import { getTodayInAppTimeZone } from "@/lib/date-format";
 
 const TODAY = "2026-07-28";
@@ -78,6 +78,74 @@ test("a raw 'expired' status is re-derived from dates, not trusted as-is", () =>
 test("omitting `today` defaults to getTodayInAppTimeZone (smoke test, not date-sensitive)", () => {
   const m = membership({ status: "active", startDate: "2020-01-01", endDate: "2099-01-01" });
   assert.equal(getDisplayLifecycleStatus(m), "active");
+});
+
+test("isPendingPaymentStatus: only pending_payment and partial are payment-gate statuses", () => {
+  assert.equal(isPendingPaymentStatus("pending_payment"), true);
+  assert.equal(isPendingPaymentStatus("partial"), true);
+  assert.equal(isPendingPaymentStatus("active"), false);
+  assert.equal(isPendingPaymentStatus("expired"), false);
+  assert.equal(isPendingPaymentStatus("cancelled"), false);
+});
+
+test("hasPendingPaymentBalance: pending_payment with a balance qualifies", () => {
+  assert.equal(hasPendingPaymentBalance({ status: "pending_payment", remainingBalance: 500 }), true);
+});
+
+test("hasPendingPaymentBalance: partial with a balance qualifies", () => {
+  assert.equal(hasPendingPaymentBalance({ status: "partial", remainingBalance: 150 }), true);
+});
+
+test("hasPendingPaymentBalance: zero balance is excluded even for a payment-gate status", () => {
+  assert.equal(hasPendingPaymentBalance({ status: "pending_payment", remainingBalance: 0 }), false);
+  assert.equal(hasPendingPaymentBalance({ status: "partial", remainingBalance: 0 }), false);
+});
+
+test("hasPendingPaymentBalance: cancelled is always excluded regardless of balance", () => {
+  assert.equal(hasPendingPaymentBalance({ status: "cancelled", remainingBalance: 500 }), false);
+});
+
+test("hasPendingPaymentBalance: a fully active membership (no payment gate) is excluded even with a balance", () => {
+  // Shouldn't normally happen (an "active" row implies fully paid), but the
+  // predicate must not accidentally include it if it ever did.
+  assert.equal(hasPendingPaymentBalance({ status: "active", remainingBalance: 500 }), false);
+});
+
+test("hasPendingPaymentBalance: no date/temporal parameter exists in its signature - future, current and expired pending_payment/partial rows all qualify identically as long as they have a balance, matching the existing 'Pagos pendientes' dashboard panel's own definition", () => {
+  const candidate = { status: "pending_payment" as const, remainingBalance: 1 };
+  // Called with the exact same (date-free) shape regardless of whether the
+  // underlying membership is future, current, or expired - there is no
+  // startDate/endDate/today input this function could branch on.
+  assert.equal(hasPendingPaymentBalance(candidate), true);
+});
+
+test("hasPendingPaymentBalance composes with every temporal operationalStatus value - the /dashboard/memberships list's own two-filter chain (filter + paymentStatus), replicated here without a browser", () => {
+  const rows = [
+    { id: "future", operationalStatus: "future", status: "pending_payment", remainingBalance: 100 },
+    { id: "active", operationalStatus: "active", status: "partial", remainingBalance: 50 },
+    { id: "expiring", operationalStatus: "expiring", status: "pending_payment", remainingBalance: 20 },
+    { id: "expired", operationalStatus: "expired", status: "partial", remainingBalance: 10 },
+    { id: "cancelled", operationalStatus: "cancelled", status: "cancelled", remainingBalance: 0 },
+    { id: "active-paid", operationalStatus: "active", status: "active", remainingBalance: 0 },
+  ] as const;
+
+  for (const temporal of ["future", "active", "expiring", "expired"] as const) {
+    const combined = rows
+      .filter((row) => row.operationalStatus === temporal)
+      .filter((row) => hasPendingPaymentBalance(row));
+
+    assert.deepEqual(
+      combined.map((row) => row.id),
+      [temporal],
+      `filter=${temporal} + paymentStatus=pending must yield exactly the one matching pending row, not the fully-paid or cancelled ones`,
+    );
+  }
+
+  // filter=all (temporal not applied, only cancelled excluded) + paymentStatus=pending.
+  const allPending = rows
+    .filter((row) => row.operationalStatus !== "cancelled")
+    .filter((row) => hasPendingPaymentBalance(row));
+  assert.deepEqual(allPending.map((row) => row.id), ["future", "active", "expiring", "expired"]);
 });
 
 test("a `today` injected from inside a real UTC/Tijuana day-mismatch window classifies correctly", () => {

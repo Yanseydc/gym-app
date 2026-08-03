@@ -3,7 +3,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { buildMembershipListHref, parseMembershipListFilter } from "./membership-list-filter";
+import {
+  buildMembershipListHref,
+  buildPendingPaymentsHref,
+  parseMembershipListFilter,
+  parseMembershipPaymentFilter,
+} from "./membership-list-filter";
 
 test("buildMembershipListHref: correct destination for each of the four category cards", () => {
   assert.equal(buildMembershipListHref("active"), "/dashboard/memberships?filter=active");
@@ -39,4 +44,37 @@ test("round-trip: every href built by buildMembershipListHref parses back to the
     const query = new URL(href, "http://localhost").searchParams.get("filter");
     assert.equal(parseMembershipListFilter(query), category);
   }
+});
+
+test("buildPendingPaymentsHref: correct destination for the 'View all' link", () => {
+  assert.equal(buildPendingPaymentsHref(), "/dashboard/memberships?paymentStatus=pending");
+});
+
+test("parseMembershipPaymentFilter: reads the known value back correctly", () => {
+  assert.equal(parseMembershipPaymentFilter("pending"), "pending");
+  assert.equal(parseMembershipPaymentFilter("all"), "all");
+});
+
+test("parseMembershipPaymentFilter: missing value defaults to 'all' (no payment filter)", () => {
+  assert.equal(parseMembershipPaymentFilter(null), "all");
+  assert.equal(parseMembershipPaymentFilter(undefined), "all");
+  assert.equal(parseMembershipPaymentFilter(""), "all");
+});
+
+test("parseMembershipPaymentFilter: unknown/invalid values default to 'all' instead of crashing or showing nothing", () => {
+  assert.equal(parseMembershipPaymentFilter("bogus"), "all");
+  assert.equal(parseMembershipPaymentFilter("PENDING"), "all", "case-sensitive - not a silent alias for 'pending'");
+  assert.equal(parseMembershipPaymentFilter("pending; DROP TABLE"), "all");
+});
+
+test("round-trip: the href built by buildPendingPaymentsHref parses back to 'pending'", () => {
+  const href = buildPendingPaymentsHref();
+  const query = new URL(href, "http://localhost").searchParams.get("paymentStatus");
+  assert.equal(parseMembershipPaymentFilter(query), "pending");
+});
+
+test("filter and paymentStatus coexist independently in the same URL, each parsed from its own key", () => {
+  const url = new URL("/dashboard/memberships?filter=future&paymentStatus=pending", "http://localhost");
+  assert.equal(parseMembershipListFilter(url.searchParams.get("filter")), "future");
+  assert.equal(parseMembershipPaymentFilter(url.searchParams.get("paymentStatus")), "pending");
 });

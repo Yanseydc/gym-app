@@ -4,6 +4,7 @@ import { getAdminText } from "@/lib/i18n/admin";
 import { card, infoRow, metaChip } from "@/lib/ui";
 import type { AttentionPendingPaymentMembership } from "@/modules/dashboard/types";
 import { MembershipStatusBadge } from "@/modules/memberships/components/membership-status-badge";
+import { buildPendingPaymentsHref } from "@/modules/memberships/lib/membership-list-filter";
 
 type PendingPaymentsPanelProps = {
   items: AttentionPendingPaymentMembership[];
@@ -71,7 +72,7 @@ export async function PendingPaymentsPanel({ items, total }: PendingPaymentsPane
       )}
 
       {total > items.length ? (
-        <Link href="/dashboard/memberships" style={{ fontSize: 14, fontWeight: 700 }}>
+        <Link href={buildPendingPaymentsHref()} style={{ fontSize: 14, fontWeight: 700 }}>
           {t("dashboard.attention.viewAll")}
         </Link>
       ) : null}

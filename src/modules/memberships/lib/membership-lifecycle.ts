@@ -117,6 +117,37 @@ export type MembershipOperationalStatusInput = {
  * and isCurrentActiveMembership for the operational dashboard's "current
  * membership" grouping - neither is derived from this function.
  */
+/**
+ * Whether a persisted membership status is one of the two payment-gate
+ * states - shared by the "Atención requerida" pending-payments panel
+ * (dashboard-service.ts) and the /dashboard/memberships payment filter, so
+ * both can narrow candidates to "payment-relevant" rows with the exact same
+ * rule. Pure, no dependency on remainingBalance (which isn't known yet at
+ * the point dashboard-service.ts narrows candidates, before the plan-price/
+ * payment queries run).
+ */
+export function isPendingPaymentStatus(
+  status: MembershipStatus,
+): status is Extract<MembershipStatus, "pending_payment" | "partial"> {
+  return status === "pending_payment" || status === "partial";
+}
+
+/**
+ * The full "Pagos pendientes" membership rule, reused literally by both
+ * selectPendingPaymentMemberships (attention-required.ts) and the
+ * /dashboard/memberships payment filter (membership-operations-dashboard.tsx):
+ * a payment-gate status (pending_payment/partial) AND an actual outstanding
+ * balance. Cancelled memberships are excluded implicitly - they can never
+ * satisfy isPendingPaymentStatus. No date/temporal check here by design:
+ * future, current and expired pending_payment/partial rows with a balance
+ * all qualify, matching the existing dashboard panel's own definition.
+ */
+export function hasPendingPaymentBalance(
+  candidate: { status: MembershipStatus; remainingBalance: number },
+): boolean {
+  return isPendingPaymentStatus(candidate.status) && candidate.remainingBalance > 0;
+}
+
 export function getOperationalStatus(
   startDate: string,
   endDate: string,

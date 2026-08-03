@@ -394,7 +394,12 @@
         "expiring": "Por vencer",
         "future": "Futuras"
       },
+      "paymentFilters": {
+        "all": "Todos",
+        "pending": "Pagos pendientes"
+      },
       "empty": "No hay membresías para este filtro.",
+      "emptyPending": "No hay pagos pendientes para este filtro.",
       "showing": "Mostrando {visible} de {total}",
       "expires": "vence {date}",
       "currentMembershipConflict": "Ya tiene una membresía activa",

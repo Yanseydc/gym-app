@@ -19,6 +19,7 @@ import {
   statusWarning,
 } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+import { hasPendingPaymentBalance, isPendingPaymentStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import {
   canExtendMembership,
   canRenewMembership,
@@ -27,8 +28,11 @@ import {
 } from "@/modules/memberships/lib/membership-operations-permissions";
 import {
   parseMembershipListFilter,
+  parseMembershipPaymentFilter,
   type MembershipListFilter,
+  type MembershipPaymentFilter,
 } from "@/modules/memberships/lib/membership-list-filter";
+import { MembershipStatusBadge } from "@/modules/memberships/components/membership-status-badge";
 import {
   cancelMembershipFromDashboard,
   extendMembership,
@@ -55,6 +59,17 @@ export function MembershipOperationsDashboard({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  // router.replace (not router.push) is deliberate, pre-existing behavior
+  // for this list's own temporal filter, kept as-is here: clicking between
+  // filter buttons swaps the current history entry's URL instead of
+  // pushing a new one, so repeated filter clicks don't pile up "Back"
+  // stops a user would have to click through one at a time. A real
+  // navigation to a different route (e.g. a sidebar link) still pushes its
+  // own entry as normal - Back from there correctly lands on whatever
+  // filter combination was active on this page just before leaving it,
+  // since that's the (single, replaced-in-place) history entry for this
+  // page. The payment filter below follows the exact same convention for
+  // the same reason.
   const filter = parseMembershipListFilter(searchParams.get("filter"));
   const setFilter = (next: MembershipListFilter) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -63,6 +78,23 @@ export function MembershipOperationsDashboard({
       params.delete("filter");
     } else {
       params.set("filter", next);
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+  // Independent dimension from `filter` (temporal): starting from a copy of
+  // ALL current search params and only ever touching its own key means each
+  // setter automatically preserves whatever the other one currently holds,
+  // with no special-casing needed.
+  const paymentFilter = parseMembershipPaymentFilter(searchParams.get("paymentStatus"));
+  const setPaymentFilter = (next: MembershipPaymentFilter) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (next === "all") {
+      params.delete("paymentStatus");
+    } else {
+      params.set("paymentStatus", next);
     }
 
     const query = params.toString();
@@ -105,6 +137,7 @@ export function MembershipOperationsDashboard({
       .filter((membership) =>
         filter === "all" ? membership.operationalStatus !== "cancelled" : membership.operationalStatus === filter,
       )
+      .filter((membership) => (paymentFilter === "all" ? true : hasPendingPaymentBalance(membership)))
       .filter((membership) => {
         if (!normalizedSearch) {
           return true;
@@ -121,13 +154,13 @@ export function MembershipOperationsDashboard({
 
         return first.endDate.localeCompare(second.endDate);
       });
-  }, [filter, memberships, search]);
+  }, [filter, paymentFilter, memberships, search]);
   const visibleMemberships = filteredMemberships.slice(0, visibleCount);
   const hasMore = visibleCount < filteredMemberships.length;
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [filter, search]);
+  }, [filter, paymentFilter, search]);
 
   return (
     <section style={{ display: "grid", gap: 18 }}>
@@ -171,8 +204,21 @@ export function MembershipOperationsDashboard({
         </div>
       </div>
 
+      <div style={filterStyles}>
+        <FilterButton active={paymentFilter === "all"} onClick={() => setPaymentFilter("all")}>
+          {t("memberships.operations.paymentFilters.all")}
+        </FilterButton>
+        <FilterButton active={paymentFilter === "pending"} onClick={() => setPaymentFilter("pending")}>
+          {t("memberships.operations.paymentFilters.pending")}
+        </FilterButton>
+      </div>
+
       {filteredMemberships.length === 0 ? (
-        <div style={emptyStyles}>{t("memberships.operations.empty")}</div>
+        <div style={emptyStyles}>
+          {paymentFilter === "pending"
+            ? t("memberships.operations.emptyPending")
+            : t("memberships.operations.empty")}
+        </div>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
@@ -224,6 +270,9 @@ export function MembershipOperationsDashboard({
 
               <div className="membership-operations-card-meta">
                 <StatusBadge status={membership.operationalStatus} />
+                {isPendingPaymentStatus(membership.status) ? (
+                  <MembershipStatusBadge status={membership.status} />
+                ) : null}
                 {!membership.isCurrentActiveMembership && membership.hasCurrentActiveMembership ? (
                   <span style={activeConflictStyles}>
                     {t("memberships.operations.currentMembershipConflict")}

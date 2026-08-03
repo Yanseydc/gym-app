@@ -394,7 +394,12 @@
         "expiring": "Expiring soon",
         "future": "Future"
       },
+      "paymentFilters": {
+        "all": "All",
+        "pending": "Pending payments"
+      },
       "empty": "No memberships match this filter.",
+      "emptyPending": "No pending payments match this filter.",
       "showing": "Showing {visible} of {total}",
       "expires": "expires {date}",
       "currentMembershipConflict": "Already has an active membership",

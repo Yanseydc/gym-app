@@ -1,5 +1,5 @@
 import { getTodayInAppTimeZone } from "@/lib/date-format";
-import { getOperationalStatus } from "@/modules/memberships/lib/membership-lifecycle";
+import { getOperationalStatus, hasPendingPaymentBalance } from "@/modules/memberships/lib/membership-lifecycle";
 import type { MembershipStatus } from "@/modules/memberships/types";
 
 /**
@@ -97,10 +97,13 @@ export type PendingPaymentAttentionCandidate = {
 };
 
 /**
- * "Pagos pendientes": the caller only ever passes pending_payment/partial
- * rows (cancelled memberships never reach this function), and here we also
- * require remainingBalance > 0 - a pending_payment/partial row that's
- * already been fully paid off has nothing left to chase.
+ * "Pagos pendientes": reuses hasPendingPaymentBalance (membership-lifecycle.ts)
+ * literally - the same rule the /dashboard/memberships payment filter uses -
+ * so this panel and that list can never drift apart on what counts as a
+ * pending payment. The caller only ever passes pending_payment/partial rows
+ * (cancelled memberships never reach this function), so in practice this
+ * only re-checks remainingBalance > 0 here, but going through the shared
+ * predicate keeps both call sites textually tied to one definition.
  *
  * Sorted by remainingBalance descending: the clients who owe the most surface
  * first, which is the most actionable order for a front-desk follow-up list.
@@ -109,7 +112,7 @@ export type PendingPaymentAttentionCandidate = {
 export function selectPendingPaymentMemberships(
   candidates: PendingPaymentAttentionCandidate[],
 ): SelectionResult<PendingPaymentAttentionCandidate> {
-  const withBalance = candidates.filter((candidate) => candidate.remainingBalance > 0);
+  const withBalance = candidates.filter((candidate) => hasPendingPaymentBalance(candidate));
 
   const sorted = [...withBalance].sort((a, b) => {
     if (a.remainingBalance !== b.remainingBalance) {

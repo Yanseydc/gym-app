@@ -10,6 +10,7 @@ import {
   type PendingPaymentAttentionCandidate,
 } from "@/modules/dashboard/lib/attention-required";
 import { countMembershipMetrics, getMonthStartFromCivilDate } from "@/modules/dashboard/lib/dashboard-metrics";
+import { isPendingPaymentStatus } from "@/modules/memberships/lib/membership-lifecycle";
 import type { AppSupabaseClient } from "@/types/supabase";
 import type {
   AttentionRequiredSnapshot,
@@ -337,7 +338,7 @@ async function getAttentionRequired(
 
   const pendingCandidatesRaw = candidates.filter(
     (candidate): candidate is AttentionMembershipCandidate & { status: "pending_payment" | "partial" } =>
-      candidate.status === "pending_payment" || candidate.status === "partial",
+      isPendingPaymentStatus(candidate.status),
   );
   const pendingPlanIds = [...new Set(pendingCandidatesRaw.map((candidate) => candidate.membershipPlanId))];
   const pendingMembershipIds = pendingCandidatesRaw.map((candidate) => candidate.id);
