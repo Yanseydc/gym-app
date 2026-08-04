@@ -126,6 +126,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Mismo pin de Node LTS que fast/build, para que `npm ci` y la suite
+      # de integracion (supabase/tests/*.integration.test.ts, corrida via
+      # tsx --test mas abajo) usen exactamente el mismo runtime reproducible.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       # Version fijada explicitamente (no "latest") para reproducibilidad -
       # debe actualizarse a proposito cuando el equipo decida subir de
       # version, nunca de forma silenciosa entre corridas.
@@ -153,12 +165,48 @@ jobs:
       - name: Start Supabase local stack
         run: supabase start
 
-      # Aplica las 11 migraciones desde cero, exactamente como en un clon
+      # Aplica las 12 migraciones desde cero, exactamente como en un clon
       # limpio del repositorio. Si alguna migracion tiene un error real de
       # SQL, este paso falla aqui - antes de que ese error llegue a
       # producción.
       - name: Apply all migrations from a clean state
         run: supabase db reset --local
+
+      # `supabase status -o json` es la unica fuente de URL/claves para el
+      # paso siguiente - nunca .env.local, nunca un secret de GitHub, nunca
+      # un proyecto remoto. Las claves impresas aqui son las claves demo
+      # locales estandar (identicas en cualquier `supabase init`, ya
+      # visibles en texto plano en el log de "Start Supabase local stack"
+      # de arriba) y pertenecen unicamente a este stack Docker efimero, que
+      # se destruye al final del job - no son secretos reales, pero de
+      # todas formas se enmascaran con `::add-mask::` para no repetirlas
+      # sin necesidad en el log de este paso. `2>/dev/null` descarta lineas
+      # informativas que este comando manda a stderr (confirmado local:
+      # ensucian stdout y rompen el parseo con jq si no se separan).
+      - name: Export local Supabase URL/keys for the integration suite
+        run: |
+          STATUS_JSON=$(supabase status -o json 2>/dev/null)
+          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.ANON_KEY')
+          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.SERVICE_ROLE_KEY')
+          API_URL=$(echo "$STATUS_JSON" | jq -r '.API_URL')
+          echo "::add-mask::$ANON_KEY"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      # Prueba de extremo a extremo contra el stack local real (JWT reales,
+      # RLS real) del RPC activate_client_routine - ver
+      # supabase/tests/activate-client-routine.integration.test.ts. Crea y
+      # borra sus propios datos de prueba (gyms/clients/profiles/routines/
+      # usuarios Auth) y verifica al final, con asserts, que no dejo nada.
+      - name: Run routine activation integration suite
+        run: npm run test:supabase:routines
+
+      - name: Lint database schema
+        run: supabase db lint --local
 
       # supabase stop siempre corre, incluso si un paso anterior fallo, para
       # no dejar contenedores huerfanos en el runner.
