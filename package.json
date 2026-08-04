@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test $(find src -name '*.test.ts')",
-    "test:supabase:routines": "tsx --test supabase/tests/activate-client-routine.integration.test.ts"
+    "test:supabase": "tsx --test $(find supabase/tests -name '*.integration.test.ts')"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

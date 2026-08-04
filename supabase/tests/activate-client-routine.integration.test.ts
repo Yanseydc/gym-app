@@ -19,107 +19,25 @@
 // production credentials. Do not point SUPABASE_URL at a remote project
 // when running this file: it creates and deletes real auth users, gyms,
 // clients and routines against whatever project it targets.
+//
+// Shared fixture/request helpers live in ./helpers.ts, reused by
+// client-routine-sessions.integration.test.ts.
 
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, before, describe, test } from "node:test";
 
-const SUPABASE_URL = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
-
-function requireEnv(name: string, value: string | undefined): string {
-  if (!value) {
-    throw new Error(
-      `${name} is required to run this integration test. Start the local stack ` +
-        "(`supabase start`) and export the local ANON/SERVICE_ROLE keys it prints " +
-        "(see `supabase status`) before running this file. Never point this at a " +
-        "remote/production project.",
-    );
-  }
-  return value;
-}
-
-const ANON_KEY = requireEnv("SUPABASE_ANON_KEY", process.env.SUPABASE_ANON_KEY);
-const SERVICE_ROLE_KEY = requireEnv(
-  "SUPABASE_SERVICE_ROLE_KEY",
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-);
+import {
+  SERVICE_ROLE_KEY,
+  SUPABASE_URL,
+  adminRequest,
+  callRpc,
+  createAuthUser,
+  deleteAuthUser,
+  signIn,
+} from "./helpers";
 
 type ActivateRoutineRow = { id: string; archived_previous: boolean };
-
-async function adminRequest(path: string, init: RequestInit = {}) {
-  const response = await fetch(`${SUPABASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-      ...(init.headers ?? {}),
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`${init.method ?? "GET"} ${path} -> ${response.status}: ${await response.text()}`);
-  }
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  return response.json();
-}
-
-async function createAuthUser(email: string, password: string): Promise<string> {
-  const user = (await adminRequest("/auth/v1/admin/users", {
-    method: "POST",
-    body: JSON.stringify({ email, password, email_confirm: true }),
-  })) as { id: string };
-
-  return user.id;
-}
-
-async function deleteAuthUser(userId: string) {
-  await adminRequest(`/auth/v1/admin/users/${userId}`, { method: "DELETE" });
-}
-
-async function signIn(email: string, password: string): Promise<string> {
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: ANON_KEY },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`sign-in failed for ${email}: ${response.status} ${await response.text()}`);
-  }
-
-  const session = (await response.json()) as { access_token: string };
-  return session.access_token;
-}
-
-async function activateRoutine(
-  accessToken: string,
-  payload: {
-    target_routine_id: string;
-    target_client_id: string;
-    target_title: string;
-    target_notes: string | null;
-    target_starts_on: string | null;
-    target_ends_on: string | null;
-  },
-) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/activate_client_routine`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const body = await response.json();
-  return { status: response.status, body };
-}
 
 describe("activate_client_routine RPC (requires local Supabase running)", () => {
   const suffix = randomUUID().slice(0, 8);
@@ -259,14 +177,17 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
     // "get user" endpoint 404s once deleted.
     for (const userId of [adminAUserId, staffBUserId]) {
       const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
-        headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` },
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        },
       });
       assert.equal(response.status, 404, `auth user ${userId} must not remain after cleanup`);
     }
   });
 
   test("gym-scoped admin activates a draft routine for their own client", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: routine1Id,
       target_client_id: clientAId,
       target_title: "Routine 1 Active",
@@ -282,7 +203,7 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
   });
 
   test("staff from a different gym cannot activate a routine for this client", async () => {
-    const { status, body } = await activateRoutine(staffBToken, {
+    const { status, body } = await callRpc("activate_client_routine", staffBToken, {
       target_routine_id: routine2Id,
       target_client_id: clientAId,
       target_title: "Hijack attempt",
@@ -296,7 +217,7 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
   });
 
   test("activating a second routine archives the previously active one", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: routine2Id,
       target_client_id: clientAId,
       target_title: "Routine 2 Active",
@@ -317,7 +238,7 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
   });
 
   test("re-activating an already-active routine succeeds and reports no newly-archived routine", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: routine2Id,
       target_client_id: clientAId,
       target_title: "Routine 2 Active Again",
@@ -333,7 +254,7 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
   });
 
   test("a non-existent client raises 'Client not found.'", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: routine2Id,
       target_client_id: "00000000-0000-0000-0000-000000000099",
       target_title: "X",
@@ -346,19 +267,8 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
     assert.equal((body as { message: string }).message, "Client not found.");
   });
 
-  // TECH DEBT (deliberately not changed by this fix -- see the bug-fix
-  // migration's own scope note): activate_client_routine raises a real
-  // exception for "client not found", but a routine that does not exist,
-  // or that exists but does not belong to target_client_id, both fall
-  // through to the final UPDATE ... RETURNING matching zero rows -- which
-  // PostgREST reports as HTTP 200 with an empty array, not an error. The
-  // caller (activateRoutineRecord in routine-service.ts) already treats an
-  // empty result as "Unable to activate routine.", so this is not a user-
-  // facing regression, but it is an inconsistency worth revisiting
-  // separately: from the RPC's own contract, an invalid id and "nothing to
-  // do" are indistinguishable from a successful no-op.
   test("a non-existent routine id returns an empty result, not an error", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: "00000000-0000-0000-0000-000000000099",
       target_client_id: clientAId,
       target_title: "X",
@@ -372,7 +282,7 @@ describe("activate_client_routine RPC (requires local Supabase running)", () => 
   });
 
   test("a routine that does not belong to the target client returns an empty result and is not mutated", async () => {
-    const { status, body } = await activateRoutine(adminAToken, {
+    const { status, body } = await callRpc("activate_client_routine", adminAToken, {
       target_routine_id: routine1Id,
       target_client_id: clientA2Id,
       target_title: "Mismatch",

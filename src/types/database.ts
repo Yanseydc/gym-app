@@ -261,6 +261,211 @@ export type Database = {
         };
         Relationships: [];
       };
+      client_routine_session_exercises: {
+        Row: {
+          client_notes: string | null;
+          client_routine_session_id: string;
+          created_at: string;
+          exercise_id: string | null;
+          exercise_name: string;
+          id: string;
+          prescribed_notes: string | null;
+          prescribed_reps_text: string | null;
+          prescribed_rest_seconds: number | null;
+          prescribed_sets_text: string | null;
+          prescribed_weight_text: string | null;
+          sort_order: number;
+          version: number;
+        };
+        Insert: {
+          client_notes?: string | null;
+          client_routine_session_id: string;
+          created_at?: string;
+          exercise_id?: string | null;
+          exercise_name: string;
+          id?: string;
+          prescribed_notes?: string | null;
+          prescribed_reps_text?: string | null;
+          prescribed_rest_seconds?: number | null;
+          prescribed_sets_text?: string | null;
+          prescribed_weight_text?: string | null;
+          sort_order: number;
+          version?: number;
+        };
+        Update: {
+          client_notes?: string | null;
+          client_routine_session_id?: string;
+          created_at?: string;
+          exercise_id?: string | null;
+          exercise_name?: string;
+          id?: string;
+          prescribed_notes?: string | null;
+          prescribed_reps_text?: string | null;
+          prescribed_rest_seconds?: number | null;
+          prescribed_sets_text?: string | null;
+          prescribed_weight_text?: string | null;
+          sort_order?: number;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_routine_session_exercises_client_routine_session_id_fkey";
+            columns: ["client_routine_session_id"];
+            isOneToOne: false;
+            referencedRelation: "client_routine_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_routine_session_exercises_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercise_library";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_routine_session_sets: {
+        Row: {
+          client_routine_session_exercise_id: string;
+          completed: boolean;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          reps: number | null;
+          set_index: number;
+          updated_at: string;
+          version: number;
+          weight: number | null;
+        };
+        Insert: {
+          client_routine_session_exercise_id: string;
+          completed?: boolean;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          reps?: number | null;
+          set_index: number;
+          updated_at?: string;
+          version?: number;
+          weight?: number | null;
+        };
+        Update: {
+          client_routine_session_exercise_id?: string;
+          completed?: boolean;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          reps?: number | null;
+          set_index?: number;
+          updated_at?: string;
+          version?: number;
+          weight?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_routine_session_sets_client_routine_session_exercis_fkey";
+            columns: ["client_routine_session_exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "client_routine_session_exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_routine_sessions: {
+        Row: {
+          abandoned_at: string | null;
+          client_id: string;
+          client_notes: string | null;
+          client_routine_day_id: string | null;
+          client_routine_id: string | null;
+          completed_at: string | null;
+          completed_sets_count: number | null;
+          created_at: string;
+          day_index: number;
+          day_notes: string | null;
+          day_title: string;
+          gym_id: string;
+          id: string;
+          idempotency_key: string;
+          routine_title: string;
+          started_at: string;
+          status: string;
+          total_sets_count: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          abandoned_at?: string | null;
+          client_id: string;
+          client_notes?: string | null;
+          client_routine_day_id?: string | null;
+          client_routine_id?: string | null;
+          completed_at?: string | null;
+          completed_sets_count?: number | null;
+          created_at?: string;
+          day_index: number;
+          day_notes?: string | null;
+          day_title: string;
+          gym_id: string;
+          id?: string;
+          idempotency_key: string;
+          routine_title: string;
+          started_at?: string;
+          status?: string;
+          total_sets_count?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          abandoned_at?: string | null;
+          client_id?: string;
+          client_notes?: string | null;
+          client_routine_day_id?: string | null;
+          client_routine_id?: string | null;
+          completed_at?: string | null;
+          completed_sets_count?: number | null;
+          created_at?: string;
+          day_index?: number;
+          day_notes?: string | null;
+          day_title?: string;
+          gym_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          routine_title?: string;
+          started_at?: string;
+          status?: string;
+          total_sets_count?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_routine_sessions_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_routine_sessions_client_routine_day_id_fkey";
+            columns: ["client_routine_day_id"];
+            isOneToOne: false;
+            referencedRelation: "client_routine_days";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_routine_sessions_client_routine_id_fkey";
+            columns: ["client_routine_id"];
+            isOneToOne: false;
+            referencedRelation: "client_routines";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_routine_sessions_gym_id_fkey";
+            columns: ["gym_id"];
+            isOneToOne: false;
+            referencedRelation: "gyms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       client_routines: {
         Row: {
           client_id: string;
@@ -701,6 +906,18 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      abandon_routine_session: {
+        Args: {
+          p_session_id: string;
+        };
+        Returns: {
+          abandoned_at: string;
+          completed_sets_count: number;
+          session_id: string;
+          status: string;
+          total_sets_count: number;
+        }[];
+      };
       assign_membership_with_payment: {
         Args: {
           p_amount: number;
@@ -735,6 +952,19 @@ export type Database = {
         Returns: {
           end_date: string;
           status: string;
+        }[];
+      };
+      finish_routine_session: {
+        Args: {
+          p_client_notes: string | null;
+          p_session_id: string;
+        };
+        Returns: {
+          completed_at: string;
+          completed_sets_count: number;
+          session_id: string;
+          status: string;
+          total_sets_count: number;
         }[];
       };
       has_any_role: {
@@ -822,6 +1052,49 @@ export type Database = {
           p_routine_day_id: string;
         };
         Returns: undefined;
+      };
+      start_routine_session: {
+        Args: {
+          p_client_routine_day_id: string;
+          p_idempotency_key: string;
+        };
+        Returns: {
+          requested_day_matches: boolean;
+          resumed: boolean;
+          session_id: string;
+        }[];
+      };
+      update_routine_session_exercise_note: {
+        Args: {
+          p_client_notes: string | null;
+          p_expected_version: number;
+          p_session_exercise_id: string;
+        };
+        Returns: {
+          client_notes: string | null;
+          conflict: boolean;
+          session_exercise_id: string;
+          version: number;
+        }[];
+      };
+      update_routine_session_set: {
+        Args: {
+          p_completed: boolean;
+          p_expected_version: number;
+          p_notes: string | null;
+          p_reps: number | null;
+          p_set_id: string;
+          p_weight: number | null;
+        };
+        Returns: {
+          completed: boolean;
+          conflict: boolean;
+          notes: string | null;
+          reps: number | null;
+          set_id: string;
+          version: number;
+          weight: number | null;
+        }[];
       };
     };
     Enums: Record<string, never>;
