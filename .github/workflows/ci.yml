@@ -197,13 +197,18 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
           } >> "$GITHUB_ENV"
 
-      # Prueba de extremo a extremo contra el stack local real (JWT reales,
-      # RLS real) del RPC activate_client_routine - ver
-      # supabase/tests/activate-client-routine.integration.test.ts. Crea y
-      # borra sus propios datos de prueba (gyms/clients/profiles/routines/
-      # usuarios Auth) y verifica al final, con asserts, que no dejo nada.
-      - name: Run routine activation integration suite
-        run: npm run test:supabase:routines
+      # Pruebas de extremo a extremo contra el stack local real (JWT
+      # reales, RLS real): activate_client_routine
+      # (activate-client-routine.integration.test.ts) y el backend de
+      # sesiones de entrenamiento persistentes
+      # (client-routine-sessions.integration.test.ts) - todo archivo
+      # *.integration.test.ts bajo supabase/tests/ corre aqui via
+      # `npm run test:supabase`, no un script por archivo. Cada suite crea
+      # y borra sus propios datos de prueba (gyms/clients/profiles/
+      # rutinas/sesiones/usuarios Auth) y verifica al final, con asserts,
+      # que no dejo nada.
+      - name: Run Supabase integration suites
+        run: npm run test:supabase
 
       - name: Lint database schema
         run: supabase db lint --local
