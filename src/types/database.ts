@@ -918,6 +918,15 @@ export type Database = {
           total_sets_count: number;
         }[];
       };
+      archive_client_routine: {
+        Args: {
+          target_routine_id: string;
+        };
+        Returns: {
+          already_archived: boolean;
+          id: string;
+        }[];
+      };
       assign_membership_with_payment: {
         Args: {
           p_amount: number;
