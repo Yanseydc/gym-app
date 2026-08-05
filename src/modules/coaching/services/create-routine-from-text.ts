@@ -5,15 +5,8 @@ import { redirect } from "next/navigation";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
-import {
-  activateRoutineRecord,
-  createRoutineFromTextRecord,
-} from "@/modules/coaching/services/routine-service";
-import type {
-  RoutineFormValues,
-  RoutineTextImportMutationState,
-  RoutineTextImportValues,
-} from "@/modules/coaching/types";
+import { createRoutineFromTextRecord } from "@/modules/coaching/services/routine-service";
+import type { RoutineTextImportMutationState, RoutineTextImportValues } from "@/modules/coaching/types";
 import { routineTextImportSchema } from "@/modules/coaching/validators/routine";
 
 function getPayload(formData: FormData) {
@@ -30,17 +23,11 @@ function getPayload(formData: FormData) {
   }
 }
 
-function toRoutineFormValues(values: RoutineTextImportValues): RoutineFormValues {
-  return {
-    clientId: values.clientId,
-    title: values.title,
-    notes: values.notes,
-    status: values.status,
-    startsOn: values.startsOn,
-    endsOn: values.endsOn,
-  };
-}
-
+// Imported routines never activate on creation either -- same reasoning as
+// create-routine.ts (Entrega A0 #3): a freshly imported routine hasn't been
+// reviewed/corrected in the builder yet, so it always lands as a draft
+// (or archived, if explicitly chosen) and activation is a separate,
+// explicit later step.
 export async function createRoutineFromText(
   _prevState: RoutineTextImportMutationState,
   formData: FormData,
@@ -67,6 +54,11 @@ export async function createRoutineFromText(
 
   const values: RoutineTextImportValues = {
     ...parsed.data,
+    // Always "draft", unconditionally -- routineTextImportSchema has no
+    // status field at all (Entrega A0 adversarial review, area 1). An
+    // imported routine has not been reviewed in the builder yet, so it
+    // never starts as anything but a draft.
+    status: "draft",
     notes: parsed.data.notes ?? "",
     startsOn: parsed.data.startsOn ?? "",
     endsOn: parsed.data.endsOn ?? "",
@@ -92,33 +84,7 @@ export async function createRoutineFromText(
     };
   }
 
-  let routineId = createdRoutine.id;
-  let archivedPrevious = false;
-
-  if (values.status === "active") {
-    const { data: activatedRoutine, error: activationError, code } = await activateRoutineRecord(
-      supabase,
-      routineId,
-      toRoutineFormValues(values),
-    );
-
-    if (activationError || !activatedRoutine) {
-      await supabase.from("client_routines").delete().eq("id", routineId);
-      return {
-        error:
-          code === "23505"
-            ? "This client already has an active routine. Try again or review the current routine."
-            : activationError?.includes("client_routines_one_active_per_client_idx")
-              ? "This client already has an active routine. Try again or review the current routine."
-              : activationError ?? "Unable to activate routine.",
-      };
-    }
-
-    routineId = activatedRoutine.id;
-    archivedPrevious = activatedRoutine.archivedPrevious;
-  }
-
   revalidatePath(`/dashboard/clients/${values.clientId}`);
-  revalidatePath(`/dashboard/coaching/routines/${routineId}`);
-  redirect(`/dashboard/coaching/routines/${routineId}/edit${archivedPrevious ? "?notice=archived_previous" : ""}`);
+  revalidatePath(`/dashboard/coaching/routines/${createdRoutine.id}`);
+  redirect(`/dashboard/coaching/routines/${createdRoutine.id}/edit`);
 }

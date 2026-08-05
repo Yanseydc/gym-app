@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { buttonPrimary, buttonSecondary, fieldError, formError, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+import { RestSecondsField } from "@/modules/coaching/components/rest-seconds-field";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { parseRoutineText, matchExerciseByName } from "@/modules/coaching/utils/routine-text-import";
 import type {
@@ -249,20 +250,17 @@ function RoutineTextImportForm({
           error={state.fieldErrors?.title}
         />
 
-        <label style={{ display: "grid", gap: 8 }}>
+        {/* Imported routines always start as a draft -- there is no status
+            control here at all (Entrega A0 adversarial review, area 1):
+            the server ignores any status a crafted payload might carry and
+            always saves "draft", so there is nothing legitimate for this
+            field to offer beyond that fixed outcome. */}
+        <div style={{ display: "grid", gap: 8 }}>
           <span style={labelStyles}>{t("clients.form.status")}</span>
-          <select
-            value={values.status}
-            onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as RoutineFormValues["status"] }))}
-            className={input}
-            style={lightInputStyles}
-          >
-            <option value="draft">{t("common.status.draft")}</option>
-            <option value="active">{t("common.status.active")}</option>
-            <option value="archived">{t("common.status.archived")}</option>
-          </select>
-          {state.fieldErrors?.status ? <FieldError message={state.fieldErrors.status} /> : null}
-        </label>
+          <span className={input} style={{ ...lightInputStyles, display: "flex", alignItems: "center" }}>
+            {t("common.status.draft")}
+          </span>
+        </div>
 
         <Field
           label={t("coaching.routines.startsOn")}
@@ -404,11 +402,13 @@ function RoutineTextImportForm({
                         value={exercise.repsText}
                         onChange={(repsText) => updateExercise(dayIndex, exerciseIndex, { repsText })}
                       />
-                      <Field
+                      <RestSecondsField
                         label={t("coaching.createPage.restSeconds")}
-                        type="number"
                         value={exercise.restSeconds}
                         onChange={(restSeconds) => updateExercise(dayIndex, exerciseIndex, { restSeconds })}
+                        inputClassName={input}
+                        inputStyle={lightInputStyles}
+                        labelStyle={labelStyles}
                       />
                     </div>
 

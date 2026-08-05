@@ -5,39 +5,50 @@ import { redirect } from "next/navigation";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/modules/auth/services/auth-service";
-import { activateRoutineRecord, createRoutineRecord } from "@/modules/coaching/services/routine-service";
+import { createRoutineRecord } from "@/modules/coaching/services/routine-service";
 import type { RoutineFormValues, RoutineMutationState } from "@/modules/coaching/types";
-import { routineFormSchema } from "@/modules/coaching/validators/routine";
+import { routineDraftFormSchema } from "@/modules/coaching/validators/routine";
 
+// "status" is never read from formData -- routineDraftFormSchema has no
+// status field at all (Entrega A0 adversarial review, area 1), and
+// toRoutineFormValues below always hardcodes "draft" regardless of what a
+// crafted request might submit.
 function getFieldValues(formData: FormData): Record<string, FormDataEntryValue | null> {
   return {
     clientId: formData.get("clientId"),
     title: formData.get("title"),
     notes: formData.get("notes"),
-    status: formData.get("status"),
     startsOn: formData.get("startsOn"),
     endsOn: formData.get("endsOn"),
   };
 }
 
 function toRoutineFormValues(
-  values: ReturnType<typeof routineFormSchema.parse>,
+  values: ReturnType<typeof routineDraftFormSchema.parse>,
 ): RoutineFormValues {
   return {
     clientId: values.clientId,
     title: values.title,
     notes: values.notes ?? "",
-    status: values.status,
+    // A brand-new routine always starts as draft, unconditionally -- never
+    // active, never archived (Entrega A0 #3). A database trigger enforces
+    // this too (20260804130000_...): an INSERT with status="active" is
+    // rejected unless it comes from inside activate_client_routine.
+    status: "draft",
     startsOn: values.startsOn ?? "",
     endsOn: values.endsOn ?? "",
   };
 }
 
+// Creation never activates: a brand-new routine has no days/exercises yet,
+// so activating it immediately would revive the "empty routine goes live"
+// gap. Activation is a separate, later action on the routine's own edit
+// page (see activate-routine.ts) once the coach has actually built it out.
 export async function createRoutine(
   _prevState: RoutineMutationState,
   formData: FormData,
 ): Promise<RoutineMutationState> {
-  const parsed = routineFormSchema.safeParse(getFieldValues(formData));
+  const parsed = routineDraftFormSchema.safeParse(getFieldValues(formData));
 
   if (!parsed.success) {
     return {
@@ -58,14 +69,7 @@ export async function createRoutine(
 
   const supabase = await createSupabaseClient();
   const values = toRoutineFormValues(parsed.data);
-  const { data: createdRoutine, error: createError } = await createRoutineRecord(
-    supabase,
-    user.id,
-    {
-      ...values,
-      status: values.status === "active" ? "draft" : values.status,
-    },
-  );
+  const { data: createdRoutine, error: createError } = await createRoutineRecord(supabase, user.id, values);
 
   if (createError || !createdRoutine) {
     return {
@@ -73,31 +77,6 @@ export async function createRoutine(
     };
   }
 
-  let routineId = createdRoutine.id;
-  let archivedPrevious = false;
-
-  if (values.status === "active") {
-    const { data: activatedRoutine, error: activationError, code } = await activateRoutineRecord(
-      supabase,
-      createdRoutine.id,
-      values,
-    );
-
-    if (activationError || !activatedRoutine) {
-      return {
-        error:
-          code === "23505"
-            ? "This client already has an active routine. Try again or review the current routine."
-            : activationError?.includes("client_routines_one_active_per_client_idx")
-              ? "This client already has an active routine. Try again or review the current routine."
-              : activationError ?? "Unable to activate routine.",
-      };
-    }
-
-    routineId = activatedRoutine.id;
-    archivedPrevious = activatedRoutine.archivedPrevious;
-  }
-
   revalidatePath(`/dashboard/clients/${parsed.data.clientId}`);
-  redirect(`/dashboard/coaching/routines/${routineId}/edit${archivedPrevious ? "?notice=archived_previous" : ""}`);
+  redirect(`/dashboard/coaching/routines/${createdRoutine.id}/edit`);
 }

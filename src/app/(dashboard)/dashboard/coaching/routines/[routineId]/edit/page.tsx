@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { BackNavigation } from "@/components/navigation/back-navigation";
 import { getAdminText } from "@/lib/i18n/admin";
+import { ActivateRoutineButton } from "@/modules/coaching/components/activate-routine-button";
 import { RoutineBuilder } from "@/modules/coaching/components/routine-builder";
 import { RoutineForm } from "@/modules/coaching/components/routine-form";
 import { getRoutineClientOptionsForPage, getRoutineExerciseOptionsForPage, getRoutineForPage } from "@/modules/coaching/services/routine-service";
@@ -12,15 +13,11 @@ type EditRoutinePageProps = {
   params: Promise<{
     routineId: string;
   }>;
-  searchParams?: Promise<{
-    notice?: string;
-  }>;
 };
 
-export default async function EditRoutinePage({ params, searchParams }: EditRoutinePageProps) {
+export default async function EditRoutinePage({ params }: EditRoutinePageProps) {
   const { t } = await getAdminText();
   const { routineId } = await params;
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [
     { data: routine, error },
     { data: clients, error: clientsError },
@@ -79,21 +76,6 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
         <h1 style={{ margin: 0 }}>{t("coaching.routines.editTitle")}</h1>
       </header>
 
-      {resolvedSearchParams?.notice === "archived_previous" ? (
-        <p
-          style={{
-            margin: 0,
-            padding: "12px 14px",
-            borderRadius: 12,
-            background: "rgba(94, 168, 120, 0.12)",
-            color: "#b9efc5",
-            border: "1px solid rgba(94, 168, 120, 0.24)",
-          }}
-        >
-          {t("coaching.routines.activeRoutineArchivedNotice")}
-        </p>
-      ) : null}
-
       <section
         className="premium-panel feature-panel"
         style={{
@@ -126,6 +108,16 @@ export default async function EditRoutinePage({ params, searchParams }: EditRout
             showHeader={false}
           />
         )}
+
+        {routine.status !== "active" ? (
+          <div style={{ paddingTop: 6, borderTop: "1px solid var(--border)" }}>
+            <ActivateRoutineButton
+              routineId={routine.id}
+              routineTitle={routine.title}
+              clientName={routine.clientName}
+            />
+          </div>
+        ) : null}
       </section>
 
       <section

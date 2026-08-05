@@ -259,9 +259,41 @@
       "editDescription": "Actualiza la rutina y constrúyela día por día con ejercicios ordenados.",
       "infoTitle": "Información de la rutina",
       "saveRoutine": "Guardar rutina",
-      "activeRoutineArchivedNotice": "Este cliente ya tenía una rutina activa. La anterior fue archivada automáticamente.",
+      "activate": "Activar rutina",
+      "activateConfirmTitle": "¿Activar esta rutina?",
+      "activateConfirmAction": "Activar",
+      "activateConfirmClient": "Cliente",
+      "activateConfirmRoutine": "Rutina",
+      "activateConfirmReplaces": "Esto reemplazará la rutina activa actual del cliente, si existe.",
+      "activateConfirmVisible": "El cliente podrá verla de inmediato.",
+      "activateSuccessToast": "Rutina activada.",
+      "activateSuccessArchivedPreviousToast": "Rutina activada. Se archivó la rutina activa anterior.",
+      "activateErrorToastTitle": "No se pudo activar la rutina",
+      "activateError": {
+        "notFound": "Esta rutina o cliente ya no está disponible.",
+        "notAuthorized": "No tienes autorización para activar esta rutina.",
+        "conflict": "Este cliente ya tiene una rutina activa. Intenta de nuevo.",
+        "generic": "Algo salió mal. Intenta de nuevo."
+      },
       "duplicate": "Duplicar rutina",
+      "duplicating": "Duplicando...",
+      "duplicateSuccessToast": "Rutina duplicada.",
+      "duplicateErrorToastTitle": "No se pudo duplicar la rutina",
+      "duplicateError": {
+        "generic": "Algo salió mal. Intenta de nuevo."
+      },
       "archive": "Archivar rutina",
+      "archiving": "Archivando...",
+      "archiveConfirmTitle": "¿Archivar esta rutina?",
+      "archiveConfirmAction": "Archivar",
+      "archiveConfirmDescription": "Esta rutina dejará de estar activa y editable como plan vigente. Podrás seguir consultándola y permanecerá en el historial del cliente.",
+      "archiveSuccessToast": "Rutina archivada.",
+      "archiveErrorToastTitle": "No se pudo archivar la rutina",
+      "archiveError": {
+        "notFound": "Esta rutina ya no está disponible.",
+        "notAuthorized": "No tienes autorización para archivar esta rutina.",
+        "generic": "Algo salió mal. Intenta de nuevo."
+      },
       "saveTemplate": "Guardar plantilla",
       "secondaryActions": "Más acciones",
       "activeBadge": "Rutina activa",
@@ -327,8 +359,12 @@
       "weight": "Peso",
       "targetWeight": "Peso objetivo",
       "rest": "Descanso",
-      "restSeconds": "Minutos de descanso",
-      "restMinutes": "Minutos de descanso",
+      "restSeconds": "Descanso (segundos)",
+      "restSecondsError": {
+        "not_integer": "El descanso debe ser un número entero de segundos.",
+        "negative": "El descanso debe ser cero o mayor.",
+        "too_large": "El descanso debe ser 3600 segundos o menos."
+      },
       "secondsShort": "seg"
     },
     "createPage": {
@@ -366,7 +402,7 @@
       "saveFirstDescription": "Después de crear la rutina, continuarás al workspace de rutina para agregar bloques de día y asignar ejercicios.",
       "whatYouCanDefine": "Lo que puedes definir ahora",
       "defineClientAndTitle": "cliente y título",
-      "defineStatus": "estado borrador, activo o archivado",
+      "defineStatus": "se guardará como borrador (actívala luego desde la rutina)",
       "defineDates": "fechas opcionales de inicio y fin",
       "defineNotes": "notas generales de coaching"
     }

@@ -22,7 +22,7 @@ import { buttonDanger, buttonGhost, buttonSecondary } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
 import { RoutineDayForm } from "@/modules/coaching/components/routine-day-form";
 import { RoutineExerciseForm } from "@/modules/coaching/components/routine-exercise-form";
-import { formatRestTime, restMinutesToSeconds, secondsToRestMinutes } from "@/modules/coaching/utils/rest-time";
+import { formatRestSeconds } from "@/modules/coaching/utils/rest-time";
 import { reorderRoutineExercises } from "@/modules/coaching/services/reorder-routine-exercises";
 import type {
   ClientRoutineDay,
@@ -460,7 +460,7 @@ export function RoutineDayManager({
                     setsText: exercise.setsText,
                     repsText: exercise.repsText,
                     targetWeightText: exercise.targetWeightText ?? "",
-                    restSeconds: secondsToRestMinutes(exercise.restSeconds),
+                    restSeconds: exercise.restSeconds == null ? "" : String(exercise.restSeconds),
                     notes: exercise.notes ?? "",
                   };
                   const isEditingExercise = editingExerciseId === exercise.id;
@@ -544,7 +544,7 @@ export function RoutineDayManager({
                             />
                             <DetailChip
                               label={t("coaching.routines.rest")}
-                              value={formatRestTime(exercise.restSeconds, t("common.notAvailable"))}
+                              value={formatRestSeconds(exercise.restSeconds, t("common.notAvailable"))}
                             />
                           </div>
 
@@ -582,7 +582,7 @@ export function RoutineDayManager({
                                             setsText: values.setsText,
                                             repsText: values.repsText,
                                             targetWeightText: values.targetWeightText || null,
-                                            restSeconds: restMinutesToSeconds(values.restSeconds),
+                                            restSeconds: values.restSeconds.trim() === "" ? null : Number(values.restSeconds),
                                             notes: values.notes || null,
                                           }
                                         : currentExercise,
@@ -680,7 +680,7 @@ export function RoutineDayManager({
                                       setsText: values.setsText,
                                       repsText: values.repsText,
                                       targetWeightText: values.targetWeightText || null,
-                                      restSeconds: restMinutesToSeconds(values.restSeconds),
+                                      restSeconds: values.restSeconds.trim() === "" ? null : Number(values.restSeconds),
                                       notes: values.notes || null,
                                       createdAt: new Date().toISOString(),
                                     },

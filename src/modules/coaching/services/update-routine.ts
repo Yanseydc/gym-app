@@ -4,40 +4,53 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
-import { activateRoutineRecord, updateRoutineRecord } from "@/modules/coaching/services/routine-service";
-import type { RoutineFormValues, RoutineMutationState } from "@/modules/coaching/types";
-import { routineFormSchema } from "@/modules/coaching/validators/routine";
+import { getRoutineById, updateRoutineRecord } from "@/modules/coaching/services/routine-service";
+import type { ClientRoutineStatus, RoutineFormValues, RoutineMutationState } from "@/modules/coaching/types";
+import { routineDraftFormSchema } from "@/modules/coaching/validators/routine";
 
+// "status" is never read from formData at all -- not even to validate and
+// reject it. There is no field here a crafted request could populate to
+// influence status; toRoutineFormValues below always uses the freshly
+// fetched, currently-persisted status instead (Entrega A0 adversarial
+// review, area 1).
 function getFieldValues(formData: FormData): Record<string, FormDataEntryValue | null> {
   return {
     clientId: formData.get("clientId"),
     title: formData.get("title"),
     notes: formData.get("notes"),
-    status: formData.get("status"),
     startsOn: formData.get("startsOn"),
     endsOn: formData.get("endsOn"),
   };
 }
 
 function toRoutineFormValues(
-  values: ReturnType<typeof routineFormSchema.parse>,
+  values: ReturnType<typeof routineDraftFormSchema.parse>,
+  currentStatus: ClientRoutineStatus,
 ): RoutineFormValues {
   return {
     clientId: values.clientId,
     title: values.title,
     notes: values.notes ?? "",
-    status: values.status,
+    // Saving metadata NEVER changes status, unconditionally -- regardless
+    // of the routine's current status (draft, active, or archived) and
+    // regardless of anything a crafted request might submit. The only two
+    // actions that can ever change status are the dedicated Activate/
+    // Archive actions (activate-routine.ts / archive-routine.ts).
+    status: currentStatus,
     startsOn: values.startsOn ?? "",
     endsOn: values.endsOn ?? "",
   };
 }
 
+// Draft-only save: activation is a separate action, see activate-routine.ts,
+// which reuses activateRoutineRecord (the same activate_client_routine RPC
+// wrapper) behind its own confirmation. This action never calls that RPC.
 export async function updateRoutine(
   routineId: string,
   _prevState: RoutineMutationState,
   formData: FormData,
 ): Promise<RoutineMutationState> {
-  const parsed = routineFormSchema.safeParse(getFieldValues(formData));
+  const parsed = routineDraftFormSchema.safeParse(getFieldValues(formData));
 
   if (!parsed.success) {
     return {
@@ -49,42 +62,25 @@ export async function updateRoutine(
   }
 
   const supabase = await createSupabaseClient();
-  const values = toRoutineFormValues(parsed.data);
-  let data: { archivedPrevious?: boolean; id: string } | null = null;
+  const { data: currentRoutine, error: currentRoutineError } = await getRoutineById(supabase, routineId);
 
-  if (values.status === "active") {
-    const { data: activationData, error, code } = await activateRoutineRecord(
-      supabase,
-      routineId,
-      values,
-    );
+  if (currentRoutineError || !currentRoutine) {
+    return {
+      error: currentRoutineError ?? "Routine is not available.",
+    };
+  }
 
-    if (error || !activationData) {
-      return {
-        error:
-          code === "23505" || error?.includes("client_routines_one_active_per_client_idx")
-            ? "This client already has an active routine. Try again or review the current routine."
-            : error ?? "Unable to update routine.",
-      };
-    }
+  const values = toRoutineFormValues(parsed.data, currentRoutine.status);
+  const { data: updatedRoutine, error } = await updateRoutineRecord(supabase, routineId, values);
 
-    data = activationData;
-  } else {
-    const { data: updatedRoutine, error } = await updateRoutineRecord(supabase, routineId, values);
-
-    if (error || !updatedRoutine) {
-      return {
-        error: error?.message ?? "Unable to update routine.",
-      };
-    }
-
-    data = { id: updatedRoutine.id };
+  if (error || !updatedRoutine) {
+    return {
+      error: error?.message ?? "Unable to update routine.",
+    };
   }
 
   revalidatePath(`/dashboard/clients/${parsed.data.clientId}`);
   revalidatePath(`/dashboard/coaching/routines/${routineId}`);
   revalidatePath(`/dashboard/coaching/routines/${routineId}/edit`);
-  redirect(
-    `/dashboard/coaching/routines/${data.id}/edit${"archivedPrevious" in data && data.archivedPrevious ? "?notice=archived_previous" : ""}`,
-  );
+  redirect(`/dashboard/coaching/routines/${updatedRoutine.id}/edit`);
 }

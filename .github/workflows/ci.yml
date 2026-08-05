@@ -218,3 +218,102 @@ jobs:
       - name: Stop Supabase local stack
         if: always()
         run: supabase stop
+
+  e2e:
+    name: e2e (Playwright local)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Solo Chromium: los dos projects de playwright.config.ts (Desktop
+      # Chrome, Mobile Chrome via el device Pixel 5) usan el mismo motor -
+      # no se instala Firefox/WebKit, que este workflow nunca ejecuta.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
+
+      # Mismo stack local efimero que el job `migrations` - Postgres 17 +
+      # el resto de supabase/config.toml, credenciales demo del propio CLI,
+      # nunca --linked ni un host fuera de 127.0.0.1.
+      - name: Start Supabase local stack
+        run: supabase start
+
+      # Aplica las migraciones desde cero, igual que en un clon limpio -
+      # nunca datos reales, nunca un proyecto remoto.
+      - name: Apply all migrations from a clean state
+        run: supabase db reset --local
+
+      # Mismo patron que el job `migrations`: las unicas credenciales que
+      # entran a este job son las claves demo que `supabase status` imprime
+      # para ESTE stack Docker efimero - nunca un secret de GitHub, nunca
+      # .env.local, nunca un proyecto remoto. Se exportan tanto con los
+      # nombres NEXT_PUBLIC_* (que next dev necesita para pasar la
+      # validacion de Zod en env-client.ts/env-server.ts) como con los
+      # nombres SUPABASE_* sin prefijo (que supabase/tests/helpers.ts, y
+      # por extension e2e/fixtures.ts, leen para crear/borrar los fixtures
+      # desechables de cada spec vía REST). NEXT_PUBLIC_APP_URL es un valor
+      # fijo local, no depende del stack Supabase.
+      - name: Export local Supabase URL/keys for the app and Playwright fixtures
+        run: |
+          STATUS_JSON=$(supabase status -o json 2>/dev/null)
+          ANON_KEY=$(echo "$STATUS_JSON" | jq -r '.ANON_KEY')
+          SERVICE_ROLE_KEY=$(echo "$STATUS_JSON" | jq -r '.SERVICE_ROLE_KEY')
+          API_URL=$(echo "$STATUS_JSON" | jq -r '.API_URL')
+          echo "::add-mask::$ANON_KEY"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3000"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+          } >> "$GITHUB_ENV"
+
+      # playwright.config.ts arranca `npm run dev` el mismo (webServer),
+      # heredando las variables exportadas arriba via GITHUB_ENV - no hay
+      # un paso separado de "levantar la app". CI=true (variable que
+      # GitHub Actions define automaticamente en todo runner) hace que
+      # reuseExistingServer se evalue a false, asi que Playwright siempre
+      # arranca su propio servidor fresco aqui, nunca reutiliza uno
+      # preexistente. Corre ambos projects (Desktop Chrome, Mobile Chrome)
+      # en la misma invocacion - ninguno usa --linked ni escribe en
+      # produccion; cada spec crea y borra sus propios gyms/clients/
+      # rutinas desechables contra el Supabase local de este job.
+      - name: Run Playwright (Desktop Chrome + Mobile Chrome)
+        run: npx playwright test
+
+      # Solo si algo fallo: el reporte HTML y los traces/screenshots por
+      # test (test-results/) ya estan gitignored y nunca se commitean:
+      # esto es la unica forma de inspeccionarlos despues de que el runner
+      # se destruye. Si todo paso, no se sube nada (nada que depurar).
+      - name: Upload Playwright report and traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      # Igual que el job `migrations`: siempre detiene Supabase, incluso si
+      # un paso anterior (incluida la propia corrida de Playwright) fallo.
+      - name: Stop Supabase local stack
+        if: always()
+        run: supabase stop

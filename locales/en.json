@@ -259,9 +259,41 @@
       "editDescription": "Update the routine and build it day by day with ordered exercises.",
       "infoTitle": "Routine info",
       "saveRoutine": "Save routine",
-      "activeRoutineArchivedNotice": "This client already had an active routine. The previous one was archived automatically.",
+      "activate": "Activate routine",
+      "activateConfirmTitle": "Activate this routine?",
+      "activateConfirmAction": "Activate",
+      "activateConfirmClient": "Client",
+      "activateConfirmRoutine": "Routine",
+      "activateConfirmReplaces": "This will replace the client's current active routine, if any.",
+      "activateConfirmVisible": "The client will be able to see it immediately.",
+      "activateSuccessToast": "Routine activated.",
+      "activateSuccessArchivedPreviousToast": "Routine activated. The previous active routine was archived.",
+      "activateErrorToastTitle": "Couldn't activate the routine",
+      "activateError": {
+        "notFound": "This routine or client is no longer available.",
+        "notAuthorized": "You're not authorized to activate this routine.",
+        "conflict": "This client already has an active routine. Please try again.",
+        "generic": "Something went wrong. Please try again."
+      },
       "duplicate": "Duplicate routine",
+      "duplicating": "Duplicating...",
+      "duplicateSuccessToast": "Routine duplicated.",
+      "duplicateErrorToastTitle": "Couldn't duplicate the routine",
+      "duplicateError": {
+        "generic": "Something went wrong. Please try again."
+      },
       "archive": "Archive routine",
+      "archiving": "Archiving...",
+      "archiveConfirmTitle": "Archive this routine?",
+      "archiveConfirmAction": "Archive",
+      "archiveConfirmDescription": "This routine will no longer be active or editable as a live plan. You can still view it, and it stays in this client's history.",
+      "archiveSuccessToast": "Routine archived.",
+      "archiveErrorToastTitle": "Couldn't archive the routine",
+      "archiveError": {
+        "notFound": "This routine is no longer available.",
+        "notAuthorized": "You're not authorized to archive this routine.",
+        "generic": "Something went wrong. Please try again."
+      },
       "saveTemplate": "Save template",
       "secondaryActions": "More actions",
       "activeBadge": "Active routine",
@@ -327,8 +359,12 @@
       "weight": "Weight",
       "targetWeight": "Target weight",
       "rest": "Rest",
-      "restSeconds": "Rest minutes",
-      "restMinutes": "Rest minutes",
+      "restSeconds": "Rest (seconds)",
+      "restSecondsError": {
+        "not_integer": "Rest must be a whole number of seconds.",
+        "negative": "Rest must be zero or greater.",
+        "too_large": "Rest must be 3600 seconds or less."
+      },
       "secondsShort": "sec"
     },
     "createPage": {
@@ -366,7 +402,7 @@
       "saveFirstDescription": "After creating the routine, you will continue to the routine workspace to add day blocks and assign exercises.",
       "whatYouCanDefine": "What you can define now",
       "defineClientAndTitle": "client and title",
-      "defineStatus": "draft, active or archived status",
+      "defineStatus": "it will save as a draft (activate it later from the routine)",
       "defineDates": "optional start and end dates",
       "defineNotes": "high-level coaching notes"
     }
