@@ -86,15 +86,18 @@ export function RoutineForm({
           error={state.fieldErrors?.title}
         />
 
-        <label style={{ display: "grid", gap: 8 }}>
+        {/* Status is always a read-only badge, never a submittable control
+            (Entrega A0 adversarial review, area 1) -- regardless of whether
+            the routine is draft, active, or archived. This form never
+            submits a "status" field at all, so saving metadata can never
+            change it as a side effect; activating and archiving only ever
+            happen through their own dedicated, confirmed actions. */}
+        <div style={{ display: "grid", gap: 8 }}>
           <span style={labelStyles}>{t("clients.form.status")}</span>
-          <select name="status" defaultValue={defaultValues.status} className={input}>
-            <option value="draft">{t("common.status.draft")}</option>
-            <option value="active">{t("common.status.active")}</option>
-            <option value="archived">{t("common.status.archived")}</option>
-          </select>
-          {state.fieldErrors?.status ? <FieldError message={state.fieldErrors.status} /> : null}
-        </label>
+          <span className={input} style={{ display: "flex", alignItems: "center", color: "var(--muted)" }}>
+            {t(`common.status.${defaultValues.status}`)}
+          </span>
+        </div>
 
         <Field
           label={t("coaching.routines.startsOn")}

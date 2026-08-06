@@ -1,8 +1,26 @@
 import { z } from "zod";
 
+import {
+  REST_SECONDS_MAX,
+  REST_SECONDS_NEGATIVE_MESSAGE,
+  REST_SECONDS_NOT_INTEGER_MESSAGE,
+  REST_SECONDS_TOO_LARGE_MESSAGE,
+} from "@/modules/coaching/utils/rest-time";
+
 export const routineStatusSchema = z.enum(["draft", "active", "archived"]);
 
 const optionalTextField = z.string().trim().max(2000).optional().or(z.literal(""));
+
+const restSecondsFieldSchema = z
+  .union([
+    z.literal(""),
+    z.coerce
+      .number()
+      .int(REST_SECONDS_NOT_INTEGER_MESSAGE)
+      .min(0, REST_SECONDS_NEGATIVE_MESSAGE)
+      .max(REST_SECONDS_MAX, REST_SECONDS_TOO_LARGE_MESSAGE),
+  ])
+  .transform((value) => (value === "" ? "" : String(value)));
 
 const routineFormBaseSchema = z
   .object({
@@ -14,11 +32,33 @@ const routineFormBaseSchema = z
     endsOn: z.string().trim().optional().or(z.literal("")),
   });
 
+// No "status" field at all (not merely restricted to draft/archived):
+// Entrega A0's adversarial review found that even an enum restricted to
+// draft/archived still let a crafted request archive a routine through the
+// generic save, or drop straight back from active to draft with no
+// dedicated confirmation. Status is never part of this schema's input --
+// routine-form.tsx renders it as a read-only badge, never a submittable
+// control, and update-routine.ts/create-routine.ts/
+// create-routine-from-text.ts always compute status themselves
+// server-side (preserve the current value on edit, force "draft" on
+// create) regardless of what a request body contains. Zod silently strips
+// unrecognized keys by default, so even a manually-added "status" field in
+// a crafted POST has no effect here.
+const routineDraftFormBaseSchema = routineFormBaseSchema.omit({ status: true });
+
 function validateDateRange<T extends { startsOn?: string; endsOn?: string }>(value: T) {
   return !value.startsOn || !value.endsOn || value.endsOn >= value.startsOn;
 }
 
 export const routineFormSchema = routineFormBaseSchema.refine(validateDateRange, {
+  message: "End date must be on or after start date.",
+  path: ["endsOn"],
+});
+
+// Used exclusively by the generic "save draft" action (updateRoutine) --
+// has no "status" key at all, so a crafted request can't reach any status
+// transition through this path.
+export const routineDraftFormSchema = routineDraftFormBaseSchema.refine(validateDateRange, {
   message: "End date must be on or after start date.",
   path: ["endsOn"],
 });
@@ -43,13 +83,15 @@ export const routineExerciseFormSchema = z.object({
   setsText: z.string().trim().min(1, "Sets are required.").max(80),
   repsText: z.string().trim().min(1, "Reps are required.").max(80),
   targetWeightText: z.string().trim().max(80).optional().or(z.literal("")),
-  restSeconds: z
-    .union([z.literal(""), z.coerce.number().min(0, "Rest must be zero or greater.")])
-    .transform((value) => (value === "" ? "" : String(value))),
+  restSeconds: restSecondsFieldSchema,
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
-export const routineTextImportSchema = routineFormBaseSchema
+// Same draft-only restriction as routineDraftFormSchema, and for the same
+// reason: importing text must never be able to activate a routine as a side
+// effect either (Entrega A0 #3 applies uniformly to every routine-creation
+// entry point, not just the manual builder).
+export const routineTextImportSchema = routineDraftFormBaseSchema
   .extend({
     days: z
       .array(
@@ -67,9 +109,7 @@ export const routineTextImportSchema = routineFormBaseSchema
                 exerciseId: z.string().uuid("Please select an exercise."),
                 setsText: z.string().trim().min(1, "Sets are required.").max(80),
                 repsText: z.string().trim().min(1, "Reps are required.").max(80),
-                restSeconds: z
-                  .union([z.literal(""), z.coerce.number().int().min(0, "Rest must be zero or greater.")])
-                  .transform((value) => (value === "" ? "" : String(value))),
+                restSeconds: restSecondsFieldSchema,
                 notes: z.string().trim().max(1000).optional().or(z.literal("")),
               }),
             )

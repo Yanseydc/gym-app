@@ -20,23 +20,22 @@ import type {
   RoutineFormValues,
   RoutineTextImportValues,
 } from "@/modules/coaching/types";
-import { restMinutesToSeconds } from "@/modules/coaching/utils/rest-time";
 
 type ActivateRoutineResult = {
   archived_previous: boolean;
   id: string;
 };
 
-type RoutineActivationError = {
+type RoutineStatusRpcError = {
   code?: string | null;
   message: string;
 };
 
-type RoutineActivationRpcClient = AppSupabaseClient & {
+type RoutineStatusRpcClient = AppSupabaseClient & {
   rpc: (
     fn: string,
     args?: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: RoutineActivationError | null }>;
+  ) => Promise<{ data: unknown; error: RoutineStatusRpcError | null }>;
 };
 
 function mapRoutineExercise(
@@ -140,7 +139,7 @@ function normalizeRoutineExercisePayload(values: RoutineExerciseFormValues) {
     sets_text: values.setsText.trim(),
     reps_text: values.repsText.trim(),
     target_weight_text: values.targetWeightText.trim() || null,
-    rest_seconds: restMinutesToSeconds(values.restSeconds),
+    rest_seconds: values.restSeconds.trim() === "" ? null : Number(values.restSeconds),
     notes: values.notes.trim() || null,
   };
 }
@@ -770,7 +769,7 @@ export async function activateRoutineRecord(
     return { data: null, error: "Selected client is not available." };
   }
 
-  const rpcClient = supabase as RoutineActivationRpcClient;
+  const rpcClient = supabase as RoutineStatusRpcClient;
   const { data, error } = await rpcClient.rpc("activate_client_routine", {
     target_routine_id: routineId,
     target_client_id: values.clientId,
@@ -801,6 +800,54 @@ export async function activateRoutineRecord(
     data: {
       id: result.id,
       archivedPrevious: result.archived_previous,
+    },
+    error: null,
+  };
+}
+
+type ArchiveRoutineRpcResult = {
+  id: string;
+  already_archived: boolean;
+};
+
+// Thin wrapper around the archive_client_routine RPC (Entrega A0
+// adversarial review, area 1) -- the only business logic here is the RPC
+// call itself; authorization, idempotency (already-archived is a success,
+// not an error), and the actual UPDATE all live entirely inside that
+// SECURITY DEFINER function, never reimplemented client-side. Deliberately
+// takes only a routineId: there is no client_id/gym_id/title/notes for a
+// caller to forge, unlike activate_client_routine (which needs those to
+// also update metadata as part of activating).
+export async function archiveRoutineRecord(
+  supabase: AppSupabaseClient,
+  routineId: string,
+): Promise<{ data: { id: string; alreadyArchived: boolean } | null; error: string | null; code?: string | null }> {
+  const rpcClient = supabase as RoutineStatusRpcClient;
+  const { data, error } = await rpcClient.rpc("archive_client_routine", {
+    target_routine_id: routineId,
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error: error.message,
+      code: error.code,
+    };
+  }
+
+  const [result] = ((data ?? []) as unknown[]) as ArchiveRoutineRpcResult[];
+
+  if (!result) {
+    return {
+      data: null,
+      error: "Unable to archive routine.",
+    };
+  }
+
+  return {
+    data: {
+      id: result.id,
+      alreadyArchived: result.already_archived,
     },
     error: null,
   };

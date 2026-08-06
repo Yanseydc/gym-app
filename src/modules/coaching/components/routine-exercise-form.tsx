@@ -13,12 +13,14 @@ import {
 
 import { buttonGhost, buttonPrimary, input } from "@/lib/ui";
 import { useAdminText } from "@/modules/admin/components/admin-i18n-provider";
+import { RestSecondsField } from "@/modules/coaching/components/rest-seconds-field";
 import { useRoutineExerciseForm } from "@/modules/coaching/hooks/use-routine-exercise-form";
 import type {
   RoutineExerciseFormValues,
   RoutineExerciseMutationState,
   RoutineExerciseOption,
 } from "@/modules/coaching/types";
+import { classifyRestSecondsFieldError } from "@/modules/coaching/utils/rest-time";
 
 type RoutineExerciseFormProps = {
   action: (
@@ -65,6 +67,7 @@ export function RoutineExerciseForm({
   );
   const { state, formAction, pending } = useRoutineExerciseForm(wrappedAction);
   const resolvedSubmitLabel = submitLabel ?? t("coaching.routines.addExerciseAction");
+  const [restSecondsDraft, setRestSecondsDraft] = useState(defaultValues?.restSeconds ?? "");
 
   useEffect(() => {
     if (!onSuccess || pending || handledSuccessRef.current || state.error || !submittedValuesRef.current) {
@@ -134,13 +137,14 @@ export function RoutineExerciseForm({
           defaultValue={defaultValues?.targetWeightText ?? ""}
           error={state.fieldErrors?.targetWeightText}
         />
-        <Field
-          label={t("coaching.routines.restMinutes")}
+        <RestSecondsField
+          label={t("coaching.routines.restSeconds")}
           name="restSeconds"
-          type="number"
-          step="0.5"
-          defaultValue={defaultValues?.restSeconds ?? ""}
-          error={state.fieldErrors?.restSeconds}
+          value={restSecondsDraft}
+          onChange={setRestSecondsDraft}
+          error={localizeRestSecondsError(state.fieldErrors?.restSeconds, t)}
+          inputClassName={input}
+          labelStyle={labelStyles}
         />
       </div>
 
@@ -456,6 +460,27 @@ function Field({
 
 function FieldError({ message }: { message: string }) {
   return <span style={{ color: "var(--danger-fg)", fontSize: 14 }}>{message}</span>;
+}
+
+/** Maps the Zod schema's stable English messages (restSecondsFieldSchema in
+ * validators/routine.ts) to a localized string. Falls back to the raw
+ * message for anything unrecognized, so a schema change never silently
+ * hides an error -- it just shows untranslated instead of not at all. */
+function localizeRestSecondsError(
+  rawMessage: string | undefined,
+  t: (key: string) => string,
+): string | undefined {
+  if (!rawMessage) {
+    return undefined;
+  }
+
+  const reason = classifyRestSecondsFieldError(rawMessage);
+
+  if (!reason) {
+    return rawMessage;
+  }
+
+  return t(`coaching.routines.restSecondsError.${reason}`);
 }
 
 const gridStyles: CSSProperties = {

@@ -17,7 +17,7 @@ import { ArchiveRoutineButton } from "@/modules/coaching/components/archive-rout
 import { DuplicateRoutineButton } from "@/modules/coaching/components/duplicate-routine-button";
 import { SaveRoutineTemplateLink } from "@/modules/coaching/components/save-routine-template-link";
 import type { ClientRoutine, ClientRoutineSummary } from "@/modules/coaching/types";
-import { formatRestTime } from "@/modules/coaching/utils/rest-time";
+import { formatRestSeconds } from "@/modules/coaching/utils/rest-time";
 
 export async function RoutineSummaryList({
   clientId,
@@ -104,17 +104,13 @@ export async function RoutineSummaryList({
               label={t("coaching.routines.secondaryActions")}
               content={
                 <>
-                  <DuplicateRoutineButton
-                    routineId={activeRoutine.id}
-                    returnPath={`/dashboard/clients/${clientId}`}
-                  />
+                  <DuplicateRoutineButton routineId={activeRoutine.id} />
                   <SaveRoutineTemplateLink
                     routineId={activeRoutine.id}
                     returnPath={`/dashboard/clients/${clientId}`}
                   />
                   <ArchiveRoutineButton
                     routineId={activeRoutine.id}
-                    returnPath={`/dashboard/clients/${clientId}?tab=coaching`}
                     status={activeRoutine.status}
                   />
                 </>
@@ -292,13 +288,9 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
               {t("coaching.routines.edit")}
             </Link>
           ) : null}
-          <DuplicateRoutineButton
-            routineId={routine.id}
-            returnPath={`/dashboard/coaching/routines/${routine.id}`}
-          />
+          <DuplicateRoutineButton routineId={routine.id} />
           <ArchiveRoutineButton
             routineId={routine.id}
-            returnPath={`/dashboard/coaching/routines/${routine.id}`}
             status={routine.status}
           />
           <SaveRoutineTemplateLink
@@ -427,7 +419,7 @@ export async function RoutineDetailCard({ routine, showEditLink = false }: {
                           <DetailChip label={t("coaching.routines.sets")} value={exercise.setsText} />
                           <DetailChip label={t("coaching.routines.reps")} value={exercise.repsText} />
                           <DetailChip label={t("coaching.routines.weight")} value={exercise.targetWeightText || t("common.notAvailable")} />
-                          <DetailChip label={t("coaching.routines.rest")} value={formatRestTime(exercise.restSeconds, t("common.notAvailable"))} />
+                          <DetailChip label={t("coaching.routines.rest")} value={formatRestSeconds(exercise.restSeconds, t("common.notAvailable"))} />
                         </div>
                         {exercise.notes ? (
                           <div
