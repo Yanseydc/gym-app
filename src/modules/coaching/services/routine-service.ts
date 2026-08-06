@@ -124,6 +124,25 @@ function normalizeRoutinePayload(values: RoutineFormValues) {
   };
 }
 
+// Metadata-only save (updateRoutineRecord below): unlike create, this path
+// must never send the status column at all, not even unchanged. update-
+// routine.ts already guarantees the value can only ever be the routine's
+// own currentStatus, so sending it was always a same-value UPDATE the A0.1
+// trigger permits -- but the goal of A0.2 was for the plain metadata save
+// to not touch that column in the request at all, so the enforcement
+// trigger (A0.3) is a defensive backstop, never a condition normal saves
+// rely on to behave correctly (Entrega A0.3 review, area 5).
+function normalizeRoutineMetadataPayload(values: RoutineFormValues) {
+  return {
+    client_id: values.clientId,
+    title: values.title.trim(),
+    notes: values.notes.trim() || null,
+    starts_on: values.startsOn || null,
+    ends_on: values.endsOn || null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 function normalizeRoutineDayPayload(values: RoutineDayFormValues) {
   return {
     day_index: values.dayIndex,
@@ -723,7 +742,7 @@ export async function updateRoutineRecord(
 
   let query = supabase
     .from("client_routines")
-    .update(normalizeRoutinePayload(values))
+    .update(normalizeRoutineMetadataPayload(values))
     .eq("id", routineId);
 
   query = applyGymScope(query, scope);

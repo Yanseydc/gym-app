@@ -1,11 +1,24 @@
--- Entrega A0.3 (contract stage): closes the direct-write bypass that A0.1
--- (RLS isolation + archive_client_routine RPC) and A0.2 (app exclusively
--- uses activate_client_routine/archive_client_routine) deliberately left
--- open so the previously-deployed app kept working without interruption.
--- A0.1 and A0.2 are already live in production; this migration is the only
--- remaining step, and it is purely additive at the schema level -- no
--- table shape changes, no RLS policy changes, no data changes, no
--- re-creation of either RPC.
+-- Entrega A0.3 (contract stage, part 2 of 2): closes the direct-write
+-- bypass that A0.1 (RLS isolation + archive_client_routine RPC) and A0.2
+-- (app exclusively uses activate_client_routine/archive_client_routine)
+-- deliberately left open so the previously-deployed app kept working
+-- without interruption. A0.1 and A0.2 are already live in production; this
+-- migration is purely additive at the schema level -- no table shape
+-- changes, no RLS policy changes, no data changes, no re-creation of
+-- either RPC.
+--
+-- Ordering: this migration MUST apply after
+-- 20260806090000_harden_activate_client_routine_status_guard.sql (which
+-- adds activate_client_routine's own archived-is-terminal guard). This
+-- trigger's `current_user in ('service_role', 'postgres')` fast path lets
+-- every write activate_client_routine/archive_client_routine perform
+-- through unconditionally -- it cannot enforce the archived-is-terminal
+-- rule for SECURITY DEFINER callers, only for direct authenticated writes.
+-- The timestamp ordering (20260806090000 < 20260806100000) is what
+-- guarantees the RPC's own guard exists before this trigger is created;
+-- swapping the order would leave a window, real only within a single
+-- local `db reset`/remote deploy run, where the RPC still lacked its own
+-- status check.
 --
 -- Mechanism: a BEFORE INSERT OR UPDATE trigger on client_routines that
 -- allows only:

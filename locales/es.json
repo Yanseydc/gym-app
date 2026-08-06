@@ -273,6 +273,7 @@
         "notFound": "Esta rutina o cliente ya no está disponible.",
         "notAuthorized": "No tienes autorización para activar esta rutina.",
         "conflict": "Este cliente ya tiene una rutina activa. Intenta de nuevo.",
+        "archived": "Esta rutina está archivada y no se puede reactivar. Crea una rutina nueva para retomar el entrenamiento.",
         "generic": "Algo salió mal. Intenta de nuevo."
       },
       "duplicate": "Duplicar rutina",

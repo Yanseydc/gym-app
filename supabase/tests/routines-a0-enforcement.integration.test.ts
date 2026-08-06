@@ -1,13 +1,20 @@
 // Entrega A0.3 (contract stage): the definitive, database-level proof that
-// no direct authenticated write can ever change client_routines.status.
-// A0.1 (RLS isolation + archive_client_routine RPC) and A0.2 (app
-// exclusively uses activate_client_routine/archive_client_routine) are
-// already live in production; this migration and this test file are the
-// only remaining piece.
+// (1) no direct authenticated write can ever change client_routines.status,
+// and (2) archived is a terminal state everywhere, including inside
+// activate_client_routine itself -- the trigger's `current_user in
+// ('service_role', 'postgres')` fast path means it cannot enforce this for
+// SECURITY DEFINER callers, so the RPC must (and does, as of
+// 20260806090000_harden_activate_client_routine_status_guard.sql) validate
+// its own target status before mutating anything. A0.1 (RLS isolation +
+// archive_client_routine RPC) and A0.2 (app exclusively uses
+// activate_client_routine/archive_client_routine) are already live in
+// production; these two migrations and this test file are the only
+// remaining piece.
 //
-// Requires a running local Supabase stack, with
-// 20260806100000_enforce_client_routine_status_transitions.sql applied.
-// Never point SUPABASE_URL at a remote/production project.
+// Requires a running local Supabase stack, with both
+// 20260806090000_harden_activate_client_routine_status_guard.sql and
+// 20260806100000_enforce_client_routine_status_transitions.sql applied, in
+// that order. Never point SUPABASE_URL at a remote/production project.
 
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -289,11 +296,46 @@ describe("Entrega A0.3: client_routines.status is unreachable by any direct auth
     assert.equal(await statusOf(routineId), "archived");
   });
 
-  test("activate_client_routine puede revivir una rutina archivada (archived -> active), igual que antes de A0.3", async () => {
-    const routineId = await makeRoutine("Archived Then Revived", "archived");
-    const result = await callRpc("activate_client_routine", coachToken, activatePayload(routineId, clientId, "Archived Then Revived"));
+  test("activar la rutina que ya es la activa del cliente mediante la misma RPC es un reintento estable/idempotente, sin efectos adicionales", async () => {
+    const routineId = await makeRoutine("RPC Activate Idempotent", "active");
+    const result = await callRpc(
+      "activate_client_routine",
+      coachToken,
+      activatePayload(routineId, clientId, "RPC Activate Idempotent"),
+    );
     assert.equal(result.status, 200, JSON.stringify(result.body));
+    assert.equal(result.body[0].archived_previous, false);
     assert.equal(await statusOf(routineId), "active");
+  });
+
+  // Archived is a terminal state for activate_client_routine itself, not
+  // only for direct writes -- see
+  // 20260806090000_harden_activate_client_routine_status_guard.sql. Before
+  // this migration, this exact call used to succeed and silently revive
+  // the routine.
+  test("activate_client_routine sobre una rutina archivada es rechazado antes de cualquier mutación (archived -> active bloqueado)", async () => {
+    const routineId = await makeRoutine("Archived Stays Archived", "archived");
+    const result = await callRpc(
+      "activate_client_routine",
+      coachToken,
+      activatePayload(routineId, clientId, "Archived Stays Archived"),
+    );
+    assert.equal(result.status, 400, JSON.stringify(result.body));
+    assert.equal(await statusOf(routineId), "archived");
+  });
+
+  test("intentar activar una rutina archivada no toca la rutina activa existente del cliente", async () => {
+    const activeRoutine = await makeRoutine("Untouched Active", "active");
+    const archivedRoutine = await makeRoutine("Attempted Revive", "archived");
+
+    const result = await callRpc(
+      "activate_client_routine",
+      coachToken,
+      activatePayload(archivedRoutine, clientId, "Attempted Revive"),
+    );
+    assert.equal(result.status, 400, JSON.stringify(result.body));
+    assert.equal(await statusOf(archivedRoutine), "archived");
+    assert.equal(await statusOf(activeRoutine), "active");
   });
 
   test("duplicar (INSERT directo con status='draft', el mismo patrón que duplicateRoutineRecord) funciona independientemente del estado de origen", async () => {
