@@ -109,21 +109,28 @@ describe("Entrega A0.1: archive_client_routine RPC + old-app compatibility (requ
     return rows[0].status;
   }
 
-  // --- The critical A0.1 gate: the OLD, currently-deployed app must keep
-  //     working exactly as it does today ---------------------------------
+  // --- Historical note: this file was written for the A0.1 gate, when
+  //     the OLD app still archived via a direct UPDATE and no enforcement
+  //     trigger existed yet -- these two tests originally asserted that
+  //     direct UPDATE archiving "still works." Entrega A0.3 adds the
+  //     enforcement trigger that deliberately closes exactly that path
+  //     (see routines-a0-enforcement.integration.test.ts for the full,
+  //     definitive coverage of every direct-write transition). Updated
+  //     here to assert the new, permanent reality instead of leaving a
+  //     now-obsolete assertion failing in CI.
 
-  test("[compatibilidad app vieja] archivar mediante UPDATE directo (draft -> archived) sigue funcionando -- ningún enforcement lo bloquea todavía", async () => {
+  test("archivar mediante UPDATE directo (draft -> archived) está bloqueado desde A0.3 -- exclusivamente vía archive_client_routine", async () => {
     const routineId = await makeRoutine("Old App Archive Draft");
     const { status } = await patchAs(coachToken, `/rest/v1/client_routines?id=eq.${routineId}`, { status: "archived" });
-    assert.equal(status, 200);
-    assert.equal(await statusOf(routineId), "archived");
+    assert.equal(status, 400);
+    assert.equal(await statusOf(routineId), "draft");
   });
 
-  test("[compatibilidad app vieja] archivar mediante UPDATE directo (active -> archived) sigue funcionando", async () => {
+  test("archivar mediante UPDATE directo (active -> archived) está bloqueado desde A0.3", async () => {
     const routineId = await makeRoutine("Old App Archive Active", "active");
     const { status } = await patchAs(coachToken, `/rest/v1/client_routines?id=eq.${routineId}`, { status: "archived" });
-    assert.equal(status, 200);
-    assert.equal(await statusOf(routineId), "archived");
+    assert.equal(status, 400);
+    assert.equal(await statusOf(routineId), "active");
   });
 
   test("[compatibilidad app vieja] activar mediante la RPC preexistente activate_client_routine sigue funcionando sin cambios", async () => {
