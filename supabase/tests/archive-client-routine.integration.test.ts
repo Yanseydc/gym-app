@@ -1,11 +1,14 @@
-// Entrega A0.1 (expand stage): the new archive_client_routine RPC, plus an
-// explicit backward-compatibility check that the currently-deployed app's
-// own archiving path (a direct UPDATE of client_routines.status) still
-// works completely unaffected. This file intentionally does NOT test that
-// a direct PATCH is blocked -- that enforcement (a trigger) is Entrega
-// A0.3's concern and does not exist yet at this stage. Every test here
-// must pass against a database built from `main` + only A0.1's two
-// migrations, with zero app code changes.
+// Entrega A0.1 (expand stage): the new archive_client_routine RPC, plus what
+// was originally an explicit backward-compatibility check that the
+// then-deployed app's own archiving path (a direct UPDATE of
+// client_routines.status) still worked unaffected. Entrega A0.3 (contract
+// stage) later closed that direct-write path and hardened
+// activate_client_routine's own status guard; the handful of tests below
+// that now assert a 400/blocked outcome are documented inline as updates
+// to this file's original A0.1-era assertions, kept here rather than
+// deleted so the file's history stays legible. Full, definitive coverage
+// of every direct-write transition and RPC guard lives in
+// routines-a0-enforcement.integration.test.ts.
 //
 // Requires a running local Supabase stack. Never point SUPABASE_URL at a
 // remote/production project.
@@ -109,21 +112,28 @@ describe("Entrega A0.1: archive_client_routine RPC + old-app compatibility (requ
     return rows[0].status;
   }
 
-  // --- The critical A0.1 gate: the OLD, currently-deployed app must keep
-  //     working exactly as it does today ---------------------------------
+  // --- Historical note: this file was written for the A0.1 gate, when
+  //     the OLD app still archived via a direct UPDATE and no enforcement
+  //     trigger existed yet -- these two tests originally asserted that
+  //     direct UPDATE archiving "still works." Entrega A0.3 adds the
+  //     enforcement trigger that deliberately closes exactly that path
+  //     (see routines-a0-enforcement.integration.test.ts for the full,
+  //     definitive coverage of every direct-write transition). Updated
+  //     here to assert the new, permanent reality instead of leaving a
+  //     now-obsolete assertion failing in CI.
 
-  test("[compatibilidad app vieja] archivar mediante UPDATE directo (draft -> archived) sigue funcionando -- ningún enforcement lo bloquea todavía", async () => {
+  test("archivar mediante UPDATE directo (draft -> archived) está bloqueado desde A0.3 -- exclusivamente vía archive_client_routine", async () => {
     const routineId = await makeRoutine("Old App Archive Draft");
     const { status } = await patchAs(coachToken, `/rest/v1/client_routines?id=eq.${routineId}`, { status: "archived" });
-    assert.equal(status, 200);
-    assert.equal(await statusOf(routineId), "archived");
+    assert.equal(status, 400);
+    assert.equal(await statusOf(routineId), "draft");
   });
 
-  test("[compatibilidad app vieja] archivar mediante UPDATE directo (active -> archived) sigue funcionando", async () => {
+  test("archivar mediante UPDATE directo (active -> archived) está bloqueado desde A0.3", async () => {
     const routineId = await makeRoutine("Old App Archive Active", "active");
     const { status } = await patchAs(coachToken, `/rest/v1/client_routines?id=eq.${routineId}`, { status: "archived" });
-    assert.equal(status, 200);
-    assert.equal(await statusOf(routineId), "archived");
+    assert.equal(status, 400);
+    assert.equal(await statusOf(routineId), "active");
   });
 
   test("[compatibilidad app vieja] activar mediante la RPC preexistente activate_client_routine sigue funcionando sin cambios", async () => {
@@ -177,11 +187,20 @@ describe("Entrega A0.1: archive_client_routine RPC + old-app compatibility (requ
     assert.equal(await statusOf(second), "active");
   });
 
-  test("la nueva RPC de archivar puede seguirse de una reactivación vía la RPC preexistente (archived -> active)", async () => {
+  // Historical note: this test originally asserted that archive_client_routine
+  // (A0.1) could be followed by activate_client_routine reactivating the
+  // routine it just archived (archived -> active), which was true only
+  // because the deployed activate_client_routine performed no status
+  // validation at all at that point. 20260806090000_harden_activate_client_
+  // routine_status_guard.sql closes that gap: archived is now a terminal
+  // state for activate_client_routine too, not only for direct writes.
+  // Updated here to assert the new, permanent reality (see
+  // routines-a0-enforcement.integration.test.ts for full coverage).
+  test("la nueva RPC de archivar deja la rutina en estado terminal: la RPC preexistente ya no puede reactivarla (archived -> active bloqueado)", async () => {
     const routineId = await makeRoutine("Archived Then Reactivated", "archived");
     const result = await callRpc("activate_client_routine", coachToken, activatePayload(routineId, clientId, "Archived Then Reactivated"));
-    assert.equal(result.status, 200, JSON.stringify(result.body));
-    assert.equal(await statusOf(routineId), "active");
+    assert.equal(result.status, 400, JSON.stringify(result.body));
+    assert.equal(await statusOf(routineId), "archived");
   });
 
   test("guardar metadatos (sin tocar status) conserva el estado, en cualquier estado", async () => {

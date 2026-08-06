@@ -13,13 +13,15 @@ export type ActivateRoutineErrorKey =
   | "notFound"
   | "notAuthorized"
   | "conflict"
+  | "archived"
   | "generic";
 
 // Exact substrings activateRoutineRecord/the activate_client_routine RPC can
 // return (routine-service.ts, and the RPC body in
-// supabase/migrations/20260803120000_fix_activate_client_routine_ambiguous_column.sql)
+// supabase/migrations/20260806090000_harden_activate_client_routine_status_guard.sql)
 // mapped to a stable, localizable key. Anything unrecognized -> "generic",
-// so a raw Postgres/internal message never reaches the UI (Entrega A0 #3/#4).
+// so a raw Postgres/internal message never reaches the UI (Entrega A0 #3/#4,
+// re-verified for the archived-is-terminal guard in Entrega A0.3).
 function classifyActivationError(rawMessage: string | null | undefined, code?: string | null): ActivateRoutineErrorKey {
   if (code === "23505") {
     return "conflict";
@@ -31,6 +33,10 @@ function classifyActivationError(rawMessage: string | null | undefined, code?: s
 
   if (rawMessage.includes("client_routines_one_active_per_client_idx")) {
     return "conflict";
+  }
+
+  if (rawMessage.includes("Archived routines cannot be reactivated")) {
+    return "archived";
   }
 
   if (

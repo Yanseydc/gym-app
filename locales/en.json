@@ -273,6 +273,7 @@
         "notFound": "This routine or client is no longer available.",
         "notAuthorized": "You're not authorized to activate this routine.",
         "conflict": "This client already has an active routine. Please try again.",
+        "archived": "This routine is archived and can't be reactivated. Create a new routine to resume training.",
         "generic": "Something went wrong. Please try again."
       },
       "duplicate": "Duplicate routine",
