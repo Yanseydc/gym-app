@@ -53,14 +53,33 @@ export function getAuthorizedHomePath(role: Role): string {
   return moduleRoutes[firstModule][0];
 }
 
+/** Picks the MOST SPECIFIC matching route across every module, not the
+ * first module encountered in `appModules` -- `.find()` on that array used
+ * to return "dashboard" (route "/dashboard") for a path like
+ * "/dashboard/clients", since "/dashboard/clients" starts with
+ * "/dashboard/" and "dashboard" is listed first. That misclassified every
+ * nested dashboard path for any role missing "dashboard" itself from its
+ * allowed modules (coach: ["clients","coaching"]), which made
+ * canAccessPath reject the role's own authorized home path and the
+ * middleware redirect to it in an infinite loop. Comparing match length
+ * (not array position) makes the result independent of appModules' order
+ * and never mutates it or moduleRoutes -- this only reads them. */
 export function getModuleByPath(pathname: string): AppModule | null {
-  const matchedModule = appModules.find((module) =>
-    moduleRoutes[module].some(
-      (route) => pathname === route || pathname.startsWith(`${route}/`),
-    ),
-  );
+  let best: { module: AppModule; route: string } | null = null;
 
-  return matchedModule ?? null;
+  for (const appModule of appModules) {
+    for (const route of moduleRoutes[appModule]) {
+      const matches = pathname === route || pathname.startsWith(`${route}/`);
+      if (!matches) {
+        continue;
+      }
+      if (!best || route.length > best.route.length) {
+        best = { module: appModule, route };
+      }
+    }
+  }
+
+  return best?.module ?? null;
 }
 
 export function canAccessPath(role: Role, pathname: string): boolean {

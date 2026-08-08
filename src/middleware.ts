@@ -114,8 +114,23 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!canAccessPath(role, pathname)) {
+    const target = role === "client" ? getDefaultAuthenticatedRoute(role) : getAuthorizedHomePath(role);
+
+    // Defense-in-depth against the exact bug this hotfix corrects (a
+    // role's own "authorized home path" not being canAccessPath-able for
+    // that role, which redirected the browser to itself forever): if the
+    // computed safe destination is the path we're already on, there is no
+    // legitimate authorized destination to send this role to. Never fall
+    // through (that would grant access this role doesn't have) -- render
+    // the project's existing not-found pattern instead, same as every
+    // record-level authorization check elsewhere in the app (notFound()
+    // in dashboard pages), rather than invent a new "forbidden" page.
+    if (target === pathname) {
+      return NextResponse.rewrite(new URL("/404", request.url));
+    }
+
     const url = request.nextUrl.clone();
-    url.pathname = role === "client" ? getDefaultAuthenticatedRoute(role) : getAuthorizedHomePath(role);
+    url.pathname = target;
     return NextResponse.redirect(url);
   }
 
